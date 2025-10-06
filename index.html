@@ -130,7 +130,6 @@
       <div class="chart-container"><canvas id="windChart"></canvas></div>
     </div>
 
-    <!-- Wind Speed Benchmarks Card -->
     <div id="windBenchmark" class="value-card" style="max-width:600px; margin: 20px auto;">
       <h3>💨 Wind Speed Benchmarks</h3>
       <p>
@@ -223,12 +222,13 @@
       const result = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
       const data = result.data;
 
-      const timestamps = [], temps = [], humidities = [], windSpeeds = [];
+      const timestamps = [], temps = [], feels = [], humidities = [], windSpeeds = [];
       const french = [], eu = [], czech = [], yarmag = [];
 
       data.forEach(row => {
         timestamps.push(row.timestamp);
         temps.push(cleanNumber(row.temperature));
+        feels.push(cleanNumber(row.feels_like));
         windSpeeds.push(cleanNumber(row.wind_speed));
         humidities.push(cleanNumber(row.humidity));
         french.push(cleanNumber(row.pm25_french));
@@ -241,19 +241,21 @@
       const latest = timestamps[latestIdx];
       document.getElementById('lastUpdated').textContent = `Last updated: ${latest} (Ulaanbaatar time)`;
 
+      const latestTemp = temps[latestIdx];
+      const latestFeels = feels[latestIdx];
+      const latestHumidity = humidities[latestIdx];
+      const latestWind = windSpeeds[latestIdx];
       const latestFrench = french[latestIdx];
       const latestEU = eu[latestIdx];
       const latestCzech = czech[latestIdx];
       const latestYarmag = yarmag[latestIdx];
-      const latestTemp = temps[latestIdx];
-      const latestHumidity = humidities[latestIdx];
-      const latestWind = windSpeeds[latestIdx];
       const windInfo = getWindInfo(latestWind);
 
       document.getElementById('latestValues').innerHTML = `
         <div class="value-card">
           <h3>🌡 Weather</h3>
           <p class="temp">Temp: ${latestTemp ?? '-'} °C</p>
+          <p class="temp">Feels Like: ${latestFeels ?? '-'} °C</p>
           <p class="hum">Humidity: ${latestHumidity ?? '-'} %</p>
           <p class="wind">Wind: ${latestWind ?? '-'} m/s ${latestWind ? `<span style="color:${windInfo.color}">(${windInfo.desc})</span>` : ""}</p>
         </div>
@@ -274,10 +276,10 @@
       }
       document.getElementById('pmAlert').textContent = alertMsg;
 
-      renderCharts(timestamps, french, eu, czech, yarmag, temps, humidities, windSpeeds, windInfo);
+      renderCharts(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds, windInfo);
     }
 
-    function renderCharts(timestamps, french, eu, czech, yarmag, temps, humidities, windSpeeds, windInfo) {
+    function renderCharts(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds, windInfo) {
       const baseOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -302,74 +304,10 @@
         options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'PM2.5 (µg/m³)', color: Chart.defaults.color } } } }
       });
 
-      // Temperature
+      // Temperature + Feels Like
       if (Chart.getChart("tempChart")) Chart.getChart("tempChart").destroy();
       new Chart(document.getElementById('tempChart'), {
         type: 'line',
-        data: { labels: timestamps, datasets: [{ label: 'Temperature (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
-        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Temperature (°C)', color: Chart.defaults.color } } } }
-      });
-
-      // Humidity
-      if (Chart.getChart("humidityChart")) Chart.getChart("humidityChart").destroy();
-      new Chart(document.getElementById('humidityChart'), {
-        type: 'line',
-        data: { labels: timestamps, datasets: [{ label: 'Humidity (%)', data: humidities, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
-        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Humidity (%)', color: Chart.defaults.color } } } }
-      });
-
-      // Wind with dynamic benchmarks
-      if (Chart.getChart("windChart")) Chart.getChart("windChart").destroy();
-      let windAnnotations = {};
-      if (windInfo && windInfo.min !== undefined && windInfo.max !== undefined) {
-        windAnnotations = {
-          lower: {
-            type: 'line',
-            yMin: windInfo.min,
-            yMax: windInfo.min,
-            borderColor: windInfo.color,
-            borderWidth: 2,
-            borderDash: [6, 6],
-            label: {
-              display: true,
-              content: `Min ${windInfo.desc}`,
-              position: "end",
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              color: '#fff',
-              font: { size: 10 }
-            }
-          },
-          upper: {
-            type: 'line',
-            yMin: windInfo.max,
-            yMax: windInfo.max,
-            borderColor: windInfo.color,
-            borderWidth: 2,
-            borderDash: [6, 6],
-            label: {
-              display: true,
-              content: `Max ${windInfo.desc}`,
-              position: "end",
-              backgroundColor: 'rgba(0,0,0,0.7)',
-              color: '#fff',
-              font: { size: 10 }
-            }
-          }
-        };
-      }
-      new Chart(document.getElementById('windChart'), {
-        type: 'line',
-        data: { labels: timestamps, datasets: [{ label: 'Wind Speed (m/s)', data: windSpeeds, borderColor: 'teal', backgroundColor: 'rgba(0,128,128,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
-        options: { 
-          ...baseOptions, 
-          plugins: { ...baseOptions.plugins, annotation: { annotations: windAnnotations } }, 
-          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Wind Speed (m/s)', color: Chart.defaults.color } } } 
-        }
-      });
-    }
-
-    loadCSV();
-    setInterval(loadCSV, 1800000);
-  </script>
-</body>
-</html>
+        data: { labels: timestamps, datasets: [
+          { label: 'Temperature (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.2)', pointRadius: 2, tension: 0.3, fill: true },
+          { label: 'Feels Like (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255
