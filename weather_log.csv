@@ -1,4 +1,4 @@
-timestamp,updated,temperature,wind_speed,humidity,pm25_french,pm25_eu,pm25_czech,pm25_yarmag
+timestamp,updated,temperature,feels_like,wind_speed,humidity,pm25_french,pm25_eu,pm25_czech,pm25_yarmag
 2025-09-30 00:18,"15:00, Нийслэл, Улаанбаатар",9,2,57,35,ERROR,39,36
 2025-09-30 00:39,"15:00, Нийслэл, Улаанбаатар",9,2,57,35,ERROR,39,36
 2025-09-30 01:15,"16:40, Нийслэл, Улаанбаатар",7,1,63,30,ERROR,36,47
@@ -334,3 +334,4 @@ timestamp,updated,temperature,wind_speed,humidity,pm25_french,pm25_eu,pm25_czech
 2025-10-06 21:21,"13:20, Нийслэл, Улаанбаатар",-2,2,71,11,ERROR,6.8,5.5
 2025-10-06 21:29,"13:20, Нийслэл, Улаанбаатар",-2,-5,2,71,11,ERROR,6.8,5.5
 2025-10-06 21:31,"13:20, Нийслэл, Улаанбаатар",-2,-5,2,71,11,ERROR,6.8,5.5
+
