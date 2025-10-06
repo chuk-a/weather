@@ -53,12 +53,15 @@ def get_text(xpath, label):
 def scrape_weather():
     print("Scraping weather.gov.mn...")
     if not safe_get("https://weather.gov.mn"):
-        return ["ERROR"] * 4
-    updated     = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[1]/div/p", "Updated")
-    temperature = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[2]", "Temperature")
-    wind_speed  = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[1]/p[2]", "Wind Speed (m/s)")
-    humidity    = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[3]/p[2]", "Humidity")
-    return updated, temperature, wind_speed, humidity
+        return ["ERROR"] * 5  # now returning 5 values total
+
+    updated      = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[1]/div/p", "Updated")
+    temperature  = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[2]", "Temperature")
+    feels_like   = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[3]/div/div[2]/h1", "Feels Like")
+    wind_speed   = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[1]/p[2]", "Wind Speed (m/s)")
+    humidity     = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[3]/p[2]", "Humidity")
+
+    return updated, temperature, feels_like, wind_speed, humidity
 
 def scrape_pm25(url, label):
     print(f"Scraping {label} PM2.5...")
@@ -74,6 +77,8 @@ def clean(val):
             return "ERROR"
         return (
             val.replace("°", "")
+               .replace("C", "")
+               .replace("Feels like", "")
                .replace("µg/m³", "")
                .replace("%", "")
                .replace("м/с", "")
@@ -83,7 +88,7 @@ def clean(val):
     return val
 
 # Scrape all data
-updated, temperature, wind_speed, humidity = scrape_weather()
+updated, temperature, feels_like, wind_speed, humidity = scrape_weather()
 pm25_french  = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy")
 pm25_eu      = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/european-union-delegation", "EU Delegation")
 pm25_czech   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/czech-embassy-ulaanbaatar", "Czech Embassy")
@@ -99,7 +104,7 @@ if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
     with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "timestamp", "updated", "temperature", "wind_speed", "humidity",
+            "timestamp", "updated", "temperature", "feels_like", "wind_speed", "humidity",
             "pm25_french", "pm25_eu", "pm25_czech", "pm25_yarmag"
         ])
 
@@ -110,6 +115,7 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
         timestamp,
         clean(updated),
         clean(temperature),
+        clean(feels_like),
         clean(wind_speed),
         clean(humidity),
         clean(pm25_french),
