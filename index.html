@@ -310,4 +310,71 @@
         type: 'line',
         data: { labels: timestamps, datasets: [
           { label: 'Temperature (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.2)', pointRadius: 2, tension: 0.3, fill: true },
-          { label: 'Feels Like (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255
+          { label: 'Feels Like (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.2)', pointRadius: 2, tension: 0.3, fill: true }
+        ] },
+        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Temperature (°C)', color: Chart.defaults.color } } } }
+      });
+
+      // Humidity
+      if (Chart.getChart("humidityChart")) Chart.getChart("humidityChart").destroy();
+      new Chart(document.getElementById('humidityChart'), {
+        type: 'line',
+        data: { labels: timestamps, datasets: [{ label: 'Humidity (%)', data: humidities, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
+        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Humidity (%)', color: Chart.defaults.color } } } }
+      });
+
+      // Wind Speed with benchmarks
+      if (Chart.getChart("windChart")) Chart.getChart("windChart").destroy();
+      let windAnnotations = {};
+      if (windInfo && windInfo.min !== undefined && windInfo.max !== undefined) {
+        windAnnotations = {
+          lower: {
+            type: 'line',
+            yMin: windInfo.min,
+            yMax: windInfo.min,
+            borderColor: windInfo.color,
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: `Min ${windInfo.desc}`,
+              position: "end",
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              font: { size: 10 }
+            }
+          },
+          upper: {
+            type: 'line',
+            yMin: windInfo.max,
+            yMax: windInfo.max,
+            borderColor: windInfo.color,
+            borderWidth: 2,
+            borderDash: [6, 6],
+            label: {
+              display: true,
+              content: `Max ${windInfo.desc}`,
+              position: "end",
+              backgroundColor: 'rgba(0,0,0,0.7)',
+              color: '#fff',
+              font: { size: 10 }
+            }
+          }
+        };
+      }
+      new Chart(document.getElementById('windChart'), {
+        type: 'line',
+        data: { labels: timestamps, datasets: [{ label: 'Wind Speed (m/s)', data: windSpeeds, borderColor: 'teal', backgroundColor: 'rgba(0,128,128,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
+        options: { 
+          ...baseOptions, 
+          plugins: { ...baseOptions.plugins, annotation: { annotations: windAnnotations } }, 
+          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Wind Speed (m/s)', color: Chart.defaults.color } } } 
+        }
+      });
+    }
+
+    loadCSV();
+    setInterval(loadCSV, 1800000);
+  </script>
+</body>
+</html>
