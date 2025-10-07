@@ -51,7 +51,6 @@
     h1, p { text-align: center; }
     #lastUpdated { font-weight: bold; margin-top: 10px; }
 
-    /* Value cards */
     #latestValues {
       display: flex;
       flex-wrap: wrap;
@@ -80,26 +79,30 @@
 
     #pmAlert { font-weight: bold; color: red; margin-bottom: 20px; text-align: center; }
 
-    /* Dark mode */
     .dark { background: #121212; color: #eee; }
     .dark header, .dark footer { background: #1e1e1e; }
     .dark .chart-container { background: #1e1e1e; }
     .dark .value-card { background: #1e1e1e; box-shadow: 0 2px 6px rgba(255,255,255,0.05); }
     .dark a { color: #4da6ff; }
 
-    .toggle-btn {
+    .btn-group { text-align: center; margin-bottom: 20px; }
+    .btn-group .toggle-btn {
       display: inline-block;
-      margin: 10px;
+      margin: 0 5px;
       padding: 6px 12px;
       background: #0077cc;
       color: white;
       border: none;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 1em;
+      min-width: 120px;
+      transition: background 0.2s;
     }
-    .btn-group { text-align: center; margin-bottom: 20px; }
-    #lang-switcher { margin-top: 8px; }
-    #lang-switcher button { margin: 0 3px; }
+    .btn-group .toggle-btn:hover {
+      background: #005fa3;
+    }
+    #langBtn { min-width: 110px; }
   </style>
 </head>
 <body>
@@ -110,28 +113,21 @@
       <a href="#humidityChart" data-i18n="humidity">Humidity</a>
       <a href="#windChart" data-i18n="wind">Wind</a>
     </nav>
-    <div id="lang-switcher">
-      <button onclick="setLanguage('en')" style="background:none;border:none;cursor:pointer;font-size:1.15em;">
-        🇬🇧 English
-      </button>
-      <button onclick="setLanguage('mn')" style="background:none;border:none;cursor:pointer;font-size:1.15em;">
-        🇲🇳 Монгол
-      </button>
-    </div>
   </header>
 
   <div class="container">
+    <div class="btn-group">
+      <button class="toggle-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 <span data-i18n="toggle_dark">Toggle Dark Mode</span></button>
+      <button class="toggle-btn" onclick="toggleCompact()" id="compactBtn">🗂 <span data-i18n="toggle_compact">Toggle Compact Mode</span></button>
+      <button class="toggle-btn" onclick="toggleLanguage()" id="langBtn" aria-label="Language Toggle">🇬🇧 English</button>
+    </div>
+
     <h1 data-i18n="title">UB Weather & Air Quality</h1>
     <p data-i18n="desc">Live data from weather.gov.mn and PM2.5 monitors at multiple embassies in Ulaanbaatar</p>
     <p><a href="weather_log.csv" download data-i18n="download_csv">📥 Download CSV</a></p>
     <p id="lastUpdated" data-i18n="last_updated">Last updated: loading…</p>
     <div id="latestValues" data-i18n="latest_values">Loading latest values…</div>
     <p id="pmAlert" data-i18n="pm_alert"></p>
-
-    <div class="btn-group">
-      <button class="toggle-btn" onclick="toggleDarkMode()">🌙 <span data-i18n="toggle_dark">Toggle Dark Mode</span></button>
-      <button class="toggle-btn" onclick="toggleCompact()">🗂 <span data-i18n="toggle_compact">Toggle Compact Mode</span></button>
-    </div>
 
     <div class="grid" id="chartGrid">
       <div class="chart-container"><canvas id="pmChart"></canvas></div>
@@ -162,7 +158,7 @@
   </footer>
 
   <script>
-    // ----- TRANSLATION DATA -----
+    // TRANSLATION DATA
     const translations = {
       en: {
         title: "UB Weather & Air Quality",
@@ -219,32 +215,52 @@
     function setLanguage(lang) {
       localStorage.setItem("lang", lang);
       updateLanguage();
+      updateLangBtn();
+    }
+    function getLang() {
+      return localStorage.getItem("lang") || "en";
     }
 
     function updateLanguage() {
-      const lang = localStorage.getItem("lang") || "en";
+      const lang = getLang();
       document.querySelectorAll("[data-i18n]").forEach(el => {
         const key = el.getAttribute("data-i18n");
-        if(translations[lang][key] !== undefined) {
+        if (translations[lang][key] !== undefined) {
           el.innerHTML = translations[lang][key];
         }
       });
-      // Also update dynamic chart labels etc after language change
       if (typeof updateDynamicText === "function") updateDynamicText();
     }
 
-    window.setLanguage = setLanguage;
+    function toggleLanguage() {
+      const current = getLang();
+      const next = current === "en" ? "mn" : "en";
+      setLanguage(next);
+    }
+    function updateLangBtn() {
+      const lang = getLang();
+      const langBtn = document.getElementById("langBtn");
+      if (lang === "en") {
+        langBtn.innerHTML = "🇬🇧 English";
+      } else {
+        langBtn.innerHTML = "🇲🇳 Монгол";
+      }
+    }
+    window.toggleLanguage = toggleLanguage;
+    window.updateLangBtn = updateLangBtn;
+    document.addEventListener("DOMContentLoaded", function() {
+      updateLangBtn();
+      updateLanguage();
+    });
 
-    document.addEventListener("DOMContentLoaded", updateLanguage);
-
-    // ----- PAGE SCRIPTS -----
+    // PAGE SCRIPTS
     function toggleCompact() {
       document.getElementById("chartGrid").classList.toggle("compact");
     }
 
     function cleanNumber(val) {
       if (!val || val === "ERROR") return null;
-      return parseFloat(val.replace(/[^\d.-]/g, '')); 
+      return parseFloat(val.replace(/[^\d.-]/g, ''));
     }
 
     function getAQIColor(value) {
@@ -257,19 +273,16 @@
 
     function getWindInfo(speed) {
       if (speed == null || isNaN(speed)) return { desc: "", color: "gray" };
-      if (speed < 0.5) return { desc: translations[getLang()]['calm'].replace(":",""), min: 0, max: 0.5, color: "gray" };
-      if (speed <= 1.5) return { desc: translations[getLang()]['light_air'].replace(":",""), min: 0.5, max: 1.5, color: "#7f8c8d" };
-      if (speed <= 3.3) return { desc: translations[getLang()]['light_breeze'].replace(":",""), min: 1.6, max: 3.3, color: "green" };
-      if (speed <= 5.4) return { desc: translations[getLang()]['gentle_breeze'].replace(":",""), min: 3.4, max: 5.4, color: "#27ae60" };
-      if (speed <= 7.9) return { desc: translations[getLang()]['moderate_breeze'].replace(":",""), min: 5.5, max: 7.9, color: "orange" };
-      if (speed <= 10.7) return { desc: translations[getLang()]['fresh_breeze'].replace(":",""), min: 8.0, max: 10.7, color: "#e67e22" };
-      if (speed <= 13.8) return { desc: translations[getLang()]['strong_breeze'].replace(":",""), min: 10.8, max: 13.8, color: "red" };
-      if (speed <= 17.1) return { desc: translations[getLang()]['near_gale'].replace(":",""), min: 13.9, max: 17.1, color: "purple" };
-      return { desc: translations[getLang()]['gale_stronger'].replace(":",""), min: 17.2, max: 25, color: "black" };
-    }
-
-    function getLang() {
-      return localStorage.getItem("lang") || "en";
+      const lang = getLang();
+      if (speed < 0.5) return { desc: translations[lang]['calm'].replace(":",""), min: 0, max: 0.5, color: "gray" };
+      if (speed <= 1.5) return { desc: translations[lang]['light_air'].replace(":",""), min: 0.5, max: 1.5, color: "#7f8c8d" };
+      if (speed <= 3.3) return { desc: translations[lang]['light_breeze'].replace(":",""), min: 1.6, max: 3.3, color: "green" };
+      if (speed <= 5.4) return { desc: translations[lang]['gentle_breeze'].replace(":",""), min: 3.4, max: 5.4, color: "#27ae60" };
+      if (speed <= 7.9) return { desc: translations[lang]['moderate_breeze'].replace(":",""), min: 5.5, max: 7.9, color: "orange" };
+      if (speed <= 10.7) return { desc: translations[lang]['fresh_breeze'].replace(":",""), min: 8.0, max: 10.7, color: "#e67e22" };
+      if (speed <= 13.8) return { desc: translations[lang]['strong_breeze'].replace(":",""), min: 10.8, max: 13.8, color: "red" };
+      if (speed <= 17.1) return { desc: translations[lang]['near_gale'].replace(":",""), min: 13.9, max: 17.1, color: "purple" };
+      return { desc: translations[lang]['gale_stronger'].replace(":",""), min: 17.2, max: 25, color: "black" };
     }
 
     function updateChartTheme(isDark) {
@@ -467,17 +480,15 @@
       new Chart(document.getElementById('windChart'), {
         type: 'line',
         data: { labels: timestamps, datasets: [{ label: translations[getLang()]['wind'] + ' Speed (m/s)', data: windSpeeds, borderColor: 'teal', backgroundColor: 'rgba(0,128,128,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
-        options: { 
-          ...baseOptions, 
-          plugins: { ...baseOptions.plugins, annotation: { annotations: windAnnotations } }, 
-          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['wind'] + ' Speed (m/s)', color: Chart.defaults.color } } } 
+        options: {
+          ...baseOptions,
+          plugins: { ...baseOptions.plugins, annotation: { annotations: windAnnotations } },
+          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['wind'] + ' Speed (m/s)', color: Chart.defaults.color } } }
         }
       });
     }
 
-    // If language is changed, update dynamic text as well
     function updateDynamicText() {
-      // Will rerun parseCSV to update dynamic content
       loadCSV();
     }
 
