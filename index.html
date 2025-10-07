@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>UB Weather & PM2.5 Dashboard</title>
+  <title data-i18n="title">UB Weather & Air Quality</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -98,29 +98,39 @@
       cursor: pointer;
     }
     .btn-group { text-align: center; margin-bottom: 20px; }
+    #lang-switcher { margin-top: 8px; }
+    #lang-switcher button { margin: 0 3px; }
   </style>
 </head>
 <body>
   <header>
     <nav>
-      <a href="#pmChart">PM2.5</a>
-      <a href="#tempChart">Temperature</a>
-      <a href="#humidityChart">Humidity</a>
-      <a href="#windChart">Wind</a>
+      <a href="#pmChart" data-i18n="pm25">PM2.5</a>
+      <a href="#tempChart" data-i18n="temperature">Temperature</a>
+      <a href="#humidityChart" data-i18n="humidity">Humidity</a>
+      <a href="#windChart" data-i18n="wind">Wind</a>
     </nav>
+    <div id="lang-switcher">
+      <button onclick="setLanguage('en')" style="background:none;border:none;cursor:pointer;font-size:1.15em;">
+        🇬🇧 English
+      </button>
+      <button onclick="setLanguage('mn')" style="background:none;border:none;cursor:pointer;font-size:1.15em;">
+        🇲🇳 Монгол
+      </button>
+    </div>
   </header>
 
   <div class="container">
-    <h1>UB Weather & Air Quality</h1>
-    <p>Live data from weather.gov.mn and PM2.5 monitors at multiple embassies in Ulaanbaatar</p>
-    <p><a href="weather_log.csv" download>📥 Download CSV</a></p>
-    <p id="lastUpdated">Last updated: loading…</p>
-    <div id="latestValues">Loading latest values…</div>
-    <p id="pmAlert"></p>
+    <h1 data-i18n="title">UB Weather & Air Quality</h1>
+    <p data-i18n="desc">Live data from weather.gov.mn and PM2.5 monitors at multiple embassies in Ulaanbaatar</p>
+    <p><a href="weather_log.csv" download data-i18n="download_csv">📥 Download CSV</a></p>
+    <p id="lastUpdated" data-i18n="last_updated">Last updated: loading…</p>
+    <div id="latestValues" data-i18n="latest_values">Loading latest values…</div>
+    <p id="pmAlert" data-i18n="pm_alert"></p>
 
     <div class="btn-group">
-      <button class="toggle-btn" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
-      <button class="toggle-btn" onclick="toggleCompact()">🗂 Toggle Compact Mode</button>
+      <button class="toggle-btn" onclick="toggleDarkMode()">🌙 <span data-i18n="toggle_dark">Toggle Dark Mode</span></button>
+      <button class="toggle-btn" onclick="toggleCompact()">🗂 <span data-i18n="toggle_compact">Toggle Compact Mode</span></button>
     </div>
 
     <div class="grid" id="chartGrid">
@@ -131,27 +141,103 @@
     </div>
 
     <div id="windBenchmark" class="value-card" style="max-width:600px; margin: 20px auto;">
-      <h3>💨 Wind Speed Benchmarks</h3>
+      <h3 data-i18n="wind_benchmarks">💨 Wind Speed Benchmarks</h3>
       <p>
-        <b>Calm:</b> &lt; 0.5 m/s<br>
-        <b>Light Air:</b> 0.5 - 1.5 m/s<br>
-        <b>Light Breeze:</b> 1.6 - 3.3 m/s<br>
-        <b>Gentle Breeze:</b> 3.4 - 5.4 m/s<br>
-        <b>Moderate Breeze:</b> 5.5 - 7.9 m/s<br>
-        <b>Fresh Breeze:</b> 8.0 - 10.7 m/s<br>
-        <b>Strong Breeze:</b> 10.8 - 13.8 m/s<br>
-        <b>Near Gale:</b> 13.9 - 17.1 m/s<br>
-        <b>Gale or stronger:</b> ≥ 17.2 m/s
+        <b data-i18n="calm">Calm:</b> &lt; 0.5 m/s<br>
+        <b data-i18n="light_air">Light Air:</b> 0.5 - 1.5 m/s<br>
+        <b data-i18n="light_breeze">Light Breeze:</b> 1.6 - 3.3 m/s<br>
+        <b data-i18n="gentle_breeze">Gentle Breeze:</b> 3.4 - 5.4 m/s<br>
+        <b data-i18n="moderate_breeze">Moderate Breeze:</b> 5.5 - 7.9 m/s<br>
+        <b data-i18n="fresh_breeze">Fresh Breeze:</b> 8.0 - 10.7 m/s<br>
+        <b data-i18n="strong_breeze">Strong Breeze:</b> 10.8 - 13.8 m/s<br>
+        <b data-i18n="near_gale">Near Gale:</b> 13.9 - 17.1 m/s<br>
+        <b data-i18n="gale_stronger">Gale or stronger:</b> ≥ 17.2 m/s
       </p>
     </div>
   </div>
 
   <footer>
-    Data from weather.gov.mn & embassies · Updated every 30 min · 
+    <span data-i18n="footer_desc">Data from weather.gov.mn & embassies · Updated every 30 min ·</span>
     <a href="https://github.com/chuk-a/chuk-a.github.io">GitHub</a>
   </footer>
 
   <script>
+    // ----- TRANSLATION DATA -----
+    const translations = {
+      en: {
+        title: "UB Weather & Air Quality",
+        desc: "Live data from weather.gov.mn and PM2.5 monitors at multiple embassies in Ulaanbaatar",
+        download_csv: "📥 Download CSV",
+        last_updated: "Last updated: loading…",
+        latest_values: "Loading latest values…",
+        pm_alert: "",
+        pm25: "PM2.5",
+        temperature: "Temperature",
+        humidity: "Humidity",
+        wind: "Wind",
+        wind_benchmarks: "💨 Wind Speed Benchmarks",
+        calm: "Calm:",
+        light_air: "Light Air:",
+        light_breeze: "Light Breeze:",
+        gentle_breeze: "Gentle Breeze:",
+        moderate_breeze: "Moderate Breeze:",
+        fresh_breeze: "Fresh Breeze:",
+        strong_breeze: "Strong Breeze:",
+        near_gale: "Near Gale:",
+        gale_stronger: "Gale or stronger:",
+        footer_desc: "Data from weather.gov.mn & embassies · Updated every 30 min ·",
+        toggle_dark: "Toggle Dark Mode",
+        toggle_compact: "Toggle Compact Mode"
+      },
+      mn: {
+        title: "Улаанбаатарын цаг агаар ба агаарын чанар",
+        desc: "weather.gov.mn болон Улаанбаатар дахь элчин сайдын яамд дахь PM2.5 мэдрэгчүүдийн бодит цагийн мэдээлэл",
+        download_csv: "📥 CSV татах",
+        last_updated: "Сүүлийн шинэчлэл: ачааллаж байна…",
+        latest_values: "Сүүлийн утгуудыг ачааллаж байна…",
+        pm_alert: "",
+        pm25: "PM2.5",
+        temperature: "Температур",
+        humidity: "Чийгшил",
+        wind: "Салхи",
+        wind_benchmarks: "💨 Салхины хурдны ангилал",
+        calm: "Тайван:",
+        light_air: "Хөнгөн салхи:",
+        light_breeze: "Сэрүүн салхи:",
+        gentle_breeze: "Зөөлөн салхи:",
+        moderate_breeze: "Дунд зэргийн салхи:",
+        fresh_breeze: "Шинэхэн салхи:",
+        strong_breeze: "Хүчтэй салхи:",
+        near_gale: "Ширүүн салхи:",
+        gale_stronger: "Ширүүн салхинаас илүү:",
+        footer_desc: "weather.gov.mn болон элчин сайдын яамдаас мэдээлэл авдаг · 30 минут тутам шинэчлэгдэнэ ·",
+        toggle_dark: "Харанхуй горим",
+        toggle_compact: "Компакт загвар"
+      }
+    };
+
+    function setLanguage(lang) {
+      localStorage.setItem("lang", lang);
+      updateLanguage();
+    }
+
+    function updateLanguage() {
+      const lang = localStorage.getItem("lang") || "en";
+      document.querySelectorAll("[data-i18n]").forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if(translations[lang][key] !== undefined) {
+          el.innerHTML = translations[lang][key];
+        }
+      });
+      // Also update dynamic chart labels etc after language change
+      if (typeof updateDynamicText === "function") updateDynamicText();
+    }
+
+    window.setLanguage = setLanguage;
+
+    document.addEventListener("DOMContentLoaded", updateLanguage);
+
+    // ----- PAGE SCRIPTS -----
     function toggleCompact() {
       document.getElementById("chartGrid").classList.toggle("compact");
     }
@@ -171,15 +257,19 @@
 
     function getWindInfo(speed) {
       if (speed == null || isNaN(speed)) return { desc: "", color: "gray" };
-      if (speed < 0.5) return { desc: "Calm", min: 0, max: 0.5, color: "gray" };
-      if (speed <= 1.5) return { desc: "Light Air", min: 0.5, max: 1.5, color: "#7f8c8d" };
-      if (speed <= 3.3) return { desc: "Light Breeze", min: 1.6, max: 3.3, color: "green" };
-      if (speed <= 5.4) return { desc: "Gentle Breeze", min: 3.4, max: 5.4, color: "#27ae60" };
-      if (speed <= 7.9) return { desc: "Moderate Breeze", min: 5.5, max: 7.9, color: "orange" };
-      if (speed <= 10.7) return { desc: "Fresh Breeze", min: 8.0, max: 10.7, color: "#e67e22" };
-      if (speed <= 13.8) return { desc: "Strong Breeze", min: 10.8, max: 13.8, color: "red" };
-      if (speed <= 17.1) return { desc: "Near Gale", min: 13.9, max: 17.1, color: "purple" };
-      return { desc: "Gale or stronger", min: 17.2, max: 25, color: "black" };
+      if (speed < 0.5) return { desc: translations[getLang()]['calm'].replace(":",""), min: 0, max: 0.5, color: "gray" };
+      if (speed <= 1.5) return { desc: translations[getLang()]['light_air'].replace(":",""), min: 0.5, max: 1.5, color: "#7f8c8d" };
+      if (speed <= 3.3) return { desc: translations[getLang()]['light_breeze'].replace(":",""), min: 1.6, max: 3.3, color: "green" };
+      if (speed <= 5.4) return { desc: translations[getLang()]['gentle_breeze'].replace(":",""), min: 3.4, max: 5.4, color: "#27ae60" };
+      if (speed <= 7.9) return { desc: translations[getLang()]['moderate_breeze'].replace(":",""), min: 5.5, max: 7.9, color: "orange" };
+      if (speed <= 10.7) return { desc: translations[getLang()]['fresh_breeze'].replace(":",""), min: 8.0, max: 10.7, color: "#e67e22" };
+      if (speed <= 13.8) return { desc: translations[getLang()]['strong_breeze'].replace(":",""), min: 10.8, max: 13.8, color: "red" };
+      if (speed <= 17.1) return { desc: translations[getLang()]['near_gale'].replace(":",""), min: 13.9, max: 17.1, color: "purple" };
+      return { desc: translations[getLang()]['gale_stronger'].replace(":",""), min: 17.2, max: 25, color: "black" };
+    }
+
+    function getLang() {
+      return localStorage.getItem("lang") || "en";
     }
 
     function updateChartTheme(isDark) {
@@ -239,8 +329,6 @@
 
       const latestIdx = timestamps.length - 1;
       const latest = timestamps[latestIdx];
-      document.getElementById('lastUpdated').textContent = `Last updated: ${latest} (Ulaanbaatar time)`;
-
       const latestTemp = temps[latestIdx];
       const latestFeels = feels[latestIdx];
       const latestHumidity = humidities[latestIdx];
@@ -251,16 +339,25 @@
       const latestYarmag = yarmag[latestIdx];
       const windInfo = getWindInfo(latestWind);
 
+      // Localized last updated
+      const lang = getLang();
+      let lastUpdatedBase = translations[lang]['last_updated'];
+      if (lastUpdatedBase.includes('ачааллаж байна') || lastUpdatedBase.includes('loading')) {
+        lastUpdatedBase = lastUpdatedBase.replace(/ачааллаж байна…|loading…/, `${latest} (Ulaanbaatar time)`);
+      }
+      document.getElementById('lastUpdated').textContent = lastUpdatedBase;
+
+      // Localized value cards
       document.getElementById('latestValues').innerHTML = `
         <div class="value-card">
-          <h3>🌡 Weather</h3>
-          <p class="temp">Temp: ${latestTemp ?? '-'} °C</p>
-          <p class="temp">Feels Like: ${latestFeels ?? '-'} °C</p>
-          <p class="hum">Humidity: ${latestHumidity ?? '-'} %</p>
-          <p class="wind">Wind: ${latestWind ?? '-'} m/s ${latestWind ? `<span style="color:${windInfo.color}">(${windInfo.desc})</span>` : ""}</p>
+          <h3>🌡 ${translations[lang]['title']}</h3>
+          <p class="temp">${translations[lang]['temperature']}: ${latestTemp ?? '-'} °C</p>
+          <p class="temp">${lang === 'mn' ? 'Мэдрэгдэх' : 'Feels Like'}: ${latestFeels ?? '-'} °C</p>
+          <p class="hum">${translations[lang]['humidity']}: ${latestHumidity ?? '-'} %</p>
+          <p class="wind">${translations[lang]['wind']}: ${latestWind ?? '-'} m/s ${latestWind ? `<span style="color:${windInfo.color}">(${windInfo.desc})</span>` : ""}</p>
         </div>
         <div class="value-card">
-          <h3>🌍 UB Air Quality</h3>
+          <h3>🌍 UB ${translations[lang]['pm25']}</h3>
           <p>🇫🇷 French Embassy: <span style="color:${getAQIColor(latestFrench)}">●</span> ${latestFrench ?? '-'} µg/m³</p>
           <p>🇪🇺 EU Delegation: <span style="color:${getAQIColor(latestEU)}">●</span> ${latestEU ?? '-'} µg/m³</p>
           <p>🇨🇿 Czech Embassy: <span style="color:${getAQIColor(latestCzech)}">●</span> ${latestCzech ?? '-'} µg/m³</p>
@@ -268,11 +365,16 @@
         </div>
       `;
 
+      // Localized alert
       let alertMsg = '';
       if ([latestFrench, latestCzech, latestYarmag, latestEU].some(v => v > 55)) {
-        alertMsg = '🚨 Unhealthy air quality. Limit outdoor activity.';
+        alertMsg = lang === 'mn'
+          ? '🚨 Агаарын чанар муу байна. Гадаа байх хугацаагаа хязгаарлаарай.'
+          : '🚨 Unhealthy air quality. Limit outdoor activity.';
       } else if ([latestFrench, latestCzech, latestYarmag, latestEU].some(v => v > 35)) {
-        alertMsg = '⚠️ Air quality may affect sensitive groups.';
+        alertMsg = lang === 'mn'
+          ? '⚠️ Агаарын чанар мэдрэмтгий бүлэг хүмүүст нөлөөлж болзошгүй.'
+          : '⚠️ Air quality may affect sensitive groups.';
       }
       document.getElementById('pmAlert').textContent = alertMsg;
 
@@ -309,18 +411,18 @@
       new Chart(document.getElementById('tempChart'), {
         type: 'line',
         data: { labels: timestamps, datasets: [
-          { label: 'Temperature (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.2)', pointRadius: 2, tension: 0.3, fill: true },
-          { label: 'Feels Like (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.2)', pointRadius: 2, tension: 0.3, fill: true }
+          { label: translations[getLang()]['temperature'] + ' (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.2)', pointRadius: 2, tension: 0.3, fill: true },
+          { label: (getLang() === 'mn' ? 'Мэдрэгдэх' : 'Feels Like') + ' (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.2)', pointRadius: 2, tension: 0.3, fill: true }
         ] },
-        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Temperature (°C)', color: Chart.defaults.color } } } }
+        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['temperature'] + ' (°C)', color: Chart.defaults.color } } } }
       });
 
       // Humidity
       if (Chart.getChart("humidityChart")) Chart.getChart("humidityChart").destroy();
       new Chart(document.getElementById('humidityChart'), {
         type: 'line',
-        data: { labels: timestamps, datasets: [{ label: 'Humidity (%)', data: humidities, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
-        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Humidity (%)', color: Chart.defaults.color } } } }
+        data: { labels: timestamps, datasets: [{ label: translations[getLang()]['humidity'] + ' (%)', data: humidities, borderColor: 'blue', backgroundColor: 'rgba(0,0,255,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
+        options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['humidity'] + ' (%)', color: Chart.defaults.color } } } }
       });
 
       // Wind Speed with benchmarks
@@ -364,13 +466,19 @@
       }
       new Chart(document.getElementById('windChart'), {
         type: 'line',
-        data: { labels: timestamps, datasets: [{ label: 'Wind Speed (m/s)', data: windSpeeds, borderColor: 'teal', backgroundColor: 'rgba(0,128,128,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
+        data: { labels: timestamps, datasets: [{ label: translations[getLang()]['wind'] + ' Speed (m/s)', data: windSpeeds, borderColor: 'teal', backgroundColor: 'rgba(0,128,128,0.2)', pointRadius: 2, tension: 0.3, fill: true }] },
         options: { 
           ...baseOptions, 
           plugins: { ...baseOptions.plugins, annotation: { annotations: windAnnotations } }, 
-          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'Wind Speed (m/s)', color: Chart.defaults.color } } } 
+          scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['wind'] + ' Speed (m/s)', color: Chart.defaults.color } } } 
         }
       });
+    }
+
+    // If language is changed, update dynamic text as well
+    function updateDynamicText() {
+      // Will rerun parseCSV to update dynamic content
+      loadCSV();
     }
 
     loadCSV();
