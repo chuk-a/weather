@@ -261,3 +261,4 @@ timestamp,updated,temperature,feels_like,wind_speed,humidity,pm25_french,pm25_eu
 2025-10-10 10:29,"02:20, Нийслэл, Улаанбаатар",3,3,1,37,28,ERROR,22,28
 2025-10-10 10:41,"02:30, Нийслэл, Улаанбаатар",3,3,1,37,28,ERROR,22,28
 2025-10-10 11:23,ERROR,ERROR,ERROR,ERROR,ERROR,46,ERROR,27,35
+2025-10-10 11:48,"03:40, Нийслэл, Улаанбаатар",6,5,2,32,46,ERROR,27,35
