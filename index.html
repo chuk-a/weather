@@ -113,6 +113,8 @@
       border-radius: 6px;
       border: 1px solid #ccc;
       font-size: 1rem;
+      margin-left: 6px;
+      margin-right: 12px;
     }
   </style>
   <!-- 100% privacy-first analytics -->
@@ -142,6 +144,16 @@
         <option value="daily">Daily</option>
         <option value="monthly">Monthly</option>
         <option value="yearly">Yearly</option>
+      </select>
+
+      <label for="rangeSelect" data-i18n="range_label">Range:</label>
+      <select id="rangeSelect" aria-label="Range selector">
+        <option value="all">All</option>
+        <option value="today">Today</option>
+        <option value="last7">Last 7 days</option>
+        <option value="last30">Last 30 days</option>
+        <option value="thisMonth">This month</option>
+        <option value="thisYear">This year</option>
       </select>
     </div>
 
@@ -207,7 +219,8 @@
         footer_desc: "Data from weather.gov.mn & embassies · Updated every 30 min ·",
         toggle_dark: "Toggle Dark Mode",
         toggle_compact: "Toggle Compact Mode",
-        aggregation_label: "Aggregation:"
+        aggregation_label: "Aggregation:",
+        range_label: "Range:"
       },
       mn: {
         title: "Улаанбаатарын цаг агаар ба агаарын чанар",
@@ -233,7 +246,8 @@
         footer_desc: "weather.gov.mn болон элчин сайдын яамдаас мэдээлэл авдаг · 30 минут тутам шинэчлэгдэнэ ·",
         toggle_dark: "Харанхуй горим",
         toggle_compact: "Компакт загвар",
-        aggregation_label: "Нийлбэр:"
+        aggregation_label: "Нийлбэр:",
+        range_label: "Хүрээ:"
       }
     };
 
@@ -318,11 +332,7 @@
       const textColor = isDark ? '#eee' : '#333';
       const gridColor = isDark ? '#444' : '#ddd';
       Chart.defaults.color = textColor;
-      // keep other defaults, chart scales are configured per chart
-      // Re-render with current aggregation
-      if (rawData) {
-        renderAggregated();
-      }
+      if (rawData) renderAggregated();
     }
 
     function toggleDarkMode() {
@@ -430,7 +440,7 @@
         document.getElementById('pmAlert').textContent = alertMsg;
       }
 
-      // initial render (based on select)
+      // initial render (based on selects)
       renderAggregated();
     }
 
@@ -452,7 +462,7 @@
       const day = String(d.getDate()).padStart(2,'0');
       const hr = String(d.getHours()).padStart(2,'0');
       if (period === 'raw') {
-        // keep original timestamp (or truncated to hour to avoid extreme granularity)
+        // keep original timestamp truncated to hour to avoid extreme granularity
         return `${y}-${m}-${day} ${hr}:00`;
       } else if (period === 'daily') return `${y}-${m}-${day}`;
       else if (period === 'monthly') return `${y}-${m}`;
@@ -468,8 +478,7 @@
       if (!rawKeys || rawKeys.length === 0) return { labels: [], aggregated: seriesArrays.map(()=>[]) };
 
       if (period === 'raw') {
-        // return as-is but possibly reduce identical timestamps (we will treat raw as per-hour string made in makeGroupKey)
-        const labels = rawKeys.map((t, i) => makeGroupKey(t, 'raw'));
+        const labels = rawKeys.map((t) => makeGroupKey(t, 'raw'));
         return { labels, aggregated: seriesArrays.map(arr => arr.map(v => v)) };
       }
 
@@ -494,7 +503,6 @@
       // Sort keys chronologically
       const keys = Array.from(map.keys());
       keys.sort((a,b) => {
-        // convert group keys to Date objects for ordering
         const period = document.getElementById('aggSelect').value || 'raw';
         const dateFor = k => {
           if (period === 'daily') return new Date(k + 'T00:00:00');
@@ -503,6 +511,7 @@
             return new Date(y, m-1, 1);
           }
           if (period === 'yearly') return new Date(Number(k), 0, 1);
+          // fallback: attempt direct parse
           return new Date(k);
         };
         return dateFor(a) - dateFor(b);
@@ -521,12 +530,103 @@
       return { labels, aggregated };
     }
 
+    // Range filtering
+    function parseLabelToDate(label, period) {
+      // period: raw/daily/monthly/yearly
+      try {
+        if (period === 'raw') {
+          // label like "YYYY-MM-DD HH:00" -> convert to ISO
+          const iso = label.replace(' ', 'T') + ':00';
+          const d = new Date(iso);
+          if (!isNaN(d)) return d;
+        } else if (period === 'daily') {
+          const d = new Date(label + 'T00:00:00');
+          if (!isNaN(d)) return d;
+        } else if (period === 'monthly') {
+          const parts = label.split('-');
+          if (parts.length >= 2) {
+            const d = new Date(Number(parts[0]), Number(parts[1]) - 1, 1);
+            if (!isNaN(d)) return d;
+          }
+        } else if (period === 'yearly') {
+          const y = Number(label);
+          if (!isNaN(y)) return new Date(y, 0, 1);
+        }
+      } catch (e) {}
+      // last resort
+      const maybe = new Date(label);
+      return isNaN(maybe) ? null : maybe;
+    }
+
+    function applyRange(labels, aggregatedArrays) {
+      const range = document.getElementById('rangeSelect').value || 'all';
+      const period = document.getElementById('aggSelect').value || 'raw';
+      if (range === 'all') return { labels, aggregatedArrays };
+
+      const now = new Date();
+      const todayStrDaily = makeGroupKey(now.toISOString(), 'daily'); // YYYY-MM-DD
+      const todayStrMonthly = makeGroupKey(now.toISOString(), 'monthly'); // YYYY-MM
+      const todayStrYearly = makeGroupKey(now.toISOString(), 'yearly'); // YYYY
+
+      const keepIndices = [];
+      for (let i = 0; i < labels.length; i++) {
+        const lbl = labels[i];
+        const lblDate = parseLabelToDate(lbl, period);
+        if (!lblDate && range !== 'all') {
+          // fallback textual compare for daily/monthly/yearly
+          if (range === 'today' && (lbl === todayStrDaily || lbl === todayStrMonthly || lbl === todayStrYearly)) {
+            keepIndices.push(i);
+          }
+          continue;
+        }
+        if (range === 'today') {
+          if (period === 'daily') {
+            if (lbl === todayStrDaily) keepIndices.push(i);
+          } else if (period === 'monthly') {
+            if (lbl === todayStrMonthly) keepIndices.push(i);
+          } else if (period === 'yearly') {
+            if (lbl === todayStrYearly) keepIndices.push(i);
+          } else {
+            // raw: same day
+            if (lblDate && lblDate.getFullYear() === now.getFullYear() && lblDate.getMonth() === now.getMonth() && lblDate.getDate() === now.getDate()) {
+              keepIndices.push(i);
+            }
+          }
+        } else if (range === 'last7' || range === 'last30') {
+          const days = range === 'last7' ? 7 : 30;
+          if (!lblDate) continue;
+          const diffMs = now - lblDate;
+          const diffDays = diffMs / (1000 * 60 * 60 * 24);
+          if (diffDays >= 0 && diffDays < days) keepIndices.push(i);
+        } else if (range === 'thisMonth') {
+          if (!lblDate) continue;
+          if (lblDate.getFullYear() === now.getFullYear() && lblDate.getMonth() === now.getMonth()) keepIndices.push(i);
+        } else if (range === 'thisYear') {
+          if (!lblDate) continue;
+          if (lblDate.getFullYear() === now.getFullYear()) keepIndices.push(i);
+        }
+      }
+
+      // if nothing matched, fall back to last label so chart isn't empty
+      if (keepIndices.length === 0) {
+        keepIndices.push(labels.length - 1);
+      }
+
+      const newLabels = [];
+      const newAggregated = aggregatedArrays.map(() => []);
+      for (const idx of keepIndices) {
+        newLabels.push(labels[idx]);
+        for (let s = 0; s < aggregatedArrays.length; s++) {
+          newAggregated[s].push(aggregatedArrays[s][idx]);
+        }
+      }
+      return { labels: newLabels, aggregatedArrays: newAggregated };
+    }
+
     function renderAggregated() {
       if (!rawData) return;
       const { timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds } = rawData;
       const { labels, aggregated } = aggregate(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds);
-      // aggregated order: [french, eu, czech, yarmag, temps, feels, humidities, windSpeeds]
-      // slice them back
       const frenchA = aggregated[0] || [];
       const euA = aggregated[1] || [];
       const czechA = aggregated[2] || [];
@@ -536,11 +636,22 @@
       const humidA = aggregated[6] || [];
       const windA = aggregated[7] || [];
 
+      // Apply range filter
+      const { labels: finalLabels, aggregatedArrays } = applyRange(labels, [frenchA, euA, czechA, yarmagA, tempsA, feelsA, humidA, windA]);
+      const frenchF = aggregatedArrays[0];
+      const euF = aggregatedArrays[1];
+      const czechF = aggregatedArrays[2];
+      const yarmagF = aggregatedArrays[3];
+      const tempsF = aggregatedArrays[4];
+      const feelsF = aggregatedArrays[5];
+      const humidF = aggregatedArrays[6];
+      const windF = aggregatedArrays[7];
+
       // Estimate windInfo based on most recent aggregated value
-      const lastWind = windA.length ? windA[windA.length-1] : null;
+      const lastWind = windF.length ? windF[windF.length-1] : null;
       const windInfo = getWindInfo(lastWind);
 
-      renderCharts(labels, frenchA, euA, czechA, yarmagA, tempsA, feelsA, humidA, windA, windInfo);
+      renderCharts(finalLabels, frenchF, euF, czechF, yarmagF, tempsF, feelsF, humidF, windF, windInfo);
     }
 
     function renderCharts(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds, windInfo) {
@@ -638,13 +749,15 @@
     }
 
     function updateDynamicText() {
-      // re-render with current aggregation if language changed
       updateLangBtn();
       renderAggregated();
     }
 
-    // listen for aggregation changes
+    // listen for aggregation & range changes
     document.getElementById('aggSelect').addEventListener('change', function() {
+      renderAggregated();
+    });
+    document.getElementById('rangeSelect').addEventListener('change', function() {
       renderAggregated();
     });
 
