@@ -4429,3 +4429,4 @@ timestamp,updated,temperature,feels_like,wind_speed,humidity,pm25_french,pm25_eu
 2025-12-15 14:27,"06:00, Нийслэл, Улаанбаатар",-12,-16,2,51,49,ERROR,32,70
 2025-12-15 14:57,"06:50, Нийслэл, Улаанбаатар",-11,-15,1,50,49,ERROR,32,70
 2025-12-15 15:23,"06:50, Нийслэл, Улаанбаатар",-11,-15,1,50,42,ERROR,27,62
+2025-12-15 15:43,ERROR,ERROR,ERROR,ERROR,ERROR,ERROR,ERROR,,62
