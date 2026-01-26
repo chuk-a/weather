@@ -192,30 +192,60 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                     ))}
                 </TableHeader>
                 <TableBody>
-                    {table.getRowModel().rows?.length ? (
-                        table.getRowModel().rows.map((row) => (
-                            <TableRow
-                                key={row.id}
-                                onClick={() => row.toggleSelected()}
-                                className={cn(
-                                    "border-border/40 hover:bg-muted/50 transition-colors h-11 cursor-pointer",
-                                    row.getIsSelected() && "bg-muted/40"
-                                )}
-                            >
-                                {row.getVisibleCells().map((cell) => (
-                                    <TableCell key={cell.id} className="px-5 py-0">
-                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                    </TableCell>
-                                ))}
+                    {(() => {
+                        const rows = table.getRowModel().rows;
+                        if (!rows?.length) return (
+                            <TableRow>
+                                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
+                                    SEARCHING_FOR_SIGNALS...
+                                </TableCell>
                             </TableRow>
-                        ))
-                    ) : (
-                        <TableRow>
-                            <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
-                                SEARCHING_FOR_SIGNALS...
-                            </TableCell>
-                        </TableRow>
-                    )}
+                        );
+
+                        const activeRows = rows.filter(r => r.original.status === 'live' || r.original.status === 'delayed');
+                        const staleRows = rows.filter(r => r.original.status === 'stale' || r.original.status === 'offline');
+
+                        const renderRows = (rowGroup, title, colorClass) => (
+                            <>
+                                {rowGroup.length > 0 && (
+                                    <TableRow className="bg-muted/10 hover:bg-muted/10 border-y border-border/20 pointer-events-none">
+                                        <TableCell colSpan={columns.length} className="py-1.5 px-5">
+                                            <div className="flex items-center gap-2">
+                                                <div className={cn("w-1 h-3 rounded-full", colorClass)} />
+                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
+                                                    {title} <span className="ml-1 opacity-50">[{rowGroup.length} NODES]</span>
+                                                </span>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                )}
+                                {rowGroup.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        onClick={() => row.toggleSelected()}
+                                        className={cn(
+                                            "border-border/40 hover:bg-muted/50 transition-colors h-11 cursor-pointer",
+                                            row.getIsSelected() && "bg-muted/40",
+                                            (row.original.status === 'stale' || row.original.status === 'offline') && "opacity-60"
+                                        )}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id} className="px-5 py-0">
+                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))}
+                            </>
+                        );
+
+                        return (
+                            <>
+                                {renderRows(activeRows, "Active Signals", "bg-emerald-500")}
+                                {renderRows(staleRows, "Stale / Offline Nodes", "bg-red-500")}
+                            </>
+                        );
+                    })()}
                 </TableBody>
             </Table>
         </div>
