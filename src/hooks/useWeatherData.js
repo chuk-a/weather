@@ -207,7 +207,7 @@ export function useWeatherData() {
                     if (!isNaN(d.getTime())) {
                         const diffHrs = (now - d) / (1000 * 60 * 60);
                         if (diffHrs < 0.5) status = 'live';
-                        else if (diffHrs < 3) status = 'delayed'; // 3 hours lenience
+                        else if (diffHrs < 2) status = 'delayed'; // Strict 2-hour window
                         else status = 'stale';
                     }
                 } catch (e) {
@@ -224,18 +224,18 @@ export function useWeatherData() {
             };
         });
 
-        // Use any station that has a value, even if it's stale (better than nothing)
+        // Strict Filtering: Only include stations updated within the last 2 hours (live/delayed)
         const currentVals = processedStations
-            .filter(s => s.val != null)
+            .filter(s => (s.status === 'live' || s.status === 'delayed') && s.val != null)
             .map(s => s.val);
 
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
             : null;
 
-        // Severe disconnection: Only hide if data is > 12 hours old or null
+        // Severe disconnection: Only hide if NO active stations exist
         const lastTs = new Date(data.timestamps[idx]);
-        const isCompletelyDead = (now - lastTs) / (1000 * 60 * 60) > 12;
+        const isCompletelyDead = (now - lastTs) / (1000 * 60 * 60) > 24; // Keep historical view if < 24h
 
         return {
             lastUpdated: data.timestamps[idx],
