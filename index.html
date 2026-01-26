@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title data-i18n="title">UB Weather & Air Quality</title>
@@ -9,23 +10,55 @@
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f9f9f9; color: #333; margin: 0; padding: 0; }
-    header, footer { text-align: center; padding: 10px 0; background: #eee; }
-    nav a { margin: 0 10px; text-decoration: none; color: #0077cc; }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f9f9f9;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+
+    header,
+    footer {
+      text-align: center;
+      padding: 10px 0;
+      background: #eee;
+    }
+
+    nav a {
+      margin: 0 10px;
+      text-decoration: none;
+      color: #0077cc;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 20px;
+    }
 
     .grid {
       display: grid;
       grid-template-columns: 1fr;
       gap: 40px;
     }
+
     @media (min-width: 768px) and (max-width: 1199px) {
-      .grid { grid-template-columns: repeat(2, 1fr); align-items: stretch; }
+      .grid {
+        grid-template-columns: repeat(2, 1fr);
+        align-items: stretch;
+      }
     }
+
     @media (min-width: 1200px) {
-      .grid { grid-template-columns: 1fr; }
+      .grid {
+        grid-template-columns: 1fr;
+      }
     }
-    .grid.compact { grid-template-columns: repeat(2, 1fr) !important; }
+
+    .grid.compact {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
 
     .chart-container {
       display: flex;
@@ -39,17 +72,35 @@
       padding: 10px;
       box-sizing: border-box;
     }
+
     .chart-container canvas {
       flex: 1;
       display: block;
       width: 100% !important;
       height: 100% !important;
     }
-    @media (min-width: 768px) { .chart-container { height: 350px; } }
-    @media (min-width: 1200px) { .chart-container { height: 450px; } }
 
-    h1, p { text-align: center; }
-    #lastUpdated { font-weight: bold; margin-top: 10px; }
+    @media (min-width: 768px) {
+      .chart-container {
+        height: 350px;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .chart-container {
+        height: 450px;
+      }
+    }
+
+    h1,
+    p {
+      text-align: center;
+    }
+
+    #lastUpdated {
+      font-weight: bold;
+      margin-top: 10px;
+    }
 
     #latestValues {
       display: flex;
@@ -59,33 +110,74 @@
       margin: 20px auto;
       max-width: 900px;
     }
+
     .value-card {
       flex: 1 1 200px;
       background: white;
       border-radius: 10px;
       padding: 15px 20px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       text-align: center;
     }
+
     .value-card h3 {
       margin: 0 0 10px;
       font-size: 1.1rem;
       font-weight: 600;
     }
-    .value-card p { margin: 4px 0; font-size: 1rem; }
-    .temp { color: #e74c3c; }
-    .hum { color: #3498db; }
-    .wind { color: #16a085; }
 
-    #pmAlert { font-weight: bold; color: red; margin-bottom: 20px; text-align: center; }
+    .value-card p {
+      margin: 4px 0;
+      font-size: 1rem;
+    }
 
-    .dark { background: #121212; color: #eee; }
-    .dark header, .dark footer { background: #1e1e1e; }
-    .dark .chart-container { background: #1e1e1e; }
-    .dark .value-card { background: #1e1e1e; box-shadow: 0 2px 6px rgba(255,255,255,0.05); }
-    .dark a { color: #4da6ff; }
+    .temp {
+      color: #e74c3c;
+    }
 
-    .btn-group { text-align: center; margin-bottom: 20px; }
+    .hum {
+      color: #3498db;
+    }
+
+    .wind {
+      color: #16a085;
+    }
+
+    #pmAlert {
+      font-weight: bold;
+      color: red;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .dark {
+      background: #121212;
+      color: #eee;
+    }
+
+    .dark header,
+    .dark footer {
+      background: #1e1e1e;
+    }
+
+    .dark .chart-container {
+      background: #1e1e1e;
+    }
+
+    .dark .value-card {
+      background: #1e1e1e;
+      box-shadow: 0 2px 6px rgba(255, 255, 255, 0.05);
+    }
+
+    .dark a {
+      color: #4da6ff;
+    }
+
+    .btn-group {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
     .btn-group .toggle-btn {
       display: inline-block;
       margin: 0 5px;
@@ -99,15 +191,20 @@
       min-width: 120px;
       transition: background 0.2s;
     }
+
     .btn-group .toggle-btn:hover {
       background: #005fa3;
     }
-    #langBtn { min-width: 110px; }
+
+    #langBtn {
+      min-width: 110px;
+    }
 
     .controls {
       text-align: center;
       margin-bottom: 12px;
     }
+
     .controls select {
       padding: 6px 10px;
       border-radius: 6px;
@@ -118,8 +215,9 @@
     }
   </style>
   <!-- 100% privacy-first analytics -->
-<script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+  <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 </head>
+
 <body>
   <header>
     <nav>
@@ -132,9 +230,12 @@
 
   <div class="container">
     <div class="btn-group">
-      <button class="toggle-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 <span data-i18n="toggle_dark">Toggle Dark Mode</span></button>
-      <button class="toggle-btn" onclick="toggleCompact()" id="compactBtn">🗂 <span data-i18n="toggle_compact">Toggle Compact Mode</span></button>
-      <button class="toggle-btn" onclick="toggleLanguage()" id="langBtn" aria-label="Language Toggle">🇬🇧 English</button>
+      <button class="toggle-btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙 <span data-i18n="toggle_dark">Toggle
+          Dark Mode</span></button>
+      <button class="toggle-btn" onclick="toggleCompact()" id="compactBtn">🗂 <span data-i18n="toggle_compact">Toggle
+          Compact Mode</span></button>
+      <button class="toggle-btn" onclick="toggleLanguage()" id="langBtn" aria-label="Language Toggle">🇬🇧
+        English</button>
     </div>
 
     <div class="controls">
@@ -287,7 +388,7 @@
     }
     window.toggleLanguage = toggleLanguage;
     window.updateLangBtn = updateLangBtn;
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
       updateLangBtn();
       updateLanguage();
     });
@@ -317,15 +418,15 @@
     function getWindInfo(speed) {
       if (speed == null || isNaN(speed)) return { desc: "", color: "gray" };
       const lang = getLang();
-      if (speed < 0.5) return { desc: translations[lang]['calm'].replace(":",""), min: 0, max: 0.5, color: "gray" };
-      if (speed <= 1.5) return { desc: translations[lang]['light_air'].replace(":",""), min: 0.5, max: 1.5, color: "#7f8c8d" };
-      if (speed <= 3.3) return { desc: translations[lang]['light_breeze'].replace(":",""), min: 1.6, max: 3.3, color: "green" };
-      if (speed <= 5.4) return { desc: translations[lang]['gentle_breeze'].replace(":",""), min: 3.4, max: 5.4, color: "#27ae60" };
-      if (speed <= 7.9) return { desc: translations[lang]['moderate_breeze'].replace(":",""), min: 5.5, max: 7.9, color: "orange" };
-      if (speed <= 10.7) return { desc: translations[lang]['fresh_breeze'].replace(":",""), min: 8.0, max: 10.7, color: "#e67e22" };
-      if (speed <= 13.8) return { desc: translations[lang]['strong_breeze'].replace(":",""), min: 10.8, max: 13.8, color: "red" };
-      if (speed <= 17.1) return { desc: translations[lang]['near_gale'].replace(":",""), min: 13.9, max: 17.1, color: "purple" };
-      return { desc: translations[lang]['gale_stronger'].replace(":",""), min: 17.2, max: 25, color: "black" };
+      if (speed < 0.5) return { desc: translations[lang]['calm'].replace(":", ""), min: 0, max: 0.5, color: "gray" };
+      if (speed <= 1.5) return { desc: translations[lang]['light_air'].replace(":", ""), min: 0.5, max: 1.5, color: "#7f8c8d" };
+      if (speed <= 3.3) return { desc: translations[lang]['light_breeze'].replace(":", ""), min: 1.6, max: 3.3, color: "green" };
+      if (speed <= 5.4) return { desc: translations[lang]['gentle_breeze'].replace(":", ""), min: 3.4, max: 5.4, color: "#27ae60" };
+      if (speed <= 7.9) return { desc: translations[lang]['moderate_breeze'].replace(":", ""), min: 5.5, max: 7.9, color: "orange" };
+      if (speed <= 10.7) return { desc: translations[lang]['fresh_breeze'].replace(":", ""), min: 8.0, max: 10.7, color: "#e67e22" };
+      if (speed <= 13.8) return { desc: translations[lang]['strong_breeze'].replace(":", ""), min: 10.8, max: 13.8, color: "red" };
+      if (speed <= 17.1) return { desc: translations[lang]['near_gale'].replace(":", ""), min: 13.9, max: 17.1, color: "purple" };
+      return { desc: translations[lang]['gale_stronger'].replace(":", ""), min: 17.2, max: 25, color: "black" };
     }
 
     function updateChartTheme(isDark) {
@@ -368,7 +469,7 @@
       const data = result.data;
 
       const timestamps = [], temps = [], feels = [], humidities = [], windSpeeds = [];
-      const french = [], eu = [], czech = [], yarmag = [];
+      const french = [], eu = [], czech = [], yarmag = [], chd9 = [], mandakh = [], chd6 = [], airv = [];
 
       data.forEach(row => {
         timestamps.push(row.timestamp);
@@ -380,10 +481,14 @@
         eu.push(cleanNumber(row.pm25_eu));
         czech.push(cleanNumber(row.pm25_czech));
         yarmag.push(cleanNumber(row.pm25_yarmag));
+        chd9.push(cleanNumber(row.pm25_chd9));
+        mandakh.push(cleanNumber(row.pm25_mandakh));
+        chd6.push(cleanNumber(row.pm25_chd6));
+        airv.push(cleanNumber(row.pm25_airv));
       });
 
       rawData = {
-        timestamps, temps, feels, humidities, windSpeeds, french, eu, czech, yarmag
+        timestamps, temps, feels, humidities, windSpeeds, french, eu, czech, yarmag, chd9, mandakh, chd6, airv
       };
 
       // Update dynamic text and latest values using the most recent raw point
@@ -397,7 +502,12 @@
         const latestFrench = french[latestIdx];
         const latestEU = eu[latestIdx];
         const latestCzech = czech[latestIdx];
+
         const latestYarmag = yarmag[latestIdx];
+        const latestChd9 = chd9[latestIdx];
+        const latestMandakh = mandakh[latestIdx];
+        const latestChd6 = chd6[latestIdx];
+        const latestAirv = airv[latestIdx];
         const windInfo = getWindInfo(latestWind);
 
         // Localized last updated
@@ -423,16 +533,21 @@
             <p>🇪🇺 EU Delegation: <span style="color:${getAQIColor(latestEU)}">●</span> ${latestEU ?? '-'} µg/m³</p>
             <p>🇨🇿 Czech Embassy: <span style="color:${getAQIColor(latestCzech)}">●</span> ${latestCzech ?? '-'} µg/m³</p>
             <p>🏙 Yarmag: <span style="color:${getAQIColor(latestYarmag)}">●</span> ${latestYarmag ?? '-'} µg/m³</p>
+            <p>🏙 CHD 9: <span style="color:${getAQIColor(latestChd9)}">●</span> ${latestChd9 ?? '-'} µg/m³</p>
+            <p>🏙 Mandakh: <span style="color:${getAQIColor(latestMandakh)}">●</span> ${latestMandakh ?? '-'} µg/m³</p>
+            <p>🏙 CHD 6: <span style="color:${getAQIColor(latestChd6)}">●</span> ${latestChd6 ?? '-'} µg/m³</p>
+            <p>🏙 Air V: <span style="color:${getAQIColor(latestAirv)}">●</span> ${latestAirv ?? '-'} µg/m³</p>
           </div>
         `;
 
         // Localized alert
+        // Localized alert
         let alertMsg = '';
-        if ([latestFrench, latestCzech, latestYarmag, latestEU].some(v => v > 55)) {
+        if ([latestFrench, latestCzech, latestYarmag, latestEU, latestChd9, latestMandakh, latestChd6, latestAirv].some(v => v > 55)) {
           alertMsg = lang === 'mn'
             ? '🚨 Агаарын чанар муу байна. Гадаа байх хугацаагаа хязгаарлаарай.'
             : '🚨 Unhealthy air quality. Limit outdoor activity.';
-        } else if ([latestFrench, latestCzech, latestYarmag, latestEU].some(v => v > 35)) {
+        } else if ([latestFrench, latestCzech, latestYarmag, latestEU, latestChd9, latestMandakh, latestChd6, latestAirv].some(v => v > 35)) {
           alertMsg = lang === 'mn'
             ? '⚠️ Агаарын чанар мэдрэмтгий бүлэг хүмүүст нөлөөлж болзошгүй.'
             : '⚠️ Air quality may affect sensitive groups.';
@@ -453,14 +568,14 @@
         const candidate = String(ts).slice(0, 10);
         if (period === 'raw') return ts;
         if (period === 'daily') return candidate;
-        if (period === 'monthly') return candidate.slice(0,7);
-        if (period === 'yearly') return candidate.slice(0,4);
+        if (period === 'monthly') return candidate.slice(0, 7);
+        if (period === 'yearly') return candidate.slice(0, 4);
         return ts;
       }
       const y = d.getFullYear();
-      const m = String(d.getMonth()+1).padStart(2,'0');
-      const day = String(d.getDate()).padStart(2,'0');
-      const hr = String(d.getHours()).padStart(2,'0');
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      const hr = String(d.getHours()).padStart(2, '0');
       if (period === 'raw') {
         // keep original timestamp truncated to hour to avoid extreme granularity
         return `${y}-${m}-${day} ${hr}:00`;
@@ -475,7 +590,7 @@
       // seriesArrays: each is array of numeric or null
       // returns { labels: [...], aggregated: [series1Arr, series2Arr, ...] }
       const period = document.getElementById('aggSelect').value || 'raw';
-      if (!rawKeys || rawKeys.length === 0) return { labels: [], aggregated: seriesArrays.map(()=>[]) };
+      if (!rawKeys || rawKeys.length === 0) return { labels: [], aggregated: seriesArrays.map(() => []) };
 
       if (period === 'raw') {
         const labels = rawKeys.map((t) => makeGroupKey(t, 'raw'));
@@ -487,11 +602,11 @@
         const gk = makeGroupKey(rawKeys[i], period);
         if (!map.has(gk)) {
           // initialize accumulator for each series: sum, count
-          const acc = seriesArrays.map(() => ({sum:0, count:0}));
+          const acc = seriesArrays.map(() => ({ sum: 0, count: 0 }));
           map.set(gk, acc);
         }
         const acc = map.get(gk);
-        for (let s=0; s<seriesArrays.length; s++) {
+        for (let s = 0; s < seriesArrays.length; s++) {
           const v = seriesArrays[s][i];
           if (v != null && !isNaN(v)) {
             acc[s].sum += v;
@@ -502,13 +617,13 @@
 
       // Sort keys chronologically
       const keys = Array.from(map.keys());
-      keys.sort((a,b) => {
+      keys.sort((a, b) => {
         const period = document.getElementById('aggSelect').value || 'raw';
         const dateFor = k => {
           if (period === 'daily') return new Date(k + 'T00:00:00');
           if (period === 'monthly') {
-            const [y,m] = k.split('-').map(Number);
-            return new Date(y, m-1, 1);
+            const [y, m] = k.split('-').map(Number);
+            return new Date(y, m - 1, 1);
           }
           if (period === 'yearly') return new Date(Number(k), 0, 1);
           // fallback: attempt direct parse
@@ -522,9 +637,9 @@
       for (const k of keys) {
         labels.push(k);
         const acc = map.get(k);
-        for (let s=0; s<acc.length; s++) {
-          const {sum, count} = acc[s];
-          aggregated[s].push(count>0 ? (sum / count) : null);
+        for (let s = 0; s < acc.length; s++) {
+          const { sum, count } = acc[s];
+          aggregated[s].push(count > 0 ? (sum / count) : null);
         }
       }
       return { labels, aggregated };
@@ -552,7 +667,7 @@
           const y = Number(label);
           if (!isNaN(y)) return new Date(y, 0, 1);
         }
-      } catch (e) {}
+      } catch (e) { }
       // last resort
       const maybe = new Date(label);
       return isNaN(maybe) ? null : maybe;
@@ -625,36 +740,44 @@
 
     function renderAggregated() {
       if (!rawData) return;
-      const { timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds } = rawData;
-      const { labels, aggregated } = aggregate(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds);
+      const { timestamps, french, eu, czech, yarmag, chd9, mandakh, chd6, airv, temps, feels, humidities, windSpeeds } = rawData;
+      const { labels, aggregated } = aggregate(timestamps, french, eu, czech, yarmag, chd9, mandakh, chd6, airv, temps, feels, humidities, windSpeeds);
       const frenchA = aggregated[0] || [];
       const euA = aggregated[1] || [];
       const czechA = aggregated[2] || [];
       const yarmagA = aggregated[3] || [];
-      const tempsA = aggregated[4] || [];
-      const feelsA = aggregated[5] || [];
-      const humidA = aggregated[6] || [];
-      const windA = aggregated[7] || [];
+      const chd9A = aggregated[4] || [];
+      const mandakhA = aggregated[5] || [];
+      const chd6A = aggregated[6] || [];
+      const airvA = aggregated[7] || [];
+      const tempsA = aggregated[8] || [];
+      const feelsA = aggregated[9] || [];
+      const humidA = aggregated[10] || [];
+      const windA = aggregated[11] || [];
 
       // Apply range filter
-      const { labels: finalLabels, aggregatedArrays } = applyRange(labels, [frenchA, euA, czechA, yarmagA, tempsA, feelsA, humidA, windA]);
+      const { labels: finalLabels, aggregatedArrays } = applyRange(labels, [frenchA, euA, czechA, yarmagA, chd9A, mandakhA, chd6A, airvA, tempsA, feelsA, humidA, windA]);
       const frenchF = aggregatedArrays[0];
       const euF = aggregatedArrays[1];
       const czechF = aggregatedArrays[2];
       const yarmagF = aggregatedArrays[3];
-      const tempsF = aggregatedArrays[4];
-      const feelsF = aggregatedArrays[5];
-      const humidF = aggregatedArrays[6];
-      const windF = aggregatedArrays[7];
+      const chd9F = aggregatedArrays[4];
+      const mandakhF = aggregatedArrays[5];
+      const chd6F = aggregatedArrays[6];
+      const airvF = aggregatedArrays[7];
+      const tempsF = aggregatedArrays[8];
+      const feelsF = aggregatedArrays[9];
+      const humidF = aggregatedArrays[10];
+      const windF = aggregatedArrays[11];
 
       // Estimate windInfo based on most recent aggregated value
-      const lastWind = windF.length ? windF[windF.length-1] : null;
+      const lastWind = windF.length ? windF[windF.length - 1] : null;
       const windInfo = getWindInfo(lastWind);
 
-      renderCharts(finalLabels, frenchF, euF, czechF, yarmagF, tempsF, feelsF, humidF, windF, windInfo);
+      renderCharts(finalLabels, frenchF, euF, czechF, yarmagF, chd9F, mandakhF, chd6F, airvF, tempsF, feelsF, humidF, windF, windInfo);
     }
 
-    function renderCharts(timestamps, french, eu, czech, yarmag, temps, feels, humidities, windSpeeds, windInfo) {
+    function renderCharts(timestamps, french, eu, czech, yarmag, chd9, mandakh, chd6, airv, temps, feels, humidities, windSpeeds, windInfo) {
       const baseOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -670,12 +793,18 @@
       if (Chart.getChart("pmChart")) Chart.getChart("pmChart").destroy();
       new Chart(document.getElementById('pmChart'), {
         type: 'line',
-        data: { labels: timestamps, datasets: [
-          { label: 'French Embassy PM2.5', data: french, borderColor: 'rgba(255,99,132,1)', backgroundColor: 'rgba(255,99,132,0.2)', pointRadius: 3, tension: 0.3, fill: true },
-          { label: 'EU PM2.5', data: eu, borderColor: 'purple', backgroundColor: 'rgba(128,0,128,0.2)', pointRadius: 3, tension: 0.3, fill: true },
-          { label: 'Czech Embassy PM2.5', data: czech, borderColor: 'rgba(54,162,235,1)', backgroundColor: 'rgba(54,162,235,0.2)', pointRadius: 3, tension: 0.3, fill: true },
-          { label: 'Yarmag Garden City PM2.5', data: yarmag, borderColor: 'rgba(75,192,192,1)', backgroundColor: 'rgba(75,192,192,0.2)', pointRadius: 3, tension: 0.3, fill: true }
-        ] },
+        data: {
+          labels: timestamps, datasets: [
+            { label: 'French Embassy PM2.5', data: french, borderColor: 'rgba(255,99,132,1)', backgroundColor: 'rgba(255,99,132,0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'EU PM2.5', data: eu, borderColor: 'purple', backgroundColor: 'rgba(128,0,128,0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'Czech Embassy PM2.5', data: czech, borderColor: 'rgba(54,162,235,1)', backgroundColor: 'rgba(54,162,235,0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'Yarmag Garden City PM2.5', data: yarmag, borderColor: 'rgba(75,192,192,1)', backgroundColor: 'rgba(75,192,192,0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'CHD 9 Khoroo PM2.5', data: chd9, borderColor: 'rgba(255, 159, 64, 1)', backgroundColor: 'rgba(255, 159, 64, 0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'Mandakh Naran Tuv PM2.5', data: mandakh, borderColor: 'rgba(255, 205, 86, 1)', backgroundColor: 'rgba(255, 205, 86, 0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'CHD 6 Horoo PM2.5', data: chd6, borderColor: 'rgba(201, 203, 207, 1)', backgroundColor: 'rgba(201, 203, 207, 0.2)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: 'Air V PM2.5', data: airv, borderColor: 'rgba(50, 200, 50, 1)', backgroundColor: 'rgba(50, 200, 50, 0.2)', pointRadius: 3, tension: 0.3, fill: true }
+          ]
+        },
         options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: 'PM2.5 (µg/m³)', color: Chart.defaults.color } } } }
       });
 
@@ -683,10 +812,12 @@
       if (Chart.getChart("tempChart")) Chart.getChart("tempChart").destroy();
       new Chart(document.getElementById('tempChart'), {
         type: 'line',
-        data: { labels: timestamps, datasets: [
-          { label: translations[getLang()]['temperature'] + ' (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.15)', pointRadius: 3, tension: 0.3, fill: true },
-          { label: (getLang() === 'mn' ? 'Мэдрэгдэх' : 'Feels Like') + ' (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.15)', pointRadius: 3, tension: 0.3, fill: true }
-        ] },
+        data: {
+          labels: timestamps, datasets: [
+            { label: translations[getLang()]['temperature'] + ' (°C)', data: temps, borderColor: 'red', backgroundColor: 'rgba(255,0,0,0.15)', pointRadius: 3, tension: 0.3, fill: true },
+            { label: (getLang() === 'mn' ? 'Мэдрэгдэх' : 'Feels Like') + ' (°C)', data: feels, borderColor: 'orange', backgroundColor: 'rgba(255,165,0,0.15)', pointRadius: 3, tension: 0.3, fill: true }
+          ]
+        },
         options: { ...baseOptions, scales: { ...baseOptions.scales, y: { ...baseOptions.scales.y, title: { display: true, text: translations[getLang()]['temperature'] + ' (°C)', color: Chart.defaults.color } } } }
       });
 
@@ -754,10 +885,10 @@
     }
 
     // listen for aggregation & range changes
-    document.getElementById('aggSelect').addEventListener('change', function() {
+    document.getElementById('aggSelect').addEventListener('change', function () {
       renderAggregated();
     });
-    document.getElementById('rangeSelect').addEventListener('change', function() {
+    document.getElementById('rangeSelect').addEventListener('change', function () {
       renderAggregated();
     });
 
@@ -765,4 +896,5 @@
     setInterval(loadCSV, 1800000);
   </script>
 </body>
+
 </html>
