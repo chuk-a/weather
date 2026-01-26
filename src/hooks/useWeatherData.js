@@ -126,6 +126,31 @@ export function useWeatherData() {
         setLoading(false);
     };
 
+    const getFilteredData = (range) => {
+        if (!data || range === 'all') return data;
+
+        const now = new Date();
+        const days = range === 'today' ? 1 : (range === 'last7' ? 7 : 30);
+        const ms = days * 24 * 60 * 60 * 1000;
+        const cutoff = new Date(now.getTime() - ms);
+
+        let start = 0;
+        for (let i = data.timestamps.length - 1; i >= 0; i--) {
+            if (new Date(data.timestamps[i]) < cutoff) {
+                start = i + 1;
+                break;
+            }
+        }
+
+        if (start <= 0) return data;
+
+        const sliced = {};
+        Object.keys(data).forEach(k => {
+            sliced[k] = data[k].slice(start);
+        });
+        return sliced;
+    };
+
     const getLatestMetrics = () => {
         if (!data) return null;
 
