@@ -106,8 +106,8 @@ def clean(val, is_time=False):
              return "OFFLINE"
 
         # Standard cleaning for numbers/units
-        # Extract only the numeric part if it's a value
-        num_match = re.search(r"(\d+(\.\d+)?)", val)
+        # Extract only the numeric part if it's a value (preserving negative sign)
+        num_match = re.search(r"(-?\d+(\.\d+)?)", val)
         if num_match:
             return num_match.group(1)
 

@@ -121,22 +121,18 @@ function App() {
                     <MetricCard
                         title="City Concentration"
                         value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
-                        unit={metrics?.isOffline ? "SIGNAL" : "µg/m³"}
-                        desc={metrics?.isOffline ? "No fresh data found from UB networks in last 2 hours." : healthData?.level + ": " + healthData?.advice}
-                        color={metrics?.isOffline ? "text-muted-foreground" : healthData?.color}
-                        icon={<AirRadialChart value={metrics?.avgAQI} />}
-                        isSplit={true}
+                        unit="µg/m³"
+                        trend={metrics?.avgAQI > 50 ? "up" : "down"}
+                        status={metrics?.avgAQI > 150 ? "emergency" : "normal"}
                     />
                     <MetricCard
-                        title="Health Safeguard"
-                        value={healthData?.mask ? "REQUIRED" : "OPTIONAL"}
-                        unit="MASK"
-                        desc={healthData?.mask ? "Extreme particulates detected" : "Atmospheric clarity optimal"}
-                        color={healthData?.mask ? "text-orange-500" : "text-emerald-500"}
-                        icon={<ShieldCheck className="w-4 h-4 text-blue-500 opacity-20" />}
+                        title="Ambient Temperature"
+                        value={metrics?.temp}
+                        unit="°C"
+                        trend="stable"
                     />
                     <MetricCard
-                        title="Wind Plume Drift"
+                        title="Wind Velocity"
                         value={metrics?.wind}
                         unit="m/s"
                         desc="Blowing North-West"

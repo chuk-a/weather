@@ -181,6 +181,9 @@ export function useWeatherData() {
         };
 
         const now = new Date();
+        const year = now.getFullYear();
+        const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+
         const processedStations = STATIONS.map(s => {
             const val = data[s.id][idx];
             const tStr = cleanTime(data[`time_${s.id}`][idx]);
@@ -188,13 +191,32 @@ export function useWeatherData() {
 
             if (tStr) {
                 try {
-                    const [timePart, datePart] = tStr.split(',').map(x => x.trim());
-                    const d = new Date(`${datePart}, ${now.getFullYear()} ${timePart}`);
-                    if (!isNaN(d.getTime())) {
-                        const diffHrs = (now - d) / (1000 * 60 * 60);
-                        if (diffHrs < 0.5) status = 'live';
-                        else if (diffHrs < 2) status = 'delayed'; // Strict 2-hour window
-                        else status = 'stale';
+                    // Robust parser for "HH:mm, MMM DD"
+                    if (tStr.includes(',')) {
+                        const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                        const [monName, day] = datePart.split(' ');
+                        const mon = months[monName] || '01';
+                        const dayFmt = day.padStart(2, '0');
+                        // Construct ISO string for local time parsing
+                        // Note: We assume the data is in the same timezone as the user (Ulaanbaatar)
+                        const isoStr = `${year}-${mon}-${dayFmt}T${timePart}:00`;
+                        const d = new Date(isoStr);
+
+                        if (!isNaN(d.getTime())) {
+                            const diffHrs = (now - d) / (1000 * 60 * 60);
+                            if (diffHrs < 2.0 && diffHrs > -1.0) { // Delayed up to 2h
+                                status = diffHrs < 0.5 ? 'live' : 'delayed';
+                            } else {
+                                status = 'stale';
+                            }
+                        }
+                    } else if (/^\d{4}/.test(tStr)) {
+                        // Standard YYYY-MM-DD HH:mm
+                        const d = new Date(tStr.replace(' ', 'T'));
+                        if (!isNaN(d.getTime())) {
+                            const diffHrs = (now - d) / (1000 * 60 * 60);
+                            status = diffHrs < 0.5 ? 'live' : (diffHrs < 2 ? 'delayed' : 'stale');
+                        }
                     }
                 } catch (e) {
                     status = 'offline';
