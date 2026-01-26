@@ -1,80 +1,65 @@
 import React from 'react';
+import { Card, CardContent } from "@/components/ui/card";
 import { Thermometer, Wind, Droplets, Sun } from 'lucide-react';
-
-// Using a custom icon for "Feels Like" since HandWarmer/Scarf isn't standard in basic sets.
-// We'll use Sun for Feels Like as a fallback safe icon.
+import { cn } from "@/lib/utils";
 
 const getAQIMeta = (pm25) => {
-    if (pm25 == null) return { color: '#9ca3af', label: 'Loading...', border: 'border-gray-400' }; // gray-400
-    if (pm25 <= 12) return { color: '#10b981', label: 'Good', border: 'border-emerald-500' };
-    if (pm25 <= 35) return { color: '#f59e0b', label: 'Moderate', border: 'border-amber-500' };
-    if (pm25 <= 55) return { color: '#f97316', label: 'Sensitive', border: 'border-orange-500' };
-    if (pm25 <= 150) return { color: '#ef4444', label: 'Unhealthy', border: 'border-red-500' };
-    return { color: '#7f1d1d', label: 'Hazardous', border: 'border-rose-900' };
+    if (pm25 == null) return { color: 'text-zinc-400', label: 'Loading...', border: 'border-zinc-200' };
+    if (pm25 <= 12) return { color: 'text-emerald-500', label: 'Good', border: 'border-emerald-500' };
+    if (pm25 <= 35) return { color: 'text-amber-500', label: 'Moderate', border: 'border-amber-500' };
+    if (pm25 <= 55) return { color: 'text-orange-500', label: 'Sensitive', border: 'border-orange-500' };
+    if (pm25 <= 150) return { color: 'text-red-500', label: 'Unhealthy', border: 'border-red-500' };
+    return { color: 'text-rose-900', label: 'Hazardous', border: 'border-rose-900' };
 };
 
 export function HeroSection({ metrics, lastUpdated }) {
     const meta = getAQIMeta(metrics?.avgAQI);
 
-    // Dynamic ring color
-    const ringStyle = {
-        borderTopColor: meta.color,
-        boxShadow: `0 0 20px ${meta.color}40`
-    };
-
     return (
-        <>
-            {/* Hero Card */}
-            <div className="col-span-1 md:col-span-2 bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl p-6 shadow-lg relative flex items-center justify-around">
-                <div className="absolute top-4 right-4 text-xs bg-black/5 px-2 py-1 rounded-full text-gray-500">
-                    {lastUpdated ? `Sync: ${lastUpdated}` : 'Syncing...'}
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
+            {/* Main Gauge Card */}
+            <Card className="flex flex-col items-center justify-center p-8 bg-white/40 dark:bg-slate-950/40 backdrop-blur-xl border-white/20 dark:border-slate-800/50 shadow-xl relative overflow-hidden h-full min-h-[300px]">
+                {/* Abstract Background Glow */}
+                <div className={cn("absolute inset-0 opacity-10 blur-3xl rounded-full scale-150 transition-colors duration-1000", meta.color.replace('text-', 'bg-'))} />
 
-                <div className="relative w-40 h-40 flex items-center justify-center">
-                    {/* Ring */}
-                    <div
-                        className="absolute w-full h-full rounded-full border-[10px] border-white/40 rotate-[-45deg] transition-colors duration-500"
-                        style={ringStyle}
-                    ></div>
-                    <span className="text-6xl font-bold z-10 leading-none text-gray-800">
-                        {metrics ? metrics.avgAQI : '--'}
-                    </span>
-                </div>
+                <div className="relative z-10 text-center">
+                    <div className="text-xs uppercase tracking-widest text-zinc-500 font-semibold mb-4">City Average</div>
 
-                <div className="text-center">
-                    <div className="text-3xl font-light text-gray-800 mb-2">{meta.label}</div>
-                    <div className="text-sm text-gray-500 font-medium">Average PM2.5 in UB</div>
+                    <div className="relative w-48 h-48 flex items-center justify-center mb-6 mx-auto">
+                        <div className={cn("absolute w-full h-full rounded-full border-[12px] border-zinc-100 dark:border-zinc-800 transition-colors duration-500 opacity-30")} />
+                        <div
+                            className={cn("absolute w-full h-full rounded-full border-[12px] border-transparent border-t-current rotate-[-45deg] transition-all duration-1000", meta.color)}
+                            style={{ filter: `drop-shadow(0 0 10px currentColor)` }}
+                        />
+                        <span className={cn("text-7xl font-bold tracking-tight", meta.color)}>
+                            {metrics ? metrics.avgAQI : '--'}
+                        </span>
+                    </div>
+
+                    <div className="text-3xl font-light text-zinc-700 dark:text-zinc-200">{meta.label}</div>
+                    <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/50 text-xs text-zinc-500 font-medium font-mono">
+                        Sync: {lastUpdated?.slice(11, 16) || '--:--'}
+                    </div>
                 </div>
+            </Card>
+
+            {/* Weather Stats Grid */}
+            <div className="grid grid-cols-2 gap-4">
+                <StatBox icon={Thermometer} label="Temperature" value={metrics?.temp ? `${metrics.temp}°` : '--'} color="text-yellow-500" />
+                <StatBox icon={Sun} label="Feels Like" value={metrics?.feels ? `${metrics.feels}°` : '--'} color="text-orange-500" />
+                <StatBox icon={Droplets} label="Humidity" value={metrics?.humidity ? `${metrics.humidity}%` : '--'} color="text-blue-500" />
+                <StatBox icon={Wind} label="Wind Speed" value={metrics?.wind ?? '--'} color="text-slate-500" />
             </div>
-
-            {/* Weather Card */}
-            <div className="col-span-1 md:col-span-2 bg-white/60 backdrop-blur-md border border-white/40 rounded-2xl p-6 shadow-lg flex justify-between items-center px-10">
-
-                <div className="flex flex-col items-center gap-1">
-                    <Thermometer className="w-8 h-8 text-gray-700" />
-                    <span className="text-2xl font-bold text-gray-800">{metrics?.temp ?? '--'}°</span>
-                    <span className="text-xs uppercase tracking-widest text-gray-500">Temp</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                    <Sun className="w-8 h-8 text-orange-600" />
-                    <span className="text-2xl font-bold text-gray-800">{metrics?.feels ?? '--'}°</span>
-                    <span className="text-xs uppercase tracking-widest text-gray-500">Feels Like</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                    <Droplets className="w-8 h-8 text-blue-600" />
-                    <span className="text-2xl font-bold text-gray-800">{metrics?.humidity ?? '--'}%</span>
-                    <span className="text-xs uppercase tracking-widest text-gray-500">Ag</span>
-                </div>
-
-                <div className="flex flex-col items-center gap-1">
-                    <Wind className="w-8 h-8 text-slate-600" />
-                    <span className="text-2xl font-bold text-gray-800">{metrics?.wind ?? '--'}</span>
-                    <span className="text-xs uppercase tracking-widest text-gray-500">Wind</span>
-                </div>
-
-            </div>
-        </>
+        </div>
     );
+}
+
+function StatBox({ icon: Icon, label, value, color }) {
+    return (
+        <Card className="flex flex-col items-center justify-center p-4 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border-white/20 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all">
+            <Icon className={cn("w-6 h-6 mb-2", color)} />
+            <div className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">{value}</div>
+            <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">{label}</div>
+        </Card>
+    )
 }

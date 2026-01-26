@@ -1,148 +1,151 @@
 import React from 'react';
-import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler
-} from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
-import { Line, Bar } from 'react-chartjs-2';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis, ReferenceLine } from "recharts";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
-ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend,
-    Filler,
-    annotationPlugin
-);
-
-const STATION_COLORS = {
-    french: '#2563eb', eu: '#7c3aed', czech: '#db2777', yarmag: '#059669',
-    chd9: '#ea580c', mandakh: '#d97706', chd6: '#4f46e5', airv: '#0891b2'
+// --- CONFIG ---
+const stationConfig = {
+    french: { label: "French Embassy", color: "hsl(221, 83%, 53%)" }, // Blue
+    eu: { label: "EU Delegation", color: "hsl(263, 83%, 58%)" }, // Purple
+    czech: { label: "Czech Embassy", color: "hsl(330, 81%, 50%)" }, // Pink
+    yarmag: { label: "Yarmag", color: "hsl(158, 64%, 52%)" }, // Emerald 500
+    chd9: { label: "CHD 9", color: "hsl(24, 95%, 53%)" }, // Orange
+    mandakh: { label: "Mandakh", color: "hsl(38, 92%, 50%)" }, // Amber
+    chd6: { label: "CHD 6", color: "hsl(250, 84%, 67%)" }, // Indigo
+    airv: { label: "Air V", color: "hsl(189, 94%, 43%)" }, // Cyan
 };
 
-const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    scales: {
-        x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
-        y: { grid: { color: 'rgba(0,0,0,0.05)' }, border: { display: false } }
-    },
-    plugins: {
-        legend: { labels: { usePointStyle: true, boxWidth: 6, padding: 20 } },
-        tooltip: { backgroundColor: 'rgba(255,255,255,0.9)', titleColor: '#000', bodyColor: '#333', borderColor: 'rgba(0,0,0,0.05)', borderWidth: 1 }
-    },
-    interaction: { mode: 'index', intersect: false }
+const tempConfig = {
+    temp: { label: "Temperature", color: "hsl(47, 95%, 57%)" }, // Yellow
+    feels: { label: "Feels Like", color: "hsl(24, 95%, 65%)" } // Orange-ish
+};
+
+const windConfig = {
+    wind: { label: "Wind Speed", color: "hsl(217, 91%, 60%)" } // Blue
+};
+
+// --- HELPER: Pivot Data (Columns -> Rows) ---
+const usePivotData = (data, keys) => {
+    return React.useMemo(() => {
+        if (!data || !data.timestamps) return [];
+        return data.timestamps.map((t, i) => {
+            const row = { time: t };
+            keys.forEach(k => row[k] = data[k][i]);
+            return row;
+        });
+    }, [data, keys]);
 };
 
 export function PMChart({ data, stations }) {
-    const chartData = {
-        labels: data.timestamps,
-        datasets: stations.map(s => ({
-            label: s.label,
-            data: data[s.id],
-            borderColor: STATION_COLORS[s.id] || '#999',
-            backgroundColor: 'transparent',
-            borderWidth: 2,
-            pointRadius: 0,
-            tension: 0.4
-        }))
-    };
+    const chartData = usePivotData(data, stations.map(s => s.id));
 
-    return <Line data={chartData} options={{ ...commonOptions, plugins: { ...commonOptions.plugins, title: { display: true, text: "District Pollution Levels", align: 'start', font: { size: 16, weight: 'bold' } } } }} />;
+    return (
+        <Card className="col-span-1 lg:col-span-2 shadow-lg border-white/20 dark:border-slate-800/50 backdrop-blur-md bg-white/40 dark:bg-slate-950/40">
+            <CardHeader>
+                <CardTitle>District Pollution Levels</CardTitle>
+                <CardDescription>PM2.5 concentrations over time</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={stationConfig} className="min-h-[300px] w-full">
+                    <AreaChart data={chartData} margin={{ left: -20, right: 10 }}>
+                        <defs>
+                            {stations.map(s => (
+                                <linearGradient key={s.id} id={`fill${s.id}`} x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor={stationConfig[s.id]?.color} stopOpacity={0.3} />
+                                    <stop offset="95%" stopColor={stationConfig[s.id]?.color} stopOpacity={0.05} />
+                                </linearGradient>
+                            ))}
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                        <XAxis
+                            dataKey="time"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            minTickGap={32}
+                            tickFormatter={(value) => value.slice(11, 16)} // Show HH:mm
+                        />
+                        <YAxis tickLine={false} axisLine={false} tickMargin={8} domain={[0, 'auto']} />
+                        <ChartTooltip content={<ChartTooltipContent indicator="dot" labelFormatter={(v) => v} />} />
+                        {stations.map(s => (
+                            <Area
+                                key={s.id}
+                                type="monotone"
+                                dataKey={s.id}
+                                stroke={stationConfig[s.id]?.color}
+                                fill={`url(#fill${s.id})`}
+                                strokeWidth={2}
+                                dot={false}
+                            />
+                        ))}
+                    </AreaChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+    );
 }
 
 export function TempChart({ data }) {
-    const chartData = {
-        labels: data.timestamps,
-        datasets: [
-            {
-                label: 'Temperature',
-                data: data.temps,
-                borderColor: '#eab308',
-                backgroundColor: (context) => {
-                    const ctx = context.chart.ctx;
-                    const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-                    gradient.addColorStop(0, 'rgba(234, 179, 8, 0.5)');
-                    gradient.addColorStop(1, 'rgba(234, 179, 8, 0.0)');
-                    return gradient;
-                },
-                fill: true,
-                tension: 0.4,
-                pointRadius: 0
-            },
-            {
-                label: 'Feels Like',
-                data: data.feels,
-                borderColor: '#f97316',
-                borderDash: [5, 5],
-                backgroundColor: 'transparent',
-                fill: false,
-                tension: 0.4,
-                pointRadius: 0
-            }
-        ]
-    };
+    const chartData = usePivotData(data, ['temps', 'feels']);
 
-    return <Line data={chartData} options={commonOptions} />;
+    return (
+        <Card className="shadow-lg border-white/20 dark:border-slate-800/50 backdrop-blur-md bg-white/40 dark:bg-slate-950/40">
+            <CardHeader>
+                <CardTitle>Temperature</CardTitle>
+                <CardDescription>Latest trends (°C)</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={tempConfig} className="min-h-[250px] w-full">
+                    <AreaChart data={chartData} margin={{ left: -20, right: 10 }}>
+                        <defs>
+                            <linearGradient id="fillTemp" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor={tempConfig.temp.color} stopOpacity={0.4} />
+                                <stop offset="95%" stopColor={tempConfig.temp.color} stopOpacity={0.05} />
+                            </linearGradient>
+                        </defs>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                        <XAxis dataKey="time" tickLine={false} axisLine={false} tickFormatter={(value) => value.slice(11, 16)} />
+                        <YAxis tickLine={false} axisLine={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Area type="monotone" dataKey="temps" stroke={tempConfig.temp.color} fill="url(#fillTemp)" strokeWidth={2} name="Temperature" />
+                        <Line type="monotone" dataKey="feels" stroke={tempConfig.feels.color} strokeWidth={2} strokeDasharray="4 4" dot={false} name="Feels Like" />
+                    </AreaChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+    );
 }
 
 export function WindChart({ data }) {
-    const maxWind = Math.max(...(data.windSpeeds || []).filter(v => v != null && !isNaN(v)), 0);
+    const chartData = usePivotData(data, ['windSpeeds']);
 
-    const windBenchmarks = {
-        lightAir: { val: 0.5, label: 'Light Air', color: '#94a3b8' }, // gray-400 equivalentish
-        lightBreeze: { val: 1.6, label: 'Light Breeze', color: '#10b981' },
-        gentleBreeze: { val: 3.4, label: 'Gentle Breeze', color: '#3b82f6' },
-        moderateBreeze: { val: 5.5, label: 'Moderate', color: '#f59e0b' },
-        freshBreeze: { val: 8.0, label: 'Fresh', color: '#f97316' },
-        strongBreeze: { val: 10.8, label: 'Strong', color: '#ef4444' },
-        gale: { val: 13.9, label: 'Gale', color: '#7f1d1d' }
-    };
+    // Benchmarks (simplified for Recharts)
+    const benchmarks = [
+        { y: 3.4, label: 'Gentle', color: '#3b82f6' },
+        { y: 8.0, label: 'Fresh', color: '#f97316' },
+        { y: 13.9, label: 'Gale', color: '#7f1d1d' }
+    ];
 
-    const annotations = {};
-    for (const [key, b] of Object.entries(windBenchmarks)) {
-        if (b.val <= maxWind + 2) {
-            annotations[key] = {
-                type: 'line',
-                yMin: b.val,
-                yMax: b.val,
-                borderColor: b.color === '#94a3b8' ? 'rgba(0,0,0,0.1)' : b.color + '60',
-                borderWidth: 1,
-                borderDash: [4, 4],
-                label: {
-                    content: b.label,
-                    display: true,
-                    color: b.color,
-                    font: { size: 10 },
-                    position: 'start',
-                    backgroundColor: 'rgba(255,255,255,0.8)',
-                    yAdjust: -6
-                }
-            };
-        }
-    }
-
-    const chartData = {
-        labels: data.timestamps,
-        datasets: [{
-            label: 'Wind Speed',
-            data: data.windSpeeds,
-            backgroundColor: '#3b82f6',
-            borderRadius: 4
-        }]
-    };
-
-    return <Bar data={chartData} options={{ ...commonOptions, plugins: { ...commonOptions.plugins, annotation: { annotations } } }} />;
+    return (
+        <Card className="shadow-lg border-white/20 dark:border-slate-800/50 backdrop-blur-md bg-white/40 dark:bg-slate-950/40">
+            <CardHeader>
+                <CardTitle>Wind Speed</CardTitle>
+                <CardDescription>Gusts & Benchmarks (m/s)</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <ChartContainer config={windConfig} className="min-h-[250px] w-full">
+                    <BarChart data={chartData} margin={{ left: -20, right: 10 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3" strokeOpacity={0.1} />
+                        <XAxis dataKey="time" tickLine={false} axisLine={false} tickFormatter={(value) => value.slice(11, 16)} />
+                        <YAxis tickLine={false} axisLine={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Bar dataKey="windSpeeds" fill={windConfig.wind.color} radius={[4, 4, 0, 0]} name="Wind" />
+                        {benchmarks.map((b, i) => (
+                            <ReferenceLine key={i} y={b.y} stroke={b.color} strokeDasharray="3 3" label={{ position: 'insideBottomRight', value: b.label, fill: b.color, fontSize: 10 }} />
+                        ))}
+                    </BarChart>
+                </ChartContainer>
+            </CardContent>
+        </Card>
+    );
 }
