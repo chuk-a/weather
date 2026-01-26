@@ -57,12 +57,10 @@ const needle = (value, data, cx, cy, iR, oR, color) => {
     data.forEach((v) => {
         total += v.value;
     });
-    const ang = 180.0 * (1 - value / 500); // Scale 0-500 to 180-0 degrees
+    const ang = 180.0 * (1 - value / 200); // Scale 0-200 to 180-0 degrees
     const cos = Math.cos(-RADIAN * ang);
     const sin = Math.sin(-RADIAN * ang);
     const r = 5;
-    const x0 = cx + 5;
-    const y0 = cy;
     const xba = cx + r * sin;
     const yba = cy - r * cos;
     const xbb = cx - r * sin;
@@ -83,8 +81,7 @@ export function AirRadialChart({ value }) {
         { name: 'Moderate', value: 23, fill: '#fbbf24' },     // 12-35
         { name: 'Sensitive', value: 20, fill: '#f97316' },    // 35-55
         { name: 'Unhealthy', value: 95, fill: '#ef4444' },    // 55-150
-        { name: 'Very Unhealthy', value: 100, fill: '#8b5cf6' }, // 150-250
-        { name: 'Hazardous', value: 250, fill: '#7f1d1d' },   // 250-500
+        { name: 'Very Unhealthy', value: 50, fill: '#8b5cf6' }, // 150-200
     ];
 
     const cx = 80;
