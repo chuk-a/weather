@@ -59,14 +59,27 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
                     </Button>
                 ),
-                cell: ({ row }) => (
-                    <div className="flex flex-col py-1">
-                        <span className="text-sm font-bold text-foreground leading-tight">{row.getValue("label")}</span>
-                        <span className="text-[9px] font-mono text-muted-foreground uppercase font-bold tracking-tighter">
-                            SYNC: {row.original.time?.split(',')[0] || '--'}
-                        </span>
-                    </div>
-                ),
+                cell: ({ row }) => {
+                    const status = row.original.status;
+                    const statusColors = {
+                        live: "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]",
+                        delayed: "bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse",
+                        stale: "bg-red-500 opacity-50",
+                        offline: "bg-muted"
+                    };
+
+                    return (
+                        <div className="flex items-center gap-3 py-1">
+                            <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColors[status] || statusColors.offline)} />
+                            <div className="flex flex-col">
+                                <span className="text-sm font-bold text-foreground leading-tight">{row.getValue("label")}</span>
+                                <span className="text-[9px] font-mono text-muted-foreground uppercase font-bold tracking-tighter">
+                                    SYNC: {row.original.time?.split(',')[0].slice(0, 5) || '--'}
+                                </span>
+                            </div>
+                        </div>
+                    );
+                },
             },
             {
                 accessorKey: "val",
@@ -82,6 +95,13 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                 ),
                 cell: ({ row }) => {
                     const val = row.getValue("val");
+                    const trend = row.original.trend;
+                    const trendIcons = {
+                        up: <span className="text-[10px] ml-1">↑</span>,
+                        down: <span className="text-[10px] ml-1">↓</span>,
+                        stable: null
+                    };
+
                     let color = "text-muted-foreground";
                     if (val <= 12) color = "text-emerald-500";
                     else if (val <= 35) color = "text-amber-500";
@@ -89,7 +109,16 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                     else if (val <= 150) color = "text-red-500";
                     else if (val > 150) color = "text-rose-500 font-black";
 
-                    return <div className={`font-mono text-right text-sm font-black ${color}`}>{val ?? '--'}</div>;
+                    return (
+                        <div className="flex items-center justify-end gap-1">
+                            <div className={cn("font-mono text-right text-sm font-black", color)}>
+                                {val ?? '--'}
+                            </div>
+                            <div className={cn("w-3 text-right font-bold", trend === 'up' ? "text-red-500" : trend === 'down' ? "text-emerald-500" : "text-muted/30")}>
+                                {trendIcons[trend]}
+                            </div>
+                        </div>
+                    );
                 },
             }
         ];

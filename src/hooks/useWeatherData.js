@@ -165,30 +165,62 @@ export function useWeatherData() {
 
         if (idx < 0) return null;
 
-        // Smart Average Logic
-        const now = new Date();
-        const currentVals = STATIONS.map(s => {
+        // Helper to find value from ~60 mins ago
+        const getTrend = (stationId, currentIdx) => {
+            if (idx < 5) return 'stable'; // Not enough history
+            const currentTime = new Date(data.timestamps[currentIdx]);
+
+            // Look back ~60 mins
+            let oldIdx = -1;
+            for (let i = currentIdx - 1; i >= 0; i--) {
+                const prevTime = new Date(data.timestamps[i]);
+                const diffMin = (currentTime - prevTime) / (1000 * 60);
+                if (diffMin >= 50 && diffMin <= 75) {
+                    oldIdx = i;
+                    break;
+                }
+                if (diffMin > 75) break;
+            }
+
+            if (oldIdx === -1) return 'stable';
+            const oldVal = data[stationId][oldIdx];
+            const newVal = data[stationId][currentIdx];
+            if (oldVal == null || newVal == null) return 'stable';
+
+            const diff = newVal - oldVal;
+            if (diff > (oldVal * 0.05)) return 'up';
+            if (diff < -(oldVal * 0.05)) return 'down';
+            return 'stable';
+        };
+
+        const processedStations = STATIONS.map(s => {
             const val = data[s.id][idx];
-            let tStr = data[`time_${s.id}`][idx];
-            tStr = cleanTime(tStr);
+            const tStr = cleanTime(data[`time_${s.id}`][idx]);
+            let status = 'offline';
 
-            if (val == null) return null;
-            if (!tStr) return val; // Assume fresh if no time
+            if (tStr) {
+                try {
+                    const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                    const d = new Date(`${datePart}, ${now.getFullYear()} ${timePart}`);
+                    const diffHrs = (now - d) / (1000 * 60 * 60);
+                    if (diffHrs < 0.5) status = 'live';
+                    else if (diffHrs < 1.5) status = 'delayed';
+                    else status = 'stale';
+                } catch (e) { status = 'offline'; }
+            }
 
-            try {
-                // Parse "10:00, Jan 26"
-                const [timePart, datePart] = tStr.split(',').map(x => x.trim());
-                if (!datePart) return val; // Logic fallback if split fails
+            return {
+                ...s,
+                val,
+                time: tStr,
+                status,
+                trend: getTrend(s.id, idx)
+            };
+        });
 
-                const year = now.getFullYear();
-                const d = new Date(`${datePart}, ${year} ${timePart}`);
-                if (isNaN(d.getTime())) return val;
-
-                const diffHrs = (now - d) / (1000 * 60 * 60);
-                if (diffHrs > 2) return null; // Stale
-                return val;
-            } catch (e) { return val; }
-        }).filter(v => v != null);
+        const currentVals = processedStations
+            .filter(s => s.status !== 'stale' && s.status !== 'offline' && s.val != null)
+            .map(s => s.val);
 
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
@@ -202,11 +234,7 @@ export function useWeatherData() {
             feels: data.feels[idx],
             humidity: data.humidities[idx],
             wind: data.windSpeeds[idx],
-            stations: STATIONS.map(s => ({
-                ...s,
-                val: data[s.id][idx],
-                time: cleanTime(data[`time_${s.id}`][idx]),
-            }))
+            stations: processedStations
         };
     };
 

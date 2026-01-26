@@ -70,6 +70,20 @@ function App() {
     return (
         <div className="h-screen bg-background text-foreground font-sans overflow-hidden flex flex-col transition-colors duration-300">
 
+            {/* HAZARD ALERT BANNER */}
+            {metrics?.avgAQI > 150 && (
+                <div className="bg-rose-600 text-white h-8 flex items-center justify-center gap-4 px-6 relative z-[100] overflow-hidden shadow-lg border-b border-rose-500">
+                    <div className="animate-pulse flex items-center gap-2 font-black text-[11px] tracking-widest uppercase italic">
+                        <AlertTriangle className="w-3.5 h-3.5 stroke-[3]" />
+                        CRITICAL ATMOSPHERIC HAZARD DETECTED
+                    </div>
+                    <div className="h-4 w-px bg-white/20 hidden md:block" />
+                    <div className="text-[10px] font-bold hidden md:block uppercase tracking-tighter opacity-90">
+                        City Average: {metrics.avgAQI} µg/m³ — Indoor filtration strictly recommended.
+                    </div>
+                </div>
+            )}
+
             {/* SHADCN TOP NAV */}
             <nav className="h-14 border-b border-border bg-card/80 backdrop-blur-md flex items-center justify-between px-6 shrink-0 z-50">
                 <div className="flex items-center gap-8">
