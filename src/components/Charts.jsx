@@ -49,26 +49,26 @@ const usePivotData = (data, keys) => {
 };
 
 // --- NEW: RADIAL GAUGE (Shadcn Style) ---
-export function AirRadialChart({ value, colorClass }) {
+export function AirRadialChart({ value }) {
     // Normalize value (0-300 range for AQI)
-    const data = [{ name: 'AQI', value: value || 0, fill: 'var(--chart-primary)' }];
+    const data = [{ name: 'AQI', value: value || 0, fill: '#10b981' }];
 
     return (
-        <div className="w-full h-24 flex items-center justify-center">
+        <div className="w-full h-full flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
                 <RadialBarChart
                     cx="50%"
                     cy="50%"
-                    innerRadius="70%"
-                    outerRadius="100%"
-                    barSize={10}
+                    innerRadius="80%"
+                    outerRadius="110%"
+                    barSize={6}
                     data={data}
-                    startAngle={180}
-                    endAngle={0}
+                    startAngle={225}
+                    endAngle={-45}
                 >
                     <RadialBar
                         minAngle={15}
-                        background={{ fill: 'hsl(var(--muted)/0.2)' }}
+                        background={{ fill: 'hsl(var(--muted)/0.3)' }}
                         clockWise
                         dataKey="value"
                         cornerRadius={10}

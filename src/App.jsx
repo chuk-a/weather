@@ -132,6 +132,7 @@ function App() {
                         desc="Estimated urban average"
                         color={metrics?.avgAQI > 55 ? "text-orange-500" : "text-emerald-500"}
                         icon={<AirRadialChart value={metrics?.avgAQI} />}
+                        isSplit={true}
                     />
                     <MetricCard
                         title="High Pollution"
@@ -235,23 +236,30 @@ function NavButton({ children, active, icon }) {
     );
 }
 
-function MetricCard({ title, value, unit, desc, icon, color }) {
+function MetricCard({ title, value, unit, desc, icon, color, isSplit = false }) {
     return (
-        <Card className="bg-card border-border group hover:border-accent transition-all duration-300 shadow-sm overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-3 opacity-100 transition-opacity">
-                {icon}
-            </div>
-            <CardHeader className="flex flex-row items-center justify-between pb-1.5 space-y-0 text-muted-foreground relative z-10">
+        <Card className="bg-card border-border group hover:border-accent transition-all duration-300 shadow-sm overflow-hidden text-card-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 text-muted-foreground">
                 <CardTitle className="text-[10px] font-mono font-bold uppercase tracking-widest">{title}</CardTitle>
+                {!isSplit && <div className="p-1 opacity-20">{icon}</div>}
             </CardHeader>
-            <CardContent className="relative z-10">
-                <div className="flex items-baseline gap-1.5 pt-1">
-                    <div className={cn("text-4xl font-black tracking-tighter tabular-nums", color)}>{value ?? '--'}</div>
-                    <div className="text-[11px] font-mono text-muted-foreground font-bold uppercase">{unit}</div>
+            <CardContent>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className="flex items-baseline gap-1.5">
+                            <div className={cn("text-4xl font-black tracking-tighter tabular-nums", color)}>{value ?? '--'}</div>
+                            <div className="text-[11px] font-mono text-muted-foreground font-bold uppercase">{unit}</div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground font-bold font-mono mt-2 uppercase tracking-tighter max-w-[140px]">
+                            {desc}
+                        </p>
+                    </div>
+                    {isSplit && (
+                        <div className="w-20 h-20 -mr-2">
+                            {icon}
+                        </div>
+                    )}
                 </div>
-                <p className="text-[10px] text-muted-foreground font-bold font-mono mt-3 flex items-center gap-1.5 uppercase tracking-tighter">
-                    {desc}
-                </p>
             </CardContent>
         </Card>
     );
