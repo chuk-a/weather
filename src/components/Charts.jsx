@@ -1,5 +1,15 @@
 import React from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
+import {
+    LineChart,
+    Line,
+    XAxis,
+    YAxis,
+    CartesianGrid,
+    Tooltip,
+    ResponsiveContainer,
+    AreaChart,
+    Area,
+} from 'recharts';
 
 // --- HELPER: Pivot Data (Columns -> Rows) ---
 const usePivotData = (data, keys) => {
@@ -34,45 +44,33 @@ export function CityMeanChart({ data }) {
     const chartData = usePivotData(data, []);
 
     return (
-        <div className="w-full h-full min-h-[300px]">
+        <div className="w-full h-full min-h-[150px]">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
+                        <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
                             <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} stroke="#27272a" strokeDasharray="3 3" />
-                    <XAxis
-                        dataKey="time"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
-                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
-                        minTickGap={50}
-                    />
-                    <YAxis
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
-                        domain={[0, 'auto']}
-                    />
-                    <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#f4f4f5' }}
-                        itemStyle={{ color: '#10b981' }}
-                        labelStyle={{ color: '#71717a', fontSize: '10px', fontFamily: 'monospace', marginBottom: '4px' }}
-                        formatter={(value) => [value, 'µg/m³']}
-                        labelFormatter={(l) => `TIME: ${l}`}
-                    />
                     <Area
                         type="monotone"
                         dataKey="value"
                         stroke="#10b981"
                         strokeWidth={2}
                         fillOpacity={1}
-                        fill="url(#colorValue)"
+                        fill="url(#colorVal)"
                         animationDuration={1500}
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: '#fff',
+                            border: '1px solid #e4e4e7',
+                            borderRadius: '8px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            color: '#18181b'
+                        }}
                     />
                 </AreaChart>
             </ResponsiveContainer>
@@ -82,47 +80,50 @@ export function CityMeanChart({ data }) {
 
 export function ComparisonChart({ data, stations }) {
     const chartData = usePivotData(data, stations.map(s => s.id));
+
     const colors = [
-        "#10b981", "#3b82f6", "#f59e0b", "#ef4444",
-        "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"
+        '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
+        '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'
     ];
 
     return (
-        <div className="w-full h-full min-h-[400px]">
+        <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="#27272a" strokeDasharray="3 3" />
+                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
                     <XAxis
                         dataKey="time"
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
-                        minTickGap={50}
+                        minTickGap={60}
+                        axisLine={false}
+                        tickLine={false}
                     />
                     <YAxis
-                        tickLine={false}
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
-                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
-                        domain={[0, 'auto']}
+                        tickLine={false}
                     />
                     <Tooltip
-                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#f4f4f5' }}
-                        labelStyle={{ color: '#71717a', fontSize: '10px', fontFamily: 'monospace', marginBottom: '4px' }}
-                        labelFormatter={(l) => `TIME: ${l}`}
-                        formatter={(value) => [value, 'µg/m³']}
+                        contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #f1f1f2',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}
                     />
-                    <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace', paddingTop: '20px' }} />
                     {stations.map((s, i) => (
                         <Line
                             key={s.id}
                             type="monotone"
                             dataKey={s.id}
-                            stroke={colors[i % colors.length]}
-                            strokeWidth={2}
                             name={s.label}
+                            stroke={colors[i % colors.length]}
+                            strokeWidth={2.5}
                             dot={false}
-                            activeDot={{ r: 4 }}
+                            activeDot={{ r: 4, strokeWidth: 0 }}
+                            animationDuration={1000}
                         />
                     ))}
                 </LineChart>
