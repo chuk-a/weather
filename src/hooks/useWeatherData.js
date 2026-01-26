@@ -103,6 +103,8 @@ export function useWeatherData() {
                 ts = `${year}-${mon}-${dayFmt} ${time}`;
             }
 
+            if (!ts) return; // Skip garbage rows with no valid timestamp
+
             raw.timestamps.push(ts);
             raw.temps.push(cleanNumber(row.temperature));
             raw.feels.push(cleanNumber(row.feels_like));

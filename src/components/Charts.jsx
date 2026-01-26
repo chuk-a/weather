@@ -49,7 +49,7 @@ export function MarketChart({ data }) {
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
-                        tickFormatter={(value) => value.slice(11, 16)}
+                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={50}
                     />
                     <YAxis
@@ -97,7 +97,7 @@ export function ComparisonChart({ data, stations }) {
                         tickLine={false}
                         axisLine={false}
                         tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
-                        tickFormatter={(value) => value.slice(11, 16)}
+                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={50}
                     />
                     <YAxis
