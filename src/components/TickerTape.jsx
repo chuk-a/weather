@@ -2,12 +2,12 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 
 const getAQIColor = (pm25) => {
-    if (pm25 == null) return "text-zinc-300";
-    if (pm25 <= 12) return "text-emerald-600";
-    if (pm25 <= 35) return "text-amber-600";
-    if (pm25 <= 55) return "text-orange-600";
+    if (pm25 == null) return "text-muted-foreground";
+    if (pm25 <= 12) return "text-emerald-500";
+    if (pm25 <= 35) return "text-amber-500";
+    if (pm25 <= 55) return "text-orange-500";
     if (pm25 <= 150) return "text-red-500";
-    return "text-rose-600";
+    return "text-rose-500";
 };
 
 export function TickerTape({ stations, metrics }) {
@@ -15,7 +15,7 @@ export function TickerTape({ stations, metrics }) {
     const tickerItems = [...stations, ...stations, ...stations];
 
     return (
-        <div className="h-full bg-white flex items-center overflow-hidden">
+        <div className="h-full bg-card flex items-center overflow-hidden transition-colors duration-300">
             <div className="flex whitespace-nowrap animate-ticker">
                 {tickerItems.map((s, i) => {
                     const val = metrics?.stations.find(st => st.id === s.id)?.val;
@@ -23,7 +23,7 @@ export function TickerTape({ stations, metrics }) {
 
                     return (
                         <div key={`${s.id}-${i}`} className="inline-flex items-center mx-8 text-[11px] font-mono font-bold tracking-tight">
-                            <span className="text-zinc-400 mr-2 uppercase tracking-widest">{s.id}</span>
+                            <span className="text-muted-foreground mr-2 uppercase tracking-widest">{s.id}</span>
                             <span className={cn("font-black", color)}>
                                 {val ?? '--'}
                             </span>

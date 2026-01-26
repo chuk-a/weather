@@ -9,11 +9,19 @@ import {
     ResponsiveContainer,
     AreaChart,
     Area,
+    Radar,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    RadialBarChart,
+    RadialBar,
+    Cell
 } from 'recharts';
 
 // --- HELPER: Pivot Data (Columns -> Rows) ---
 const usePivotData = (data, keys) => {
-    return React.useMemo(() => {
+    return useMemo(() => {
         if (!data || !data.timestamps) return [];
         return data.timestamps.map((t, i) => {
             const row = { time: t };
@@ -40,6 +48,84 @@ const usePivotData = (data, keys) => {
     }, [data, keys]);
 };
 
+// --- NEW: RADIAL GAUGE (Shadcn Style) ---
+export function AirRadialChart({ value, colorClass }) {
+    // Normalize value (0-300 range for AQI)
+    const data = [{ name: 'AQI', value: value || 0, fill: 'var(--chart-primary)' }];
+
+    return (
+        <div className="w-full h-24 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+                <RadialBarChart
+                    cx="50%"
+                    cy="50%"
+                    innerRadius="70%"
+                    outerRadius="100%"
+                    barSize={10}
+                    data={data}
+                    startAngle={180}
+                    endAngle={0}
+                >
+                    <RadialBar
+                        minAngle={15}
+                        background={{ fill: 'hsl(var(--muted)/0.2)' }}
+                        clockWise
+                        dataKey="value"
+                        cornerRadius={10}
+                    />
+                </RadialBarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+// --- NEW: SPATIAL RADAR (Shadcn Style) ---
+export function SpatialRadarChart({ stations, metrics }) {
+    const data = useMemo(() => {
+        if (!metrics) return [];
+        return stations.map(s => {
+            const stats = metrics.stations.find(st => st.id === s.id);
+            return {
+                subject: s.id.toUpperCase(),
+                value: stats?.val || 0,
+                fullMark: 300,
+            };
+        });
+    }, [stations, metrics]);
+
+    return (
+        <div className="w-full h-full min-h-[300px] flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+                    <PolarGrid stroke="hsl(var(--border))" />
+                    <PolarAngleAxis
+                        dataKey="subject"
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 'bold' }}
+                    />
+                    <Radar
+                        name="AQI"
+                        dataKey="value"
+                        stroke="#10b981"
+                        strokeWidth={2}
+                        fill="#10b981"
+                        fillOpacity={0.4}
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            borderColor: 'hsl(var(--border))',
+                            color: 'hsl(var(--foreground))',
+                            fontSize: '10px',
+                            borderRadius: '8px'
+                        }}
+                    />
+                </RadarChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+// --- EXISTING: CITY MEAN (Area) ---
 export function CityMeanChart({ data }) {
     const chartData = usePivotData(data, []);
 
@@ -64,12 +150,12 @@ export function CityMeanChart({ data }) {
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: '#fff',
-                            border: '1px solid #e4e4e7',
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             fontSize: '11px',
                             fontWeight: '700',
-                            color: '#18181b'
+                            color: 'hsl(var(--foreground))'
                         }}
                     />
                 </AreaChart>
@@ -78,6 +164,7 @@ export function CityMeanChart({ data }) {
     );
 }
 
+// --- EXISTING: COMPARISON (Lines) ---
 export function ComparisonChart({ data, stations }) {
     const chartData = usePivotData(data, stations.map(s => s.id));
 
@@ -90,27 +177,27 @@ export function ComparisonChart({ data, stations }) {
         <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
                         tickLine={false}
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #f1f1f2',
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             fontSize: '10px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                            color: 'hsl(var(--foreground))'
                         }}
                     />
                     {stations.map((s, i) => (
@@ -132,6 +219,7 @@ export function ComparisonChart({ data, stations }) {
     );
 }
 
+// --- EXISTING: ATMOSPHERE (Temp Lines) ---
 export function AtmosphereTrendChart({ data }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
@@ -146,28 +234,28 @@ export function AtmosphereTrendChart({ data }) {
         <div className="w-full h-full min-h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
                         tickLine={false}
                         unit="°"
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #f1f1f2',
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             fontSize: '10px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                            color: 'hsl(var(--foreground))'
                         }}
                     />
                     <Line
@@ -195,6 +283,7 @@ export function AtmosphereTrendChart({ data }) {
     );
 }
 
+// --- EXISTING: WIND (Area) ---
 export function WindVelocityChart({ data }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
@@ -214,28 +303,28 @@ export function WindVelocityChart({ data }) {
                             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
+                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
                         tickLine={false}
                         unit="m/s"
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'white',
-                            border: '1px solid #f1f1f2',
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
                             borderRadius: '8px',
                             fontSize: '10px',
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                            color: 'hsl(var(--foreground))'
                         }}
                     />
                     <Area
