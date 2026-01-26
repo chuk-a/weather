@@ -11,6 +11,7 @@ import os
 import time
 import tempfile
 import pytz
+import re
 
 # Localized timestamp for Ulaanbaatar
 tz = pytz.timezone("Asia/Ulaanbaatar")
@@ -97,13 +98,14 @@ def clean(val):
         if "ERROR" in val:
             return "ERROR"
         
+        # Extract timestamp if it matches HH:mm, MMM DD (IQAir format)
+        ts_match = re.search(r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})", val)
+        if ts_match:
+            return f"{ts_match.group(1)}, {ts_match.group(2)}"
+
         # Check for specific IQAir "No current data" patterns
         if "No current data" in val:
-             # Try to extract the last update time
-             # Format: "No current data Last update 18:00Jan 25 Local time"
-             match = datetime.strptime("18:00Jan 25", "%H:%MM %d") if "Jan" in val else None # Logic...
-             # Actually, just strip it to the time if possible, or leave it as a string
-             return val
+             return "OFFLINE"
 
         # Standard cleaning for numbers/units
         return (
@@ -114,7 +116,6 @@ def clean(val):
                .replace("%", "")
                .replace("м/с", "")
                .replace("|", "")
-               # keep the comma if it exists for the frontend parser
                .strip()
         )
     return val
