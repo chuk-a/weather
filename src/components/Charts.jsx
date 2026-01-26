@@ -113,84 +113,128 @@ export function AirRadialChart({ value }) {
     );
 }
 
-// --- NEW: SPATIAL RADAR (Shadcn Style) ---
+// --- NEW: GEOSPATIAL MATRIX (Grid with Pulses) ---
 export function SpatialRadarChart({ stations, metrics }) {
-    const data = useMemo(() => {
-        if (!metrics) return [];
-        return stations.map(s => {
-            const stats = metrics.stations.find(st => st.id === s.id);
-            return {
-                subject: s.id.toUpperCase(),
-                value: stats?.val || 0,
-                fullMark: 300,
-            };
-        });
-    }, [stations, metrics]);
+    if (!stations) return null;
 
     return (
-        <div className="w-full h-full min-h-[250px] flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-                    <PolarGrid stroke="hsl(var(--border))" />
-                    <PolarAngleAxis
-                        dataKey="subject"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 'bold' }}
-                    />
-                    <Radar
-                        name="AQI"
-                        dataKey="value"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        fill="#10b981"
-                        fillOpacity={0.4}
-                    />
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            borderColor: 'hsl(var(--border))',
-                            color: 'hsl(var(--foreground))',
-                            fontSize: '10px',
-                            borderRadius: '8px'
-                        }}
-                    />
-                </RadarChart>
-            </ResponsiveContainer>
+        <div className="w-full h-full relative overflow-hidden bg-[#0F0A1E]/40 cyber-grid">
+            {/* Pulsing Grid Points */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                {stations.map((s, i) => {
+                    // Random-ish positioning based on ID for visual variety in the matrix
+                    const left = ((s.id.charCodeAt(0) + s.id.charCodeAt(1)) % 80) + 10;
+                    const top = ((s.id.charCodeAt(2) + (s.id.charCodeAt(3) || 0)) % 60) + 20;
+                    const isOptimal = s.val <= 50;
+
+                    return (
+                        <div
+                            key={s.id}
+                            className="absolute transform -translate-x-1/2 -translate-y-1/2"
+                            style={{ left: `${left}%`, top: `${top}%` }}
+                        >
+                            <div className={cn(
+                                "w-3 h-3 rounded-full relative",
+                                isOptimal ? "bg-primary" : "bg-amber-500"
+                            )}>
+                                <div className={cn(
+                                    "absolute inset-0 rounded-full animate-ping opacity-75",
+                                    isOptimal ? "bg-primary" : "bg-amber-500"
+                                )} />
+                                <div className={cn(
+                                    "absolute -inset-4 rounded-full blur-md opacity-40",
+                                    isOptimal ? "bg-primary/40" : "bg-amber-500/40"
+                                )} />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
         </div>
     );
 }
 
-// --- EXISTING: CITY MEAN (Area) ---
-export function CityMeanChart({ data }) {
-    const chartData = usePivotData(data, []);
+// --- NEW: TEMPORAL ANALYSIS (Stacked Area) ---
+export function ComparisonChart({ data }) {
+    const chartData = useMemo(() => {
+        if (!data || !data.timestamps) return [];
+        return data.timestamps.map((t, i) => ({
+            time: t,
+            AQI: data.avgAqi ? data.avgAqi[i] : (data.french[i] || 0), // Fallback logic
+            PM25: data.french ? data.french[i] : 0,
+            PM10: data.eu ? data.eu[i] : 0
+        }));
+    }, [data]);
 
     return (
-        <div className="w-full h-full min-h-[150px]">
+        <div className="w-full h-full min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="colorVal" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.2} />
-                            <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                        <linearGradient id="colorAQI" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorPM25" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="colorPM10" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
+                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <Area
-                        type="monotone"
-                        dataKey="value"
-                        stroke="#10b981"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorVal)"
-                        animationDuration={1500}
+                    <CartesianGrid vertical={false} stroke="white" strokeOpacity={0.05} strokeDasharray="3 3" />
+                    <XAxis
+                        dataKey="time"
+                        tick={{ fill: 'white', opacity: 0.2, fontSize: 8, fontWeight: '900' }}
+                        tickFormatter={(value) => value ? value.split(' ')[1] : ''}
+                        minTickGap={60}
+                        axisLine={false}
+                        tickLine={false}
+                    />
+                    <YAxis
+                        tick={{ fill: 'white', opacity: 0.2, fontSize: 8, fontWeight: '900' }}
+                        axisLine={false}
+                        tickLine={false}
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
+                            backgroundColor: '#0F0A1E',
+                            border: '1px solid rgba(255,255,255,0.1)',
                             borderRadius: '8px',
-                            fontSize: '11px',
-                            fontWeight: '700',
-                            color: 'hsl(var(--foreground))'
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
                         }}
+                        itemStyle={{ color: 'white' }}
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="AQI"
+                        stackId="1"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorAQI)"
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="PM25"
+                        stackId="1"
+                        stroke="hsl(var(--accent))"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorPM25)"
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="PM10"
+                        stackId="1"
+                        stroke="#f43f5e"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorPM10)"
                     />
                 </AreaChart>
             </ResponsiveContainer>
@@ -198,68 +242,8 @@ export function CityMeanChart({ data }) {
     );
 }
 
-// --- EXISTING: COMPARISON (Lines) ---
-export function ComparisonChart({ data, stations, highlightedIds = [] }) {
-    const chartData = usePivotData(data, stations.map(s => s.id));
-
-    const colors = [
-        '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
-        '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'
-    ];
-
-    const hasHighlight = highlightedIds.length > 0;
-
-    return (
-        <div className="w-full h-full min-h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
-                    <XAxis
-                        dataKey="time"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
-                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
-                        minTickGap={60}
-                        axisLine={false}
-                        tickLine={false}
-                    />
-                    <YAxis
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
-                        axisLine={false}
-                        tickLine={false}
-                    />
-                    <Tooltip
-                        contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
-                            borderRadius: '8px',
-                            fontSize: '10px',
-                            color: 'hsl(var(--foreground))'
-                        }}
-                    />
-                    {stations.map((s, i) => {
-                        const isHighlighted = highlightedIds.includes(s.id);
-                        const opacity = hasHighlight ? (isHighlighted ? 1 : 0.1) : 1;
-                        const strokeWidth = hasHighlight ? (isHighlighted ? 4 : 1.5) : 2.5;
-
-                        return (
-                            <Line
-                                key={s.id}
-                                type="monotone"
-                                dataKey={s.id}
-                                name={s.label}
-                                stroke={colors[i % colors.length]}
-                                strokeWidth={strokeWidth}
-                                strokeOpacity={opacity}
-                                dot={false}
-                                activeDot={{ r: 4, strokeWidth: 0, opacity: 1 }}
-                                animationDuration={1000}
-                            />
-                        );
-                    })}
-                </LineChart>
-            </ResponsiveContainer>
-        </div>
-    );
+function cn(...inputs) {
+    return inputs.filter(Boolean).join(' ');
 }
 
 // --- EXISTING: ATMOSPHERE (Temp Lines) ---

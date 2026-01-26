@@ -2,18 +2,18 @@ import { useState, useEffect } from 'react';
 import Papa from 'papaparse';
 
 const STATIONS = [
-    { id: 'french', label: 'French Embassy', flag: '🇫🇷' },
-    { id: 'eu', label: 'EU Delegation', flag: '🇪🇺' },
-    { id: 'czech', label: 'Czech Embassy', flag: '🇨🇿' },
-    { id: 'yarmag', label: 'Yarmag', flag: '🏙️' },
-    { id: 'chd9', label: 'CHD 9', flag: '🏙️' },
-    { id: 'mandakh', label: 'Mandakh', flag: '🏙️' },
-    { id: 'chd6', label: 'CHD 6', flag: '🏙️' },
-    { id: 'airv', label: 'Air V', flag: '📡' },
-    { id: 'school17', label: 'School No. 17', flag: '🏫' },
-    { id: 'school72', label: 'School No. 72', flag: '🏫' },
-    { id: 'chd12', label: 'CHD 12 Khoroo', flag: '🏢' },
-    { id: 'kind280', label: 'Kindergarden 280', flag: '🎒' }
+    { id: 'school72', id_num: '#01', label: 'School No. 72', region: 'Downtown', flag: '🏫' },
+    { id: 'school17', id_num: '#02', label: 'School No. 17', region: 'Midtown', flag: '🏫' },
+    { id: 'kind280', id_num: '#03', label: 'Kindergarten 280', region: 'Uptown', flag: '🎒' },
+    { id: 'chd12', id_num: '#04', label: 'CHD 12 Khoroo', region: 'East Side', flag: '🏢' },
+    { id: 'chd9', id_num: '#05', label: 'CHD 9', region: 'West Side', flag: '🏙️' },
+    { id: 'chd6', id_num: '#06', label: 'CHD 6', region: 'Central', flag: '🏙️' },
+    { id: 'czech', id_num: '#07', label: 'Czech Embassy', region: 'Embassy Row', flag: '🇨🇿' },
+    { id: 'french', id_num: '#08', label: 'French Embassy', region: 'Embassy Row', flag: '🇫🇷' },
+    { id: 'eu', id_num: '#09', label: 'EU Delegation', region: 'Diplomatic Quarter', flag: '🇪🇺' },
+    { id: 'airv', id_num: '#10', label: 'Air V', region: 'North District', flag: '📡' },
+    { id: 'yarmag', id_num: '#11', label: 'Yarmag', region: 'Uptown', flag: '🏙️' },
+    { id: 'mandakh', id_num: '#12', label: 'Mandakh', region: 'Downtown', flag: '🏙️' }
 ];
 
 export function useWeatherData() {

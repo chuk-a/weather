@@ -4,56 +4,59 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 236 60% 98%;
+    --foreground: 224 71.4% 4.1%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 224 71.4% 4.1%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
+    --popover-foreground: 224 71.4% 4.1%;
+    --primary: 180 100% 50%;
+    --primary-foreground: 210 20% 98%;
+    --secondary: 220 14.3% 95.9%;
+    --secondary-foreground: 220.9 39.3% 11%;
+    --muted: 220 14.3% 95.9%;
+    --muted-foreground: 220 8.9% 46.1%;
+    --accent: 300 100% 50%;
+    --accent-foreground: 220.9 39.3% 11%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
+    --destructive-foreground: 210 20% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 224 71.4% 4.1%;
+    --radius: 1rem;
 
-    /* Futuristic Tokens - Light */
-    --cyber-glow: 160 84% 39%;
-    --cyber-border: 240 5.9% 90%;
+    /* Figma Tokens - Quantum Nexus (Light - Placeholder) */
+    --cyber-cyan: 180 100% 50%;
+    --cyber-magenta: 300 100% 50%;
   }
 
   .dark {
-    --background: 230 25% 2%;
+    --background: 257 50% 8%;
+    /* #0F0A1E */
     --foreground: 180 20% 98%;
-    --card: 230 25% 4%;
+    --card: 257 50% 10%;
     --card-foreground: 180 20% 98%;
-    --popover: 230 25% 4%;
+    --popover: 257 50% 10%;
     --popover-foreground: 180 20% 98%;
-    --primary: 160 84% 39%;
-    --primary-foreground: 230 25% 2%;
-    --secondary: 230 15% 10%;
+    --primary: 180 100% 50%;
+    /* #00FFFF */
+    --primary-foreground: 257 50% 2%;
+    --secondary: 257 30% 15%;
     --secondary-foreground: 180 20% 98%;
-    --muted: 230 15% 8%;
-    --muted-foreground: 230 10% 60%;
-    --accent: 160 84% 39%;
-    --accent-foreground: 230 25% 2%;
-    --destructive: 0 62% 30%;
+    --muted: 257 30% 12%;
+    --muted-foreground: 257 10% 65%;
+    --accent: 300 100% 50%;
+    /* #FF00FF */
+    --accent-foreground: 257 50% 2%;
+    --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 180 20% 98%;
-    --border: 230 15% 12%;
-    --input: 230 15% 12%;
-    --ring: 160 84% 39%;
+    --border: 257 20% 20%;
+    --input: 257 20% 20%;
+    --ring: 180 100% 50%;
 
-    /* Futuristic Tokens - Dark */
-    --cyber-glow: 160 84% 39%;
-    --cyber-border: 230 20% 15%;
+    /* Figma Tokens - Quantum Nexus (Dark) */
+    --cyber-cyan: 180 100% 50%;
+    --cyber-magenta: 300 100% 50%;
   }
 }
 
@@ -64,14 +67,23 @@
 
   body {
     @apply bg-background text-foreground antialiased transition-colors duration-300;
-    font-family: 'JetBrains Mono', 'Menlo', 'Monaco', 'Courier New', monospace;
-    letter-spacing: -0.025em;
+    font-family: 'Rajdhani', sans-serif;
+    letter-spacing: 0.02em;
   }
 }
 
 @layer utilities {
   .glass-panel {
-    @apply bg-card/60 backdrop-blur-xl border border-white/5 shadow-2xl shadow-black/40;
+    @apply bg-card/40 backdrop-blur-[24px] border border-white/10 shadow-2xl;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+  }
+
+  .glass-magenta {
+    @apply border-accent/20 shadow-[0_0_20px_rgba(255, 0, 255, 0.1)];
+  }
+
+  .glass-cyan {
+    @apply border-primary/20 shadow-[0_0_20px_rgba(0, 255, 255, 0.1)];
   }
 
   .cyber-grid {
@@ -91,6 +103,22 @@
     pointer-events: none;
     animation: scanline 8s linear infinite;
   }
+
+  .animate-ticker {
+    @apply animate-[ticker_60s_linear_infinite];
+  }
+
+  .pause-on-hover:hover {
+    @apply [animation-play-state:paused];
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
+  }
 }
 
 @keyframes scanline {
@@ -103,16 +131,6 @@
   }
 }
 
-@layer utilities {
-  .animate-ticker {
-    animation: ticker 60s linear infinite;
-  }
-
-  .pause-on-hover:hover {
-    animation-play-state: paused;
-  }
-}
-
 @keyframes ticker {
   0% {
     transform: translateX(0);
@@ -121,12 +139,4 @@
   100% {
     transform: translateX(-50%);
   }
-}
-
-.custom-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-  @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
 }
