@@ -70,10 +70,23 @@ def scrape_pm25(url, label):
         return "ERROR"
     xpath_val = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[2]/div/div[1]/div[3]/p'
     xpath_time = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[1]/div[1]/div/div[2]/h2'
+    xpath_time_alt = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[1]/div[1]/div/div[2]/div[2]'
     
     val = get_text(xpath_val, f"{label} PM2.5")
-    time_val = get_text(xpath_time, f"{label} Time")
+    time_val = get_text(xpath_time, f"{label} Time (Primary)")
     
+    # If primary time doesn't look right (missing "Local time"), try alternate
+    if "Local time" not in time_val:
+        print(f"Primary time extraction failed for {label}, trying alternate...")
+        try:
+             # Try to get text from the alternate div
+             alt_val = wait.until(EC.presence_of_element_located((By.XPATH, xpath_time_alt))).text.strip()
+             if "Local time" in alt_val:
+                 time_val = alt_val
+                 print(f"Alternate time found: {time_val}")
+        except Exception as e:
+            print(f"Alternate time extraction failed for {label}: {e}")
+            
     return val, time_val
 
 def clean(val):

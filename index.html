@@ -600,7 +600,33 @@
       if (idx < 0) return;
 
       // Hero
-      const currentVals = stations.map(s => data[s.id][idx]).filter(v => v != null);
+      const now = new Date();
+      const currentVals = stations.map(s => {
+        const val = data[s.id][idx];
+        const tStr = data[`time_${s.id}`][idx];
+
+        if (val == null) return null;
+        if (!tStr) return val; // No time info, assume valid (or legacy)
+
+        // Parse "08:00, Jan 26"
+        // We assume current year. If month is ahead of current month, might be last year? 
+        // Allow simplified check: if logic fails, include it.
+        try {
+          const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+          const year = now.getFullYear();
+          const d = new Date(`${datePart}, ${year} ${timePart}`);
+
+          // If date is invalid, include it
+          if (isNaN(d.getTime())) return val;
+
+          // Check difference in hours
+          const diffHrs = (now - d) / (1000 * 60 * 60);
+          if (diffHrs > 2) return null; // Stale (> 2 hours old)
+
+          return val;
+        } catch (e) { return val; }
+      }).filter(v => v != null);
+
       const avg = currentVals.length ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length) : 0;
       const meta = getAQIMeta(avg);
 
@@ -702,10 +728,57 @@
             fill: true,
             tension: 0.4,
             pointRadius: 0
+          },
+          {
+            label: 'Feels Like',
+            data: data.feels,
+            borderColor: '#f97316', // Orange
+            borderDash: [5, 5],
+            backgroundColor: 'transparent',
+            fill: false,
+            tension: 0.4,
+            pointRadius: 0
           }]
         },
         options: { ...opts }
       });
+
+
+
+      // Dynamic Wind Annotations
+      const maxWind = Math.max(...data.windSpeeds.filter(v => v != null && !isNaN(v)), 0);
+      const windBenchmarks = {
+        lightAir: { val: 0.5, label: 'Light Air', color: '#fff' },
+        lightBreeze: { val: 1.6, label: 'Light Breeze', color: '#10b981' },
+        gentleBreeze: { val: 3.4, label: 'Gentle Breeze', color: '#3b82f6' },
+        moderateBreeze: { val: 5.5, label: 'Moderate', color: '#f59e0b' },
+        freshBreeze: { val: 8.0, label: 'Fresh', color: '#f97316' },
+        strongBreeze: { val: 10.8, label: 'Strong', color: '#ef4444' },
+        gale: { val: 13.9, label: 'Gale', color: '#7f1d1d' }
+      };
+
+      const relevantAnnotations = {};
+      for (const [key, b] of Object.entries(windBenchmarks)) {
+        if (b.val <= maxWind + 2) { // Show if within range + small buffer
+          relevantAnnotations[key] = {
+            type: 'line',
+            yMin: b.val,
+            yMax: b.val,
+            borderColor: b.color === '#fff' ? 'rgba(255,255,255,0.3)' : b.color + '60',
+            borderWidth: 1,
+            borderDash: [4, 4],
+            label: {
+              content: b.label,
+              display: true,
+              color: b.color === '#fff' ? 'rgba(255,255,255,0.6)' : b.color,
+              font: { size: 10 },
+              position: 'start',
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              yAdjust: -6
+            }
+          };
+        }
+      }
 
       new Chart(ctxWind, {
         type: 'bar',
@@ -723,15 +796,7 @@
           plugins: {
             ...opts.plugins,
             annotation: {
-              annotations: {
-                lightAir: { type: 'line', yMin: 0.5, yMax: 0.5, borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Light Air', display: true, color: 'rgba(255,255,255,0.6)', font: { size: 10 }, position: 'start' } },
-                lightBreeze: { type: 'line', yMin: 1.6, yMax: 1.6, borderColor: 'rgba(16, 185, 129, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Light Breeze', display: true, color: 'rgba(16, 185, 129, 0.8)', font: { size: 10 }, position: 'start' } },
-                gentleBreeze: { type: 'line', yMin: 3.4, yMax: 3.4, borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Gentle Breeze', display: true, color: 'rgba(59, 130, 246, 0.8)', font: { size: 10 }, position: 'start' } },
-                moderateBreeze: { type: 'line', yMin: 5.5, yMax: 5.5, borderColor: 'rgba(245, 158, 11, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Moderate', display: true, color: 'rgba(245, 158, 11, 0.8)', font: { size: 10 }, position: 'start' } },
-                freshBreeze: { type: 'line', yMin: 8.0, yMax: 8.0, borderColor: 'rgba(249, 115, 22, 0.5)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Fresh', display: true, color: 'rgba(249, 115, 22, 0.8)', font: { size: 10 }, position: 'start' } },
-                strongBreeze: { type: 'line', yMin: 10.8, yMax: 10.8, borderColor: 'rgba(239, 68, 68, 0.5)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Strong', display: true, color: 'rgba(239, 68, 68, 0.8)', font: { size: 10 }, position: 'start' } },
-                gale: { type: 'line', yMin: 13.9, yMax: 13.9, borderColor: 'rgba(127, 29, 29, 0.6)', borderWidth: 2, borderDash: [4, 4], label: { content: 'Gale', display: true, color: 'rgba(127, 29, 29, 0.8)', font: { size: 10 }, position: 'start' } }
-              }
+              annotations: relevantAnnotations
             }
           }
         }
