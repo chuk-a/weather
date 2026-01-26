@@ -3,8 +3,9 @@ import { useWeatherData } from './hooks/useWeatherData';
 import {
     ComparisonChart as PollutionChart,
     AtmosphereTrendChart,
+    WindVelocityChart,
     AirRadialChart,
-    SpatialRadarChart as StationMap
+    SpatialRadarChart as RadarChart
 } from './components/Charts';
 import {
     Wind,
@@ -33,53 +34,51 @@ const TRANSLATIONS = {
         brand: 'ATMOSPHERIC NEXUS',
         system: 'QUANTUM AIR ANALYSIS SYSTEM',
         location: 'ULAANBAATAR GRID',
-        geospatial: 'GEOSPATIAL MATRIX',
-        temporal: 'TEMPORAL ANALYSIS',
-        molecular: 'MOLECULAR SCAN',
-        quantumIndex: 'QUANTUM INDEX',
-        airQualityIndex: 'AQI SCORE',
-        healthStatus: 'HEALTH STATUS',
-        temperature: 'TEMPERATURE',
-        activeSensors: 'ACTIVE SENSORS',
-        active: 'ACTIVE',
-        live: 'LIVE',
-        optimal: 'OPTIMAL',
-        moderate: 'MODERATE',
-        status: 'SYSTEM STATUS',
-        integrity: 'Network integrity',
+        cityConc: 'CITY CONCENTRATION',
+        guard: 'HEALTH SAFEGUARD',
+        atmosphere: 'ATMOSPHERE',
+        composition: 'COMPOSITION',
+        map: 'Map',
+        pollution: 'Pollution',
+        windSpeed: 'Wind Speed',
+        climate: 'Climate',
+        activeSignals: 'Active Signals',
+        filtering: '2H Filtering',
+        feels: 'Feels',
+        sync: 'Sync',
         heartbeat: 'Telemetry Heartbeat',
-        reliability: 'Signal Integrity',
         loading: 'SYNCHRONIZING SECURE NETWORK...',
         all: 'ALL',
         today: '1D',
         last7: '1W',
-        last30: '1M'
+        last30: '1M',
+        unitTemp: 'C',
+        unitHumidity: '%'
     },
     mn: {
         brand: 'ATMOSPHERIC NEXUS',
         system: 'КВАНТ АГААРЫН ШИНЖИЛГЭ',
         location: 'УЛААНБААТАР СҮЛЖЭЭ',
-        geospatial: 'ОРОН ЗАЙН МАТРИЦ',
-        temporal: 'ХУГАЦААНЫ ШИНЖИЛГЭ',
-        molecular: 'МОЛЕКУЛЫН САН',
-        quantumIndex: 'КВАНТ ИНДЕКС',
-        airQualityIndex: 'AQI ОНОО',
-        healthStatus: 'ЭРҮҮЛ МЭНД',
-        temperature: 'ХЭМ',
-        activeSensors: 'МЭДРЭГЧҮҮД',
-        active: 'ИДЭВХТЭЙ',
-        live: 'ШУУД',
-        optimal: 'ХЭВИЙН',
-        moderate: 'ДУНДАЖ',
-        status: 'СҮЛЖЭЭНИЙ ТӨЛӨВ',
-        integrity: 'Сүлжээний нэгдмэл байдал',
+        cityConc: 'ХОТЫН БОХИРДОЛ',
+        guard: 'ЭРҮҮЛ МЭНД',
+        atmosphere: 'ЦАГ АГААР',
+        composition: 'НАЙРЛАГА',
+        map: 'Газрын зураг',
+        pollution: 'Бохирдол',
+        windSpeed: 'Салхины хурд',
+        climate: 'Цаг уур',
+        activeSignals: 'Идэвхтэй Цэгүүд',
+        filtering: '2Ц Шүүлтүүр',
+        feels: 'Мэдрэгдэх',
+        sync: 'Синх',
         heartbeat: 'Сүлжээний дохио',
-        reliability: 'Дохионы найдвартай байдал',
-        loading: 'СҮЛЖЭЭГ СИНХРОНЧИЛЖ БАЙНА...',
+        loading: 'СҮЛЖЭЭГ ШАЛГАЖ БАЙНА...',
         all: 'БҮГД',
         today: '1Ө',
         last7: '1Д',
-        last30: '1С'
+        last30: '1С',
+        unitTemp: 'Хэм',
+        unitHumidity: '%'
     }
 };
 
@@ -130,7 +129,7 @@ function App() {
     );
 
     return (
-        <div className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-4 gap-4 transition-colors duration-500">
+        <div className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-4 gap-4 transition-colors duration-500 group">
             {/* Cyber-Grid Background */}
             <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
 
@@ -140,14 +139,14 @@ function App() {
             {/* Header Layer */}
             <header className="flex items-center justify-between z-10 shrink-0">
                 <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 bg-primary/20 rounded-xl flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
-                        <Activity className="w-6 h-6 text-primary" />
+                    <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
+                        <Activity className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-black tracking-tighter text-foreground leading-[0.8] font-rajdhani">
-                            ATMOSPHERIC <span className="text-primary italic">NEXUS</span>
+                        <h1 className="text-2xl font-black tracking-tighter text-foreground leading-none font-rajdhani">
+                            {t('brand')}
                         </h1>
-                        <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                        <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
                             {t('system')}
                         </p>
                     </div>
@@ -159,13 +158,13 @@ function App() {
                         <span className="text-sm font-bold tracking-tight">{t('location')}</span>
                     </div>
 
-                    <div className="flex bg-card/40 backdrop-blur-md rounded-lg border border-white/5 p-1 h-10 items-center">
+                    <div className="flex bg-card/40 backdrop-blur-md rounded-lg border border-white/5 p-1 h-9 items-center">
                         {['today', 'last7', 'last30'].map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={cn(
-                                    "px-4 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                                    "px-3 h-full rounded-md text-[9px] font-black uppercase tracking-widest transition-all duration-300",
                                     timeRange === range ? "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,255,255,0.4)]" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
@@ -181,7 +180,7 @@ function App() {
                                     key={l}
                                     onClick={() => setLang(l)}
                                     className={cn(
-                                        "px-3 py-1 text-[10px] font-black uppercase rounded-md transition-all",
+                                        "px-2 py-0.5 text-[9px] font-black uppercase rounded transition-all",
                                         lang === l ? "bg-white/10 text-primary" : "text-muted-foreground"
                                     )}
                                 >
@@ -191,7 +190,7 @@ function App() {
                         </div>
                         <button
                             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="p-2.5 rounded-lg glass-panel hover:bg-white/10 transition-colors"
+                            className="p-2 rounded-lg glass-panel hover:bg-white/10 transition-colors"
                         >
                             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
                         </button>
@@ -199,299 +198,171 @@ function App() {
                 </div>
             </header>
 
-            {/* Primary Metrics Layer */}
+            {/* Primary Metrics Layer (Restored 4nd-card header) */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0">
                 <MetricCard
-                    label={t('quantumIndex')}
-                    value={metrics.avgAQI || '--'}
-                    status={metrics.isOffline ? 'OFFLINE' : t('live')}
-                    icon={<Activity className="w-4 h-4 text-primary" />}
-                    subValue="Optimal atmospheric conditions"
-                    trend="stable"
+                    label={t('cityConc')}
+                    value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
+                    unit="µg/m³"
+                    icon={<AirRadialChart value={metrics.avgAQI} />}
+                    subValue={`${metrics.activeCount}/${metrics.totalCount} ${t('activeSignals')} | ${t('filtering')}`}
+                    isSplit
                 />
                 <MetricCard
-                    label={t('healthStatus')}
+                    label={t('guard')}
                     value={metrics.avgAQI ? getHealthLevel(metrics.avgAQI).status : '--'}
-                    status="ACTIVE"
-                    icon={<HeartPulse className="w-4 h-4 text-accent" />}
-                    subValue="PM2.5 & PM10 monitored"
-                    trend="stable"
+                    unit="STATUS"
+                    icon={<ShieldCheck className="w-6 h-6 text-emerald-500 opacity-40" />}
+                    subValue="IDEAL CONDITIONS. PERFECT FOR OUTDOOR EXERCISE."
+                    statusColor={getHealthLevel(metrics.avgAQI).text}
                 />
                 <MetricCard
-                    label={t('temperature')}
+                    label={t('atmosphere')}
                     value={metrics.temp != null ? `${metrics.temp}°` : '--'}
-                    status="READY"
-                    icon={<ThermometerSun className="w-4 h-4 text-primary" />}
-                    subValue={`Thermal index: ${metrics.feels != null ? metrics.feels : '--'}° • Fog detected`}
-                    trend="stable"
+                    unit="C"
+                    icon={<ThermometerSun className="w-6 h-6 text-sky-400 opacity-40" />}
+                    subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | T-ZONE`}
                 />
                 <MetricCard
-                    label={t('activeSensors')}
-                    value={metrics.activeCount || '0'}
-                    status="ONLINE"
-                    icon={<Zap className="w-4 h-4 text-primary" />}
-                    subValue={`${t('integrity')}: 95%`}
-                    trend="up"
+                    label={t('composition')}
+                    value={metrics.humidity || '--'}
+                    unit="%"
+                    icon={<Droplets className="w-6 h-6 text-blue-400 opacity-40" />}
+                    subValue={`WIND ${metrics.wind || '--'}m/s | RH ${metrics.humidity || '--'}%`}
                 />
             </div>
 
-            {/* Main Intelligence Grid (Restored 70/30 Split) */}
+            {/* Main Intelligence Grid (Hybrid 70/30) */}
             <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-4 z-10 min-h-0 overflow-hidden mb-2">
 
-                {/* Left Section (70%) */}
-                <div className="md:col-span-7 flex flex-col gap-4 min-h-0">
-
-                    {/* Top Hero: Quantum Analysis Horizontal Sub-Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 shrink-0">
-                        <Card className="glass-panel border-white/5 bg-background/20 relative overflow-hidden p-6 flex items-center gap-8 min-h-[220px]">
-                            <div className="absolute top-4 left-4 text-[9px] font-black uppercase tracking-widest text-primary/60">{t('quantumIndex')}</div>
-                            <div className="absolute top-4 right-4 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[8px] font-black text-emerald-500 uppercase">{t('live')}</span>
-                            </div>
-
-                            {/* Radial Gauge */}
-                            <div className="relative w-36 h-36 flex items-center justify-center shrink-0">
-                                <svg className="w-full h-full transform -rotate-90">
-                                    <circle cx="72" cy="72" r="60" stroke="currentColor" strokeWidth="6" fill="transparent" className="text-white/5" />
-                                    <circle cx="72" cy="72" r="60" stroke="currentColor" strokeWidth="6" fill="transparent" strokeDasharray="377" strokeDashoffset={377 - (377 * Math.min(metrics.avgAQI || 0, 200)) / 200} className="text-primary drop-shadow-[0_0_10px_rgba(0,255,255,0.4)] transition-all duration-1000" />
-                                </svg>
-                                <div className="absolute flex flex-col items-center">
-                                    <span className="text-4xl font-black tracking-tighter leading-none">{metrics.avgAQI || '--'}</span>
-                                    <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground mt-1">{t('airQualityIndex')}</span>
+                {/* Left Section (70%): Tabs Restore */}
+                <Card className="md:col-span-7 glass-panel border-white/5 bg-background/20 relative overflow-hidden flex flex-col p-0 border-none">
+                    <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
+                        <div className="px-6 pt-4 flex items-center justify-between shrink-0">
+                            <div className="flex items-center gap-4">
+                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Intelligence Layer</span>
+                                <div className="h-3 w-px bg-white/10" />
+                                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-black/40 border border-white/5 backdrop-blur-md">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,0.8)]" />
+                                    <span className="text-[9px] font-black text-primary/80 uppercase">SYSTEM_ACTIVE</span>
                                 </div>
                             </div>
-
-                            <div className="flex-1">
-                                <div className="flex justify-between items-end mb-2">
-                                    <span className="text-xs font-bold text-emerald-500 uppercase tracking-widest">{t('optimal')}</span>
-                                    <span className="text-[8px] font-bold text-muted-foreground uppercase opacity-40">0-50 Optimal</span>
-                                </div>
-                                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                    <div className="h-full bg-emerald-500 w-[70%] shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
-                                </div>
-                                <p className="mt-4 text-[11px] text-muted-foreground/80 font-bold leading-relaxed italic">
-                                    Atmospheric conditions are ideal for the Ulaanbaatar Grid.
-                                </p>
-                            </div>
-                        </Card>
-
-                        <Card className="glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col p-6 min-h-[220px]">
-                            <div className="flex items-center justify-between mb-6">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">{t('molecular')}</span>
-                                <Zap className="w-3 h-3 text-primary animate-pulse" />
-                            </div>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <div className="flex justify-between text-[11px] font-bold uppercase mb-1">
-                                        <span className="text-primary font-black tracking-widest">PM2.5 <span className="opacity-40 ml-1 text-[8px]">µg/m³</span></span>
-                                        <span className="font-rajdhani text-base">{metrics.avgAQI ? Math.round(metrics.avgAQI * 0.4) : '--'} <span className="opacity-40 text-[10px]">/35</span></span>
-                                    </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-primary shadow-[0_0_8px_rgba(0,255,255,0.4)]" style={{ width: '45%' }} />
-                                    </div>
-                                    <div className="flex justify-between text-[8px] font-black uppercase mt-1 opacity-60 tracking-[0.2em]">
-                                        <span className="text-emerald-500">{t('optimal')}</span>
-                                        <span>34.3% LOAD</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div className="flex justify-between text-[11px] font-bold uppercase mb-1">
-                                        <span className="text-accent font-black tracking-widest">PM10 <span className="opacity-40 ml-1 text-[8px]">µg/m³</span></span>
-                                        <span className="font-rajdhani text-base">{metrics.avgAQI ? Math.round(metrics.avgAQI * 0.6) : '--'} <span className="opacity-40 text-[10px]">/50</span></span>
-                                    </div>
-                                    <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                        <div className="h-full bg-accent shadow-[0_0_8px_rgba(255,0,255,0.4)]" style={{ width: '36%' }} />
-                                    </div>
-                                    <div className="flex justify-between text-[8px] font-black uppercase mt-1 opacity-60 tracking-[0.2em]">
-                                        <span className="text-emerald-500">{t('optimal')}</span>
-                                        <span>36.0% LOAD</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-
-                    {/* Main Area: Matrix & Temporal Tabs */}
-                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 relative overflow-hidden flex flex-col p-0 border-none">
-                        <Tabs defaultValue="matrix" className="flex flex-col h-full bg-transparent">
-                            <div className="px-6 pt-4 flex items-center justify-between shrink-0">
-                                <div className="flex items-center gap-4">
-                                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Intelligence Layer</span>
-                                    <div className="h-3 w-px bg-white/10" />
-                                    <div className="flex gap-4">
-                                        {['AQI', 'PM2.5', 'PM10'].map(tag => (
-                                            <div key={tag} className="flex items-center gap-1.5 opacity-40">
-                                                <div className={cn("w-1 h-1 rounded-full", tag === 'AQI' ? 'bg-primary' : tag === 'PM2.5' ? 'bg-accent' : 'bg-rose-500')} />
-                                                <span className="text-[8px] font-black uppercase tracking-widest text-foreground">{tag}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <TabsList className="bg-white/5 border border-white/5 gap-1 h-9">
-                                    <TabsTrigger value="matrix" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('geospatial')}</TabsTrigger>
-                                    <TabsTrigger value="temporal" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('temporal')}</TabsTrigger>
-                                </TabsList>
-                            </div>
-
-                            <div className="flex-1 min-h-0 relative">
-                                <TabsContent value="matrix" className="h-full m-0 p-0 relative border-none outline-none">
-                                    <div className="absolute top-4 left-6 z-20">
-                                        <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-black/60 border border-white/5 backdrop-blur-xl">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,0.8)]" />
-                                            <span className="text-[10px] font-black tracking-[0.2em] text-primary">47.92°N, 106.91°E</span>
-                                        </div>
-                                    </div>
-                                    <StationMap
-                                        stations={metrics.stations}
-                                        filteredData={filteredData}
-                                    />
-                                    <div className="absolute bottom-4 right-6 z-20 px-4 py-1.5 rounded-lg bg-black/60 border border-white/5 backdrop-blur-xl">
-                                        <div className="flex items-center gap-4">
-                                            <div className="h-px w-16 bg-white/20 relative">
-                                                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
-                                                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full" />
-                                            </div>
-                                            <span className="text-[9px] font-black tracking-[0.3em] text-white/40 uppercase">20km</span>
-                                        </div>
-                                    </div>
-                                </TabsContent>
-                                <TabsContent value="temporal" className="h-full m-0 p-0 relative border-none outline-none pt-8">
-                                    <div className="absolute top-0 right-6 z-20 flex gap-2">
-                                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-md">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">{t('optimal')}</span>
-                                        </div>
-                                    </div>
-                                    <div className="h-full w-full px-2">
-                                        <PollutionChart data={filteredData} />
-                                    </div>
-                                </TabsContent>
-                            </div>
-                        </Tabs>
-                    </Card>
-                </div>
-
-                {/* Right Section: Sensor Network (30%) */}
-                <div className="md:col-span-3 flex flex-col min-h-0">
-                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col relative">
-                        <div className="p-5 border-b border-white/5 flex items-center justify-between shrink-0 bg-white/[0.02]">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">Sensor Network</span>
-                            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 shadow-[0_0_10px_rgba(0,255,255,0.1)]">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                <span className="text-[9px] font-black text-primary uppercase">{metrics.activeCount} ACTIVE</span>
-                            </div>
+                            <TabsList className="bg-white/5 border border-white/5 gap-1 h-9">
+                                <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
+                                <TabsTrigger value="pollution" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('pollution')}</TabsTrigger>
+                                <TabsTrigger value="wind" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('windSpeed')}</TabsTrigger>
+                                <TabsTrigger value="climate" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('climate')}</TabsTrigger>
+                            </TabsList>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-3">
+                        <div className="flex-1 min-h-0 relative">
+                            <TabsContent value="map" className="h-full m-0 p-0 relative border-none outline-none">
+                                <RadarChart stations={stations} metrics={metrics} />
+                            </TabsContent>
+                            <TabsContent value="pollution" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                <PollutionChart data={filteredData} />
+                            </TabsContent>
+                            <TabsContent value="wind" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                <WindVelocityChart data={filteredData} />
+                            </TabsContent>
+                            <TabsContent value="climate" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                <AtmosphereTrendChart data={filteredData} />
+                            </TabsContent>
+                        </div>
+                    </Tabs>
+                </Card>
+
+                {/* Right Section (30%): Sensor Network */}
+                <div className="md:col-span-3 flex flex-col min-h-0">
+                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col relative">
+                        <div className="p-4 border-b border-white/5 flex flex-col gap-1 shrink-0 bg-white/[0.02]">
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/80">REGIONAL SIGNALS</span>
+                            <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest">LIVE DISTRICT NODE STATUS</span>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
                             {metrics.stations.map((s) => (
                                 <div
                                     key={s.id}
                                     className={cn(
-                                        "group p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden",
+                                        "group p-3 rounded-lg border transition-all cursor-pointer relative overflow-hidden",
                                         s.status === 'live' ? "glass-panel bg-white/[0.03] border-white/10 hover:border-primary/40" : "bg-black/40 border-white/5 opacity-50"
                                     )}
                                 >
-                                    <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center justify-between mb-2">
                                         <div className="flex flex-col">
                                             <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-[10px] font-black text-primary px-1.5 py-0.5 rounded bg-primary/10 border border-primary/20">{s.id_num || '#--'}</span>
-                                                <span className="text-xs font-black uppercase tracking-tighter truncate max-w-[120px]">{s.label}</span>
+                                                <span className="text-[9px] font-black text-primary/60">{s.id_num || '#--'}</span>
+                                                <span className="text-[10px] font-black uppercase tracking-tighter truncate max-w-[100px]">{s.label}</span>
                                             </div>
-                                            <span className="text-[9px] font-bold uppercase tracking-widest text-foreground/30 ml-0.5">{s.region || 'Unknown'}</span>
+                                            <span className="text-[8px] font-bold uppercase tracking-widest text-foreground/20">{s.region || 'Unknown'}</span>
                                         </div>
                                         <div className="flex flex-col items-end">
-                                            <span className="text-2xl font-black tracking-tighter leading-none">{s.val || '--'}</span>
-                                            <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mt-1">AQI</span>
+                                            <span className="text-xl font-black tracking-tighter leading-none">{s.val || '--'}</span>
+                                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1">AQI</span>
                                         </div>
                                     </div>
-                                    <div className="h-1 bg-white/5 rounded-full overflow-hidden flex-1 relative">
+                                    <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden flex-1 relative">
                                         <div
-                                            className={cn("h-full transition-all duration-1000 shadow-[0_0_8px_rgba(0,0,0,0.5)]", getHealthLevel(s.val || 0).bg)}
+                                            className={cn("h-full transition-all duration-1000", getHealthLevel(s.val || 0).bg)}
                                             style={{ width: `${Math.min((s.val || 0) / 2, 100)}%` }}
                                         />
                                     </div>
-                                    <SignalHigh className={cn("absolute bottom-3 right-3 w-3 h-3 transition-colors", s.status === 'live' ? "text-emerald-500" : "text-muted-foreground")} />
+                                    <SignalHigh className={cn("absolute bottom-2 right-2 w-3 h-3 transition-colors", s.status === 'live' ? "text-emerald-500" : "text-muted-foreground")} />
                                 </div>
                             ))}
                         </div>
 
-                        <div className="p-5 border-t border-white/5 bg-black/60 relative">
-                            <div className="flex flex-col">
-                                <span className="text-[9px] font-black text-primary uppercase tracking-[0.4em] mb-2">{t('status')}:</span>
-                                <div className="flex items-center gap-2">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    <span className="text-xs font-bold text-emerald-500/90 leading-tight uppercase tracking-tight">System parameters within safe thresholds</span>
-                                </div>
+                        <div className="p-4 border-t border-white/5 bg-black/60 flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest">SECURE_LINK</span>
                             </div>
+                            <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span>
                         </div>
                     </Card>
                 </div>
             </main>
 
             {/* Global Telemetry Footprint */}
-            <footer className="h-8 flex items-center justify-between z-10 shrink-0 px-2 lg:px-4">
-                <div className="flex items-center gap-6">
+            <footer className="h-6 flex items-center justify-between z-10 shrink-0 px-2 lg:px-4">
+                <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.8)]" />
-                        <span className="text-[10px] font-black uppercase tracking-[0.3em] text-foreground/30">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/30">
                             {t('heartbeat')}: <span className="text-primary/60 ml-1">[{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}]</span>
                         </span>
                     </div>
                 </div>
-                <div className="flex items-center gap-8">
-                    <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-foreground/20">System Integrity</span>
-                        <div className="w-16 h-1 bg-white/5 rounded-full overflow-hidden">
-                            <div className="w-[95%] h-full bg-primary/40" />
-                        </div>
-                        <span className="text-[10px] font-black uppercase tracking-tight text-emerald-500/60">95% Reliable</span>
-                    </div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-foreground/20">Quantum Nexus Terminal v2.6</span>
+                <div>
+                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-foreground/20 italic">QUANTUM NEXUS TERMINAL v2.7</span>
                 </div>
             </footer>
         </div>
     );
 }
 
-function MetricCard({ label, value, status, icon, subValue, trend }) {
+function MetricCard({ label, value, unit, icon, subValue, isSplit = false, statusColor }) {
     return (
         <Card className="glass-panel group p-4 border-white/5 bg-background/20 relative overflow-hidden transition-all hover:border-primary/40">
-            <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-white/5 border border-white/10 transition-colors group-hover:border-primary/30">
-                        {icon}
-                    </div>
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60">{label}</span>
-                </div>
-                <div className={cn(
-                    "px-2 py-0.5 rounded text-[9px] font-black tracking-widest border transition-all",
-                    status === 'OFFLINE' ? "bg-rose-500/10 border-rose-500/30 text-rose-500" : "bg-primary/10 border-primary/30 text-primary group-hover:bg-primary/20"
-                )}>
-                    {status}
-                </div>
+            <div className="flex items-center justify-between mb-4 flex-nowrap">
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-primary/20 pl-2">{label}</span>
+                {!isSplit && icon}
             </div>
 
-            <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-5xl font-black tracking-tighter leading-none">{value}</span>
-                {trend && (
-                    <div className={cn("text-[11px] font-black", trend === 'up' ? 'text-rose-500' : 'text-emerald-500')}>
-                        {trend === 'up' ? '↑' : '↓'}
-                    </div>
-                )}
+            <div className="flex items-end justify-between">
+                <div className="flex items-baseline gap-2">
+                    <span className={cn("text-4xl font-black tracking-tighter leading-none tabular-nums", statusColor)}>{value}</span>
+                    <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">{unit}</span>
+                </div>
+                {isSplit && <div className="w-20 h-10 flex items-center justify-center opacity-80">{icon}</div>}
             </div>
 
-            <div className="mt-2 pt-2 border-t border-white/5">
-                <p className="text-[10px] font-bold text-muted-foreground/80 uppercase tracking-tight truncate">
+            <div className="mt-4 pt-2 border-t border-white/5">
+                <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-tighter truncate">
                     {subValue}
                 </p>
             </div>
-
-            {/* Precision corner accents */}
-            <div className="absolute top-0 right-0 w-2 h-2 border-t border-r border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <div className="absolute bottom-0 left-0 w-2 h-2 border-b border-l border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         </Card>
     );
 }

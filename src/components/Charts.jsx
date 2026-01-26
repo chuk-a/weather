@@ -113,43 +113,50 @@ export function AirRadialChart({ value }) {
     );
 }
 
-// --- NEW: GEOSPATIAL MATRIX (Grid with Pulses) ---
+// --- NEW: SPATIAL TELEMETRY (Fidelity Radar) ---
 export function SpatialRadarChart({ stations, metrics }) {
-    if (!stations) return null;
+    const data = useMemo(() => {
+        if (!metrics || !stations) return [];
+        return stations.map(s => {
+            const stats = metrics.stations.find(st => st.id === s.id);
+            return {
+                subject: s.label.toUpperCase(),
+                value: stats?.val || 0,
+                fullMark: 200,
+            };
+        });
+    }, [stations, metrics]);
 
     return (
-        <div className="w-full h-full relative overflow-hidden bg-[#0F0A1E]/40 cyber-grid">
-            {/* Pulsing Grid Points */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                {stations.map((s, i) => {
-                    // Random-ish positioning based on ID for visual variety in the matrix
-                    const left = ((s.id.charCodeAt(0) + s.id.charCodeAt(1)) % 80) + 10;
-                    const top = ((s.id.charCodeAt(2) + (s.id.charCodeAt(3) || 0)) % 60) + 20;
-                    const isOptimal = s.val <= 50;
-
-                    return (
-                        <div
-                            key={s.id}
-                            className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                            style={{ left: `${left}%`, top: `${top}%` }}
-                        >
-                            <div className={cn(
-                                "w-3 h-3 rounded-full relative",
-                                isOptimal ? "bg-primary" : "bg-amber-500"
-                            )}>
-                                <div className={cn(
-                                    "absolute inset-0 rounded-full animate-ping opacity-75",
-                                    isOptimal ? "bg-primary" : "bg-amber-500"
-                                )} />
-                                <div className={cn(
-                                    "absolute -inset-4 rounded-full blur-md opacity-40",
-                                    isOptimal ? "bg-primary/40" : "bg-amber-500/40"
-                                )} />
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
+        <div className="w-full h-full min-h-[350px] flex items-center justify-center relative bg-[#0F0A1E]/20 cyber-grid">
+            <ResponsiveContainer width="100%" height="100%">
+                <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+                    <PolarGrid stroke="rgba(255,255,255,0.05)" />
+                    <PolarAngleAxis
+                        dataKey="subject"
+                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: '900' }}
+                    />
+                    <Radar
+                        name="AQI"
+                        dataKey="value"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="hsl(var(--primary))"
+                        fillOpacity={0.2}
+                        animationDuration={1500}
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: '#0F0A1E',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                        }}
+                    />
+                </RadarChart>
+            </ResponsiveContainer>
         </div>
     );
 }
