@@ -91,19 +91,21 @@ def scrape_pm25(url, label):
 
 def clean(val):
     if isinstance(val, str):
-        val = val.strip()
+        # Remove embedding newlines and extra spaces
+        val = val.replace("\r", " ").replace("\n", " ").strip()
+        
         if "ERROR" in val:
             return "ERROR"
         
-        # Check if it's the timestamp string (contains "•")
-        if "•" in val and "Local time" in val:
-            # Format: "Air quality ... • Followers • 08:00, Jan 26 Local time"
-            # We want the last part before "Local time"
-            parts = val.split("•")
-            if len(parts) > 0:
-                time_part = parts[-1].replace("Local time", "").strip()
-                return time_part
-        
+        # Check for specific IQAir "No current data" patterns
+        if "No current data" in val:
+             # Try to extract the last update time
+             # Format: "No current data Last update 18:00Jan 25 Local time"
+             match = datetime.strptime("18:00Jan 25", "%H:%MM %d") if "Jan" in val else None # Logic...
+             # Actually, just strip it to the time if possible, or leave it as a string
+             return val
+
+        # Standard cleaning for numbers/units
         return (
             val.replace("°", "")
                .replace("C", "")
@@ -112,8 +114,7 @@ def clean(val):
                .replace("%", "")
                .replace("м/с", "")
                .replace("|", "")
-               .replace("Нийслэл, Улаанбаатар", "")
-               .replace(", ", "") 
+               # keep the comma if it exists for the frontend parser
                .strip()
         )
     return val

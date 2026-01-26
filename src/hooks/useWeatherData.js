@@ -192,11 +192,12 @@ export function useWeatherData() {
 
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
-            : 0;
+            : null;
 
         return {
             lastUpdated: data.timestamps[idx],
             avgAQI: avg,
+            isOffline: avg === null,
             temp: data.temps[idx],
             feels: data.feels[idx],
             humidity: data.humidities[idx],

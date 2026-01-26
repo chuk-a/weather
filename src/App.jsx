@@ -106,10 +106,10 @@ function App() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
                     <MetricCard
                         title="City Concentration"
-                        value={metrics?.avgAQI}
-                        unit="µg/m³"
-                        desc={healthData?.level + ": " + healthData?.advice}
-                        color={healthData?.color}
+                        value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
+                        unit={metrics?.isOffline ? "SIGNAL" : "µg/m³"}
+                        desc={metrics?.isOffline ? "No fresh data found from UB networks in last 2 hours." : healthData?.level + ": " + healthData?.advice}
+                        color={metrics?.isOffline ? "text-muted-foreground" : healthData?.color}
                         icon={<AirRadialChart value={metrics?.avgAQI} />}
                         isSplit={true}
                     />
