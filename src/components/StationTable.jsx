@@ -68,30 +68,44 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         offline: "bg-muted"
                     };
 
-                    const rawTime = row.original.time || "";
+                    return (
+                        <div className="flex items-center gap-3 py-1">
+                            <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColors[status] || statusColors.offline)} />
+                            <span className="text-sm font-bold text-foreground leading-tight truncate">
+                                {row.original.flag} {row.getValue("label")}
+                            </span>
+                        </div>
+                    );
+                },
+            },
+            {
+                accessorKey: "time",
+                header: ({ column }) => (
+                    <Button
+                        variant="ghost"
+                        onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+                        className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground h-auto py-0 font-bold"
+                    >
+                        Sync
+                        <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
+                    </Button>
+                ),
+                cell: ({ row }) => {
+                    const rawTime = row.getValue("time") || "";
                     let displayTime = "--";
 
                     if (rawTime.includes(',')) {
                         displayTime = rawTime.split(',')[0].trim();
                     } else if (rawTime.includes(' ')) {
-                        // Extract HH:mm from "YYYY-MM-DD HH:mm"
                         displayTime = rawTime.split(' ').pop();
                     }
 
                     return (
-                        <div className="flex items-center gap-3 py-1">
-                            <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColors[status] || statusColors.offline)} />
-                            <div className="flex flex-col">
-                                <span className="text-sm font-bold text-foreground leading-tight">
-                                    {row.original.flag} {row.getValue("label")}
-                                </span>
-                                <span className="text-[9px] font-mono text-muted-foreground uppercase font-bold tracking-tighter">
-                                    SYNC: {displayTime}
-                                </span>
-                            </div>
+                        <div className="text-[10px] font-mono text-muted-foreground font-bold tabular-nums">
+                            {displayTime}
                         </div>
                     );
-                },
+                }
             },
             {
                 accessorKey: "val",
