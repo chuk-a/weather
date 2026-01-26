@@ -195,9 +195,12 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
     });
 
     return (
-        <div className="bg-card h-full">
-            <Table>
-                <TableHeader className="bg-muted/30 border-y border-border/50 sticky top-0 z-20">
+        <div className="bg-transparent h-full relative overflow-hidden">
+            {/* Subtle inner grid for the table */}
+            <div className="absolute inset-0 cyber-grid opacity-5 pointer-events-none" />
+
+            <Table className="relative z-10">
+                <TableHeader className="bg-white/5 border-y border-white/5 sticky top-0 z-20 backdrop-blur-md">
                     {table.getHeaderGroups().map((headerGroup) => (
                         <TableRow key={headerGroup.id} className="border-transparent hover:bg-transparent">
                             {headerGroup.headers.map((header) => (
@@ -217,9 +220,12 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                     {(() => {
                         const rows = table.getRowModel().rows;
                         if (!rows?.length) return (
-                            <TableRow>
-                                <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
-                                    {t('searching')}
+                            <TableRow className="hover:bg-transparent border-none">
+                                <TableCell colSpan={columns.length} className="h-48 text-center text-primary/40 font-black text-[9px] tracking-[.4em] uppercase">
+                                    <div className="flex flex-col items-center gap-4">
+                                        <div className="w-12 h-12 rounded-full border border-primary/20 border-t-primary animate-spin" />
+                                        {t('searching')}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         );
@@ -230,41 +236,46 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         const renderRows = (rowGroup, titleKey, colorClass) => (
                             <>
                                 {rowGroup.length > 0 && (
-                                    <TableRow className="bg-muted/10 hover:bg-muted/10 border-y border-border/20 pointer-events-none">
-                                        <TableCell colSpan={columns.length} className="py-1.5 px-5">
+                                    <TableRow className="bg-white/5 hover:bg-white/5 border-none pointer-events-none">
+                                        <TableCell colSpan={columns.length} className="py-1.5 px-5 h-8">
                                             <div className="flex items-center gap-2">
-                                                <div className={cn("w-1 h-3 rounded-full", colorClass)} />
-                                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
-                                                    {t(titleKey)} <span className="ml-1 opacity-50">[{rowGroup.length} {t('nodes')}]</span>
+                                                <div className={cn("w-1 h-3 rounded-full shadow-[0_0_8px_rgba(16,185,129,0.5)]", colorClass)} />
+                                                <span className="text-[8px] font-black uppercase tracking-[.3em] text-foreground/40">
+                                                    {t(titleKey)} <span className="ml-2 text-primary/40">[{rowGroup.length} {t('nodes')}]</span>
                                                 </span>
                                             </div>
                                         </TableCell>
                                     </TableRow>
                                 )}
-                                {rowGroup.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        onClick={() => row.toggleSelected()}
-                                        className={cn(
-                                            "border-border/40 hover:bg-muted/50 transition-colors h-11 cursor-pointer",
-                                            row.getIsSelected() && "bg-muted/40",
-                                            (row.original.status === 'stale' || row.original.status === 'offline') && "opacity-60"
-                                        )}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id} className="px-5 py-0">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))}
+                                {rowGroup.map((row) => {
+                                    const isSelected = row.getIsSelected();
+                                    return (
+                                        <TableRow
+                                            key={row.id}
+                                            onClick={() => row.toggleSelected()}
+                                            className={cn(
+                                                "border-white/5 transition-all h-11 cursor-pointer group",
+                                                isSelected ? "bg-primary/10" : "hover:bg-white/5",
+                                                (row.original.status === 'stale' || row.original.status === 'offline') && "opacity-40"
+                                            )}
+                                        >
+                                            {row.getVisibleCells().map((cell) => (
+                                                <TableCell key={cell.id} className="px-5 py-0 border-none">
+                                                    <div className={cn("transition-transform duration-300", isSelected ? "translate-x-1" : "group-hover:translate-x-0.5")}>
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </div>
+                                                </TableCell>
+                                            ))}
+                                        </TableRow>
+                                    );
+                                })}
                             </>
                         );
 
                         return (
                             <>
-                                {renderRows(activeRows, "active", "bg-emerald-500")}
-                                {renderRows(staleRows, "stale", "bg-red-500")}
+                                {renderRows(activeRows, "active", "bg-primary")}
+                                {renderRows(staleRows, "stale", "bg-rose-500")}
                             </>
                         );
                     })()}
