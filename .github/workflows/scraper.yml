@@ -44,6 +44,11 @@ jobs:
         git add public/weather_log.csv
         git commit -m "Update weather_log.csv [auto]" || echo "No changes to commit"
 
+    - name: Push CSV changes to main
+      run: |
+        git pull --rebase origin main || echo "Already up to date"
+        git push origin main || echo "Nothing to push"
+
     - name: Setup Node
       uses: actions/setup-node@v3
       with:
@@ -61,8 +66,3 @@ jobs:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./dist
         publish_branch: gh-pages-build
-
-    - name: Push CSV changes to main
-      run: |
-        git pull --rebase
-        git push
