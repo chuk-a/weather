@@ -120,11 +120,22 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                     <ArrowUpDown className="ml-2 h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </Button>
             ),
-            cell: ({ row }) => (
-                <div className="text-[10px] font-black text-muted-foreground/30 tabular-nums uppercase">
-                    {row.getValue("time") ? row.getValue("time").split(' ').pop() : '--'}
-                </div>
-            )
+            cell: ({ row }) => {
+                const rawTime = row.getValue("time") || "";
+                let displayTime = "--";
+                if (rawTime.includes(',')) {
+                    displayTime = rawTime.split(',')[0].trim();
+                } else if (rawTime.includes(' ')) {
+                    displayTime = rawTime.split(' ').pop();
+                } else {
+                    displayTime = rawTime;
+                }
+                return (
+                    <div className="text-[10px] font-black text-muted-foreground/30 tabular-nums uppercase">
+                        {displayTime}
+                    </div>
+                );
+            }
         },
         {
             accessorKey: "val",
