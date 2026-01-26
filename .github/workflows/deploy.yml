@@ -26,10 +26,6 @@ jobs:
 
       - name: Build
         run: npm run build
-        
-      # Critical step: Copy the live CSV data into the build folder
-      - name: Copy Data
-        run: cp weather_log.csv dist/
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

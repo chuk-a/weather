@@ -50,16 +50,16 @@ jobs:
         echo "=== Git status ==="
         git status
         echo "=== Git diff ==="
-        git diff weather_log.csv || echo "No diff"
+        git diff public/weather_log.csv || echo "No diff"
         echo "=== End debug ==="
 
     - name: Auto-commit updated CSV
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
-        git add weather_log.csv
+        git add public/weather_log.csv
         git status
-        git diff --stat weather_log.csv
+        git diff --stat public/weather_log.csv
         git commit -m "Update weather_log.csv [auto]" || echo "No changes to commit"
         git pull --rebase
         git push
