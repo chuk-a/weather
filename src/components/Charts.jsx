@@ -16,7 +16,9 @@ import {
     PolarRadiusAxis,
     RadialBarChart,
     RadialBar,
-    Cell
+    Cell,
+    PieChart,
+    Pie
 } from 'recharts';
 
 // --- HELPER: Pivot Data (Columns -> Rows) ---
@@ -48,33 +50,68 @@ const usePivotData = (data, keys) => {
     }, [data, keys]);
 };
 
-// --- NEW: RADIAL GAUGE (Shadcn Style) ---
+// --- HELPER: Needle for AQI Gauge ---
+const RADIAN = Math.PI / 180;
+const needle = (value, data, cx, cy, iR, oR, color) => {
+    let total = 0;
+    data.forEach((v) => {
+        total += v.value;
+    });
+    const ang = 180.0 * (1 - value / 500); // Scale 0-500 to 180-0 degrees
+    const cos = Math.cos(-RADIAN * ang);
+    const sin = Math.sin(-RADIAN * ang);
+    const r = 5;
+    const x0 = cx + 5;
+    const y0 = cy;
+    const xba = cx + r * sin;
+    const yba = cy - r * cos;
+    const xbb = cx - r * sin;
+    const ybb = cy + r * cos;
+    const xp = cx + oR * cos;
+    const yp = cy + oR * sin;
+
+    return [
+        <circle key="center" cx={cx} cy={cy} r={r} fill={color} stroke="none" />,
+        <path key="needle" d={`M${xba} ${yba}L${xbb} ${ybb}L${xp} ${yp} Z`} stroke="#none" fill={color} />,
+    ];
+};
+
+// --- NEW: AUTHENTIC AQI NEEDLE GAUGE ---
 export function AirRadialChart({ value }) {
-    // Normalize value (0-300 range for AQI)
-    const data = [{ name: 'AQI', value: value || 0, fill: '#10b981' }];
+    const data = [
+        { name: 'Good', value: 50, fill: '#10b981' },
+        { name: 'Moderate', value: 50, fill: '#fbbf24' },
+        { name: 'Sensitive', value: 50, fill: '#f97316' },
+        { name: 'Unhealthy', value: 50, fill: '#ef4444' },
+        { name: 'Very Unhealthy', value: 100, fill: '#8b5cf6' },
+        { name: 'Hazardous', value: 200, fill: '#7f1d1d' },
+    ];
+
+    const cx = 80;
+    const cy = 80;
+    const iR = 50;
+    const oR = 75;
 
     return (
-        <div className="w-full h-full flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart
-                    cx="50%"
-                    cy="50%"
-                    innerRadius="80%"
-                    outerRadius="110%"
-                    barSize={6}
+        <div className="w-full h-full flex items-center justify-center pt-4">
+            <PieChart width={160} height={100}>
+                <Pie
+                    dataKey="value"
+                    startAngle={180}
+                    endAngle={0}
                     data={data}
-                    startAngle={225}
-                    endAngle={-45}
+                    cx={cx}
+                    cy={cy}
+                    innerRadius={iR}
+                    outerRadius={oR}
+                    stroke="none"
                 >
-                    <RadialBar
-                        minAngle={15}
-                        background={{ fill: 'hsl(var(--muted)/0.3)' }}
-                        clockWise
-                        dataKey="value"
-                        cornerRadius={10}
-                    />
-                </RadialBarChart>
-            </ResponsiveContainer>
+                    {data.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.fill} />
+                    ))}
+                </Pie>
+                {needle(Math.min(value || 0, 500), data, cx, cy, iR, oR, 'currentColor')}
+            </PieChart>
         </div>
     );
 }
