@@ -193,6 +193,7 @@ export function useWeatherData() {
             return 'stable';
         };
 
+        const now = new Date();
         const processedStations = STATIONS.map(s => {
             const val = data[s.id][idx];
             const tStr = cleanTime(data[`time_${s.id}`][idx]);
@@ -200,12 +201,17 @@ export function useWeatherData() {
 
             if (tStr) {
                 try {
+                    // tStr is "10:00, Jan 26"
                     const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                    // Create string like "Jan 26, 2026 10:00" which is widely supported by Date()
                     const d = new Date(`${datePart}, ${now.getFullYear()} ${timePart}`);
-                    const diffHrs = (now - d) / (1000 * 60 * 60);
-                    if (diffHrs < 0.5) status = 'live';
-                    else if (diffHrs < 1.5) status = 'delayed';
-                    else status = 'stale';
+
+                    if (!isNaN(d.getTime())) {
+                        const diffHrs = (now - d) / (1000 * 60 * 60);
+                        if (diffHrs < 0.5) status = 'live';
+                        else if (diffHrs < 1.5) status = 'delayed';
+                        else status = 'stale';
+                    }
                 } catch (e) { status = 'offline'; }
             }
 
