@@ -9,6 +9,12 @@
 
 <body>
   <div id="root"></div>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      document.body.innerHTML += '<div style="color:red; padding:20px; background:white; position:fixed; top:0; left:0; z-index:9999;">JS Error: ' + msg + ' at ' + line + ':' + col + '</div>';
+      return false;
+    };
+  </script>
   <script type="module" src="/src/main.jsx"></script>
 </body>
 
