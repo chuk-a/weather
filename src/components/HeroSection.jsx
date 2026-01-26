@@ -1,10 +1,8 @@
 import React from 'react';
-import { Thermometer, Wind, Droplets, HelpCircle } from 'lucide-react';
+import { Thermometer, Wind, Droplets, Sun } from 'lucide-react';
 
-// Using a custom icon for "Feels Like" since HandWarmer/Scarf isn't standard in basic sets, using HelpCircle or similar.
-// Actually Lucide has 'ThermometerSun' or similar. We used a scarf emoji before. Let's use 'Hand' or just text.
-// We'll use ThermometerSun for Feels Like.
-import { ThermometerSun } from 'lucide-react';
+// Using a custom icon for "Feels Like" since HandWarmer/Scarf isn't standard in basic sets.
+// We'll use Sun for Feels Like as a fallback safe icon.
 
 const getAQIMeta = (pm25) => {
     if (pm25 == null) return { color: '#9ca3af', label: 'Loading...', border: 'border-gray-400' }; // gray-400
@@ -59,7 +57,7 @@ export function HeroSection({ metrics, lastUpdated }) {
                 </div>
 
                 <div className="flex flex-col items-center gap-1">
-                    <ThermometerSun className="w-8 h-8 text-orange-600" />
+                    <Sun className="w-8 h-8 text-orange-600" />
                     <span className="text-2xl font-bold text-gray-800">{metrics?.feels ?? '--'}°</span>
                     <span className="text-xs uppercase tracking-widest text-gray-500">Feels Like</span>
                 </div>
