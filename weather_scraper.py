@@ -55,13 +55,14 @@ def scrape_weather():
     if not safe_get("https://weather.gov.mn"):
         return ["ERROR"] * 5  # now returning 5 values total
 
-    updated      = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[1]/div/p", "Updated")
+    driver.get("https://weather.gov.mn")
+
     temperature  = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[2]", "Temperature")
     feels_like   = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[3]/div/div[2]/h1", "Feels Like")
     wind_speed   = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[1]/p[2]", "Wind Speed (m/s)")
     humidity     = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[3]/p[2]", "Humidity")
 
-    return updated, temperature, feels_like, wind_speed, humidity
+    return temperature, feels_like, wind_speed, humidity
 
 def scrape_pm25(url, label):
     print(f"Scraping {label} PM2.5...")
@@ -83,16 +84,22 @@ def clean(val):
                .replace("%", "")
                .replace("м/с", "")
                .replace("|", "")
+               .replace("Нийслэл, Улаанбаатар", "")
+               .replace(", ", "") 
                .strip()
         )
     return val
 
 # Scrape all data
-updated, temperature, feels_like, wind_speed, humidity = scrape_weather()
+temperature, feels_like, wind_speed, humidity = scrape_weather()
 pm25_french  = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy")
-pm25_eu      = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/european-union-delegation", "EU Delegation")
+pm25_eu      = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/eu-delegation-to-mongolia", "EU Delegation")
 pm25_czech   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/czech-embassy-ulaanbaatar", "Czech Embassy")
 pm25_yarmag  = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/yarmag-garden-city", "Yarmag Garden City")
+pm25_chd9    = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-9-khoroo", "CHD 9 Khoroo")
+pm25_mandakh = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/mandakh-naran-tuv", "Mandakh Naran Tuv")
+pm25_chd6    = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-6-horoo", "CHD 6 Horoo")
+pm25_airv    = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/air-v", "Air V")
 
 driver.quit()
 
@@ -104,8 +111,9 @@ if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
     with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "timestamp", "updated", "temperature", "feels_like", "wind_speed", "humidity",
-            "pm25_french", "pm25_eu", "pm25_czech", "pm25_yarmag"
+            "timestamp", "temperature", "feels_like", "wind_speed", "humidity",
+            "pm25_french", "pm25_eu", "pm25_czech", "pm25_yarmag",
+            "pm25_chd9", "pm25_mandakh", "pm25_chd6", "pm25_airv"
         ])
 
 # Append latest data with UB-local timestamp
@@ -113,7 +121,6 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
     writer = csv.writer(f)
     writer.writerow([
         timestamp,
-        clean(updated),
         clean(temperature),
         clean(feels_like),
         clean(wind_speed),
@@ -121,5 +128,9 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
         clean(pm25_french),
         clean(pm25_eu),
         clean(pm25_czech),
-        clean(pm25_yarmag)
+        clean(pm25_yarmag),
+        clean(pm25_chd9),
+        clean(pm25_mandakh),
+        clean(pm25_chd6),
+        clean(pm25_airv)
     ])
