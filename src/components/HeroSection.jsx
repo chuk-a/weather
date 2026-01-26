@@ -28,9 +28,12 @@ export function HeroSection({ metrics, lastUpdated }) {
             </div>
 
             {/* The Big Number */}
-            <h1 className={cn("text-9xl md:text-[12rem] font-black tracking-tighter leading-none tabular-nums", meta.color)}>
-                {metrics ? metrics.avgAQI : '--'}
-            </h1>
+            <div className="flex items-baseline gap-2">
+                <h1 className={cn("text-9xl md:text-[12rem] font-black tracking-tighter leading-none tabular-nums", meta.color)}>
+                    {metrics ? metrics.avgAQI : '--'}
+                </h1>
+                <span className="text-2xl md:text-4xl font-bold text-zinc-600 mb-8 md:mb-12">µg/m³</span>
+            </div>
 
             <div className="mt-4 flex items-center gap-6 text-zinc-400 font-mono text-sm">
                 <span className="flex items-center gap-2 text-emerald-400">

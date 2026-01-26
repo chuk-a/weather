@@ -42,7 +42,7 @@ const columns = [
                     onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                     className="text-xs font-mono uppercase tracking-wider text-zinc-500 hover:text-zinc-300"
                 >
-                    PM2.5
+                    PM2.5 (µg/m³)
                     <ArrowUpDown className="ml-2 h-3 w-3" />
                 </Button>
             );

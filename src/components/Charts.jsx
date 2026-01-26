@@ -62,7 +62,7 @@ export function MarketChart({ data }) {
                         contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#f4f4f5' }}
                         itemStyle={{ color: '#10b981' }}
                         labelStyle={{ color: '#71717a', fontSize: '10px', fontFamily: 'monospace', marginBottom: '4px' }}
-                        formatter={(value) => [value, 'Index']}
+                        formatter={(value) => [value, 'µg/m³']}
                         labelFormatter={(l) => `TIME: ${l}`}
                     />
                     <Area
@@ -110,6 +110,7 @@ export function ComparisonChart({ data, stations }) {
                         contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#f4f4f5' }}
                         labelStyle={{ color: '#71717a', fontSize: '10px', fontFamily: 'monospace', marginBottom: '4px' }}
                         labelFormatter={(l) => `TIME: ${l}`}
+                        formatter={(value) => [value, 'µg/m³']}
                     />
                     <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace', paddingTop: '20px' }} />
                     {stations.map((s, i) => (
