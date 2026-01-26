@@ -90,7 +90,7 @@ export function ComparisonChart({ data, stations }) {
     return (
         <div className="w-full h-full min-h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke="#27272a" strokeDasharray="3 3" />
                     <XAxis
                         dataKey="time"

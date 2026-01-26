@@ -11,13 +11,32 @@ const getAQIMeta = (pm25) => {
     return { color: 'text-rose-600', bg: 'bg-rose-600/10', label: 'HAZARDOUS' };
 };
 
-export function HeroSection({ metrics, lastUpdated }) {
+export function HeroSection({ metrics, lastUpdated, isCompact }) {
     const meta = getAQIMeta(metrics?.avgAQI);
+
+    if (isCompact) {
+        return (
+            <div className="flex flex-col items-center justify-center p-4 text-center">
+                <div className={cn("px-2 py-0.5 rounded-full text-[8px] uppercase font-bold tracking-[0.2em] mb-4 border border-current/20", meta.color, meta.bg)}>
+                    {meta.label} SYSTEM
+                </div>
+                <div className="flex items-baseline gap-1">
+                    <h1 className={cn("text-8xl md:text-9xl font-black tracking-tighter leading-none tabular-nums", meta.color)}>
+                        {metrics ? metrics.avgAQI : '--'}
+                    </h1>
+                    <span className="text-xl font-bold text-zinc-600">µg/m³</span>
+                </div>
+                <div className="mt-4 text-[10px] font-mono text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                    <span className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse" />
+                    UB.CITY • {lastUpdated?.slice(11) || '--:--'}
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in duration-700">
 
-            {/* Badge */}
             {/* Badge */}
             <div className={cn("px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest mb-6 flex items-center gap-2 border border-current/20", meta.color, meta.bg)}>
                 <span className="relative flex h-2 w-2">

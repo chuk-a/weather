@@ -20,7 +20,12 @@ export function useWeatherData() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await fetch('weather_log.csv');
+                // Try to fetch with relative path
+                let response = await fetch('weather_log.csv');
+                if (!response.ok) {
+                    // Fallback for some GH pages setups
+                    response = await fetch('./weather_log.csv');
+                }
                 if (!response.ok) throw new Error('Failed to fetch data');
                 const text = await response.text();
 
