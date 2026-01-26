@@ -199,13 +199,15 @@ export function CityMeanChart({ data }) {
 }
 
 // --- EXISTING: COMPARISON (Lines) ---
-export function ComparisonChart({ data, stations }) {
+export function ComparisonChart({ data, stations, highlightedIds = [] }) {
     const chartData = usePivotData(data, stations.map(s => s.id));
 
     const colors = [
         '#10b981', '#3b82f6', '#f59e0b', '#ef4444',
         '#8b5cf6', '#ec4899', '#f97316', '#06b6d4'
     ];
+
+    const hasHighlight = highlightedIds.length > 0;
 
     return (
         <div className="w-full h-full min-h-[300px]">
@@ -234,19 +236,26 @@ export function ComparisonChart({ data, stations }) {
                             color: 'hsl(var(--foreground))'
                         }}
                     />
-                    {stations.map((s, i) => (
-                        <Line
-                            key={s.id}
-                            type="monotone"
-                            dataKey={s.id}
-                            name={s.label}
-                            stroke={colors[i % colors.length]}
-                            strokeWidth={2.5}
-                            dot={false}
-                            activeDot={{ r: 4, strokeWidth: 0 }}
-                            animationDuration={1000}
-                        />
-                    ))}
+                    {stations.map((s, i) => {
+                        const isHighlighted = highlightedIds.includes(s.id);
+                        const opacity = hasHighlight ? (isHighlighted ? 1 : 0.1) : 1;
+                        const strokeWidth = hasHighlight ? (isHighlighted ? 4 : 1.5) : 2.5;
+
+                        return (
+                            <Line
+                                key={s.id}
+                                type="monotone"
+                                dataKey={s.id}
+                                name={s.label}
+                                stroke={colors[i % colors.length]}
+                                strokeWidth={strokeWidth}
+                                strokeOpacity={opacity}
+                                dot={false}
+                                activeDot={{ r: 4, strokeWidth: 0, opacity: 1 }}
+                                animationDuration={1000}
+                            />
+                        );
+                    })}
                 </LineChart>
             </ResponsiveContainer>
         </div>

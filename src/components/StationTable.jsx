@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
     useReactTable,
     getCoreRowModel,
@@ -13,15 +13,40 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { ArrowUpDown } from "lucide-react";
+import { ArrowUpDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
-export function StationTable({ stations, metrics, isCompact = false }) {
+export function StationTable({ stations, metrics, isCompact = false, onSelectionChange }) {
     const [sorting, setSorting] = useState([{ id: 'val', desc: true }]);
+    const [rowSelection, setRowSelection] = useState({});
+
+    useEffect(() => {
+        const selectedIds = Object.keys(rowSelection);
+        if (onSelectionChange) onSelectionChange(selectedIds);
+    }, [rowSelection, onSelectionChange]);
 
     // Define Columns inside component
     const columns = useMemo(() => {
         const cols = [
+            {
+                id: "select",
+                header: () => <div className="w-4" />,
+                cell: ({ row }) => (
+                    <div
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            row.toggleSelected();
+                        }}
+                        className={cn(
+                            "w-4 h-4 rounded border border-border flex items-center justify-center cursor-pointer transition-all",
+                            row.getIsSelected() ? "bg-primary border-primary" : "bg-muted/30"
+                        )}
+                    >
+                        {row.getIsSelected() && <Check className="w-3 h-3 text-primary-foreground stroke-[4]" />}
+                    </div>
+                ),
+            },
             {
                 accessorKey: "label",
                 header: ({ column }) => (
@@ -69,34 +94,8 @@ export function StationTable({ stations, metrics, isCompact = false }) {
             }
         ];
 
-        if (!isCompact) {
-            cols.push({
-                accessorKey: "status",
-                header: "AQ_STATUS",
-                cell: ({ row }) => {
-                    const val = row.getValue("val");
-                    let label = "Offline";
-                    let colorSet = "bg-muted text-muted-foreground border-border";
-
-                    if (val <= 12) { label = "Good"; colorSet = "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"; }
-                    else if (val <= 35) { label = "Moderate"; colorSet = "bg-amber-500/10 text-amber-500 border-amber-500/20"; }
-                    else if (val <= 55) { label = "Sensitive"; colorSet = "bg-orange-500/10 text-orange-500 border-orange-500/20"; }
-                    else if (val <= 150) { label = "Unhealthy"; colorSet = "bg-red-500/10 text-red-500 border-red-500/20"; }
-                    else if (val > 150) { label = "Hazardous"; colorSet = "bg-rose-500/10 text-rose-500 border-rose-500/20"; }
-
-                    if (val == null) return <span className="text-muted-foreground text-[8px] font-bold border border-border px-1 rounded uppercase">No Signal</span>;
-
-                    return (
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider border ${colorSet}`}>
-                            {label}
-                        </span>
-                    );
-                },
-            });
-        }
-
         return cols;
-    }, [isCompact]);
+    }, []);
 
     // Merge static station info with dynamic metrics
     const data = useMemo(() => {
@@ -117,8 +116,11 @@ export function StationTable({ stations, metrics, isCompact = false }) {
         getCoreRowModel: getCoreRowModel(),
         onSortingChange: setSorting,
         getSortedRowModel: getSortedRowModel(),
+        onRowSelectionChange: setRowSelection,
+        getRowId: (row) => row.id,
         state: {
             sorting,
+            rowSelection,
         },
     });
 
@@ -146,7 +148,11 @@ export function StationTable({ stations, metrics, isCompact = false }) {
                         table.getRowModel().rows.map((row) => (
                             <TableRow
                                 key={row.id}
-                                className="border-border/40 hover:bg-muted/50 transition-colors h-11"
+                                onClick={() => row.toggleSelected()}
+                                className={cn(
+                                    "border-border/40 hover:bg-muted/50 transition-colors h-11 cursor-pointer",
+                                    row.getIsSelected() && "bg-muted/40"
+                                )}
                             >
                                 {row.getVisibleCells().map((cell) => (
                                     <TableCell key={cell.id} className="px-5 py-0">
