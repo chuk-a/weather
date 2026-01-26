@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useWeatherData } from './hooks/useWeatherData';
+import { StationTable } from './components/StationTable';
 import {
     ComparisonChart as PollutionChart,
     AtmosphereTrendChart,
@@ -272,45 +273,14 @@ function App() {
                     </Tabs>
                 </Card>
 
-                {/* Right Section (30%): Sensor Network */}
                 <div className="md:col-span-3 flex flex-col min-h-0">
-                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col relative">
-                        <div className="p-4 border-b border-white/5 flex flex-col gap-1 shrink-0 bg-white/[0.02]">
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/80">REGIONAL SIGNALS</span>
-                            <span className="text-[8px] font-bold text-muted-foreground/60 uppercase tracking-widest">LIVE DISTRICT NODE STATUS</span>
-                        </div>
-
-                        <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
-                            {metrics.stations.map((s) => (
-                                <div
-                                    key={s.id}
-                                    className={cn(
-                                        "group p-3 rounded-lg border transition-all cursor-pointer relative overflow-hidden",
-                                        s.status === 'live' ? "glass-panel bg-white/[0.03] border-white/10 hover:border-primary/40" : "bg-black/40 border-white/5 opacity-50"
-                                    )}
-                                >
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex flex-col">
-                                            <div className="flex items-center gap-2 mb-1">
-                                                <span className="text-[9px] font-black text-primary/60">{s.id_num || '#--'}</span>
-                                                <span className="text-[10px] font-black uppercase tracking-tighter truncate max-w-[100px]">{s.label}</span>
-                                            </div>
-                                            <span className="text-[8px] font-bold uppercase tracking-widest text-foreground/20">{s.region || 'Unknown'}</span>
-                                        </div>
-                                        <div className="flex flex-col items-end">
-                                            <span className="text-xl font-black tracking-tighter leading-none">{s.val || '--'}</span>
-                                            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest mt-1">AQI</span>
-                                        </div>
-                                    </div>
-                                    <div className="h-1 bg-white/[0.05] rounded-full overflow-hidden flex-1 relative">
-                                        <div
-                                            className={cn("h-full transition-all duration-1000", getHealthLevel(s.val || 0).bg)}
-                                            style={{ width: `${Math.min((s.val || 0) / 2, 100)}%` }}
-                                        />
-                                    </div>
-                                    <SignalHigh className={cn("absolute bottom-2 right-2 w-3 h-3 transition-colors", s.status === 'live' ? "text-emerald-500" : "text-muted-foreground")} />
-                                </div>
-                            ))}
+                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col relative p-0">
+                        <div className="flex-1 min-h-0 overflow-hidden">
+                            <StationTable
+                                stations={stations}
+                                metrics={metrics}
+                                lang={lang}
+                            />
                         </div>
 
                         <div className="p-4 border-t border-white/5 bg-black/60 flex items-center justify-between">
