@@ -7,23 +7,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&family=Outfit:wght@400;600;700&display=swap"
-    rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
     :root {
-      --bg-color: #f0f2f5;
-      --card-bg: #ffffff;
-      --text-main: #1a1a1a;
-      --text-sub: #666;
-      --accent: #2563eb;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-      --card-radius: 20px;
-      --transition: all 0.3s ease;
+      /* Dynamic Background Gradient Colors */
+      --bg-color: #e0e7ff;
+      --glass-bg: rgba(255, 255, 255, 0.65);
+      --glass-border: rgba(255, 255, 255, 0.4);
+      --text-main: #1e293b;
+      --text-sub: #64748b;
+      --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+      --card-radius: 24px;
 
-      /* AQI Colors */
+      /* Status Colors */
       --aqi-good: #10b981;
       --aqi-moderate: #f59e0b;
       --aqi-sensitive: #f97316;
@@ -34,10 +33,11 @@
 
     body.dark {
       --bg-color: #0f172a;
-      --card-bg: #1e293b;
+      --glass-bg: rgba(30, 41, 59, 0.70);
+      --glass-border: rgba(255, 255, 255, 0.08);
       --text-main: #f8fafc;
       --text-sub: #94a3b8;
-      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+      --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
     }
 
     * {
@@ -45,290 +45,357 @@
     }
 
     body {
-      font-family: 'Inter', sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-main);
-      margin: 0;
-      padding: 20px;
-      transition: var(--transition);
-    }
-
-    h1,
-    h2,
-    h3 {
       font-family: 'Outfit', sans-serif;
       margin: 0;
+      padding: 0;
+      color: var(--text-main);
+      min-height: 100vh;
+      /* Animated Mesh Gradient Background */
+      background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    body.dark {
+      background: linear-gradient(-45deg, #0f2027, #203a43, #2c5364);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+    }
+
+    @keyframes gradientBG {
+      0% {
+        background-position: 0% 50%;
+      }
+
+      50% {
+        background-position: 100% 50%;
+      }
+
+      100% {
+        background-position: 0% 50%;
+      }
     }
 
     .container {
       max-width: 1400px;
       margin: 0 auto;
+      padding: 20px;
     }
 
-    /* Header */
+    /* HEADER */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 30px;
-      padding: 10px 0;
+      margin-bottom: 40px;
+      padding: 10px 20px;
+      backdrop-filter: blur(4px);
+      border-radius: 20px;
     }
 
     .header-title h1 {
-      font-size: 1.8rem;
+      font-size: 2rem;
       font-weight: 700;
+      letter-spacing: -0.5px;
+      margin: 0;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .header-title p {
-      color: var(--text-sub);
-      font-size: 0.9rem;
-      margin-top: 4px;
+      margin: 4px 0 0 0;
+      opacity: 0.9;
+      font-weight: 400;
     }
 
     .controls-wrapper {
       display: flex;
-      gap: 10px;
+      gap: 12px;
       align-items: center;
     }
 
-    .btn {
-      background: var(--card-bg);
+    .glass-btn,
+    select {
+      background: var(--glass-bg);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid var(--glass-border);
       color: var(--text-main);
-      border: 1px solid rgba(128, 128, 128, 0.2);
-      padding: 8px 16px;
-      border-radius: 12px;
-      cursor: pointer;
+      padding: 10px 16px;
+      border-radius: 14px;
       font-family: 'Outfit', sans-serif;
       font-weight: 500;
-      transition: var(--transition);
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      outline: none;
+    }
+
+    .glass-btn:hover,
+    select:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      background: rgba(255, 255, 255, 0.8);
+    }
+
+    body.dark .glass-btn:hover {
+      background: rgba(50, 60, 80, 0.9);
+    }
+
+    a.glass-btn {
+      text-decoration: none;
       display: flex;
       align-items: center;
       gap: 6px;
-      text-decoration: none;
-      font-size: 0.9rem;
     }
 
-    .btn:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-
-    select {
-      background: var(--card-bg);
-      color: var(--text-main);
-      border: 1px solid rgba(128, 128, 128, 0.2);
-      padding: 8px 12px;
-      border-radius: 12px;
-      font-family: 'Inter', sans-serif;
-      cursor: pointer;
-    }
-
-    /* Dashboard Layout */
+    /* DASHBOARD */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      grid-template-rows: auto auto;
-      gap: 20px;
-      margin-bottom: 30px;
+      gap: 24px;
+      margin-bottom: 40px;
     }
 
-    /* Bento Cards */
-    .card {
-      background: var(--card-bg);
+    /* GLASS CARD BASE */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--glass-border);
       border-radius: var(--card-radius);
       padding: 24px;
       box-shadow: var(--shadow);
-      position: relative;
-      overflow: hidden;
+      transition: transform 0.3s ease;
     }
 
-    /* Hero: Average AQI - Spans 2 columns */
+    .glass-card:hover {
+      transform: translateY(-3px);
+    }
+
+    /* HERO CARD */
     .hero-card {
       grid-column: span 2;
       display: flex;
-      flex-direction: column;
-      justify-content: center;
+      flex-direction: row;
       align-items: center;
-      background: linear-gradient(135deg, var(--card-bg), var(--bg-color));
-      min-height: 220px;
-    }
-
-    .aqi-circle {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      border: 8px solid var(--aqi-good);
-      margin-bottom: 16px;
+      justify-content: space-around;
       position: relative;
     }
 
-    .aqi-value {
-      font-size: 2.5rem;
+    .hero-content {
+      text-align: center;
+    }
+
+    .hero-aqi-display {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      border: 10px solid var(--glass-border);
+      border-top-color: var(--aqi-good);
+      /* Dynamic */
+      transform: rotate(-45deg);
+      transition: border-color 0.5s ease;
+    }
+
+    .hero-val {
+      font-size: 4rem;
       font-weight: 700;
+      z-index: 2;
       line-height: 1;
     }
 
-    .aqi-label {
-      font-size: 0.8rem;
-      text-transform: uppercase;
+    .hero-label {
+      margin-top: 10px;
+      font-size: 1.2rem;
+      font-weight: 500;
       color: var(--text-sub);
     }
 
-    .hero-status {
-      font-size: 1.5rem;
-      font-weight: 600;
-      color: var(--text-main);
+    .hero-status-text {
+      font-size: 2rem;
+      font-weight: 300;
     }
 
-    .last-updated {
+    .updated-badge {
       position: absolute;
       top: 20px;
       right: 20px;
-      font-size: 0.8rem;
-      color: var(--text-sub);
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.1);
+      padding: 4px 8px;
+      border-radius: 20px;
     }
 
-    /* Weather Card - Spans 2 columns */
+    /* WEATHER CARD */
     .weather-card {
       grid-column: span 2;
       display: flex;
-      flex-direction: row;
-      justify-content: space-around;
+      justify-content: space-between;
       align-items: center;
+      padding: 0 40px;
     }
 
-    .weather-item {
-      text-align: center;
+    .weather-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
     }
 
     .weather-icon {
       font-size: 2.5rem;
-      margin-bottom: 8px;
     }
 
-    .weather-val {
-      font-size: 1.8rem;
-      font-weight: 700;
+    .weather-reading {
+      font-size: 1.5rem;
+      font-weight: 600;
     }
 
-    .weather-desc {
+    .weather-caption {
+      font-size: 0.85rem;
       color: var(--text-sub);
-      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
     }
 
-    /* Stations Grid Area */
-    .stations-container {
+    /* STATIONS GRID */
+    .stations-wrapper {
       grid-column: span 4;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 20px;
     }
 
-    .station-card {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 16px;
-      box-shadow: var(--shadow);
+    .station-unit {
+      position: relative;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 20px;
+      padding: 20px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      border-left: 6px solid transparent;
-      /* Colored Accent */
+      height: 160px;
+      overflow: hidden;
     }
 
-    .station-name {
+    /* Glowing Indicator Dot */
+    .status-dot {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--aqi-good);
+      box-shadow: 0 0 10px var(--aqi-good);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.5;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    .station-title {
+      font-size: 1.1rem;
       font-weight: 600;
-      font-size: 1rem;
       margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
     }
 
-    .station-val {
-      font-size: 1.8rem;
+    .station-number {
+      font-size: 2.8rem;
       font-weight: 700;
-      margin: 8px 0;
+      color: var(--text-main);
+      margin-top: auto;
     }
 
-    .station-trend {
-      font-size: 0.8rem;
+    .station-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .station-time {
+      font-size: 0.75rem;
       color: var(--text-sub);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    /* Charts Section */
-    .charts-grid {
+    /* CHARTS */
+    .charts-section {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
-      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+      gap: 24px;
     }
 
-    .chart-card {
-      grid-column: span 1;
+    .chart-box {
       height: 400px;
+      grid-column: span 1;
     }
 
-    .chart-card.full-width {
+    .chart-box.wide {
       grid-column: span 2;
     }
 
+    /* FOOTER */
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      padding: 20px;
+      color: #fff;
+      /* On gradient bg */
+      opacity: 0.8;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: #fff;
+      text-decoration: underline;
+    }
+
     /* Responsive */
-    @media (max-width: 1024px) {
+    @media(max-width: 1000px) {
       .dashboard-grid {
         grid-template-columns: 1fr;
       }
 
       .hero-card,
-      .weather-card {
+      .weather-card,
+      .stations-wrapper {
         grid-column: span 1;
       }
 
-      .stations-container {
-        grid-column: span 1;
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .charts-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .chart-card.full-width {
+      .chart-box.wide {
         grid-column: span 1;
       }
-    }
-
-    @media (max-width: 600px) {
-      .stations-container {
-        grid-template-columns: 1fr;
-      }
-
-      .header-title h1 {
-        font-size: 1.4rem;
-      }
-
-      .controls-wrapper {
-        display: none;
-        /* Hide complexity on mobile for now, or stack */
-      }
-    }
-
-    /* Footer */
-    footer {
-      text-align: center;
-      margin-top: 50px;
-      color: var(--text-sub);
-      font-size: 0.9rem;
-      border-top: 1px solid rgba(128, 128, 128, 0.1);
-      padding-top: 20px;
-    }
-
-    footer a {
-      color: var(--accent);
-      text-decoration: none;
     }
   </style>
-  <!-- 100% privacy-first analytics -->
   <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
 </head>
 
@@ -337,128 +404,119 @@
   <div class="container">
     <header>
       <div class="header-title">
-        <h1 data-i18n="title">UB Air & Weather</h1>
-        <p data-i18n="desc">Real-time environmental monitoring</p>
+        <h1 data-i18n="title">UB Air</h1>
+        <p data-i18n="desc">Atmospheric Monitoring</p>
       </div>
       <div class="controls-wrapper">
-        <button class="btn" onclick="toggleDarkMode()" id="darkModeBtn">🌙</button>
-        <button class="btn" onclick="toggleLanguage()" id="langBtn">🇬🇧</button>
-        <select id="rangeSelect" onchange="renderAggregated()">
-          <option value="today">24h</option>
+        <button class="glass-btn" onclick="toggleDarkMode()">🌗</button>
+        <button class="glass-btn" onclick="toggleLanguage()">🌐</button>
+        <select id="rangeSelect" onchange="renderDashboard()"> <!-- FIXED FUNCTION NAME -->
+          <option value="today">Today</option>
           <option value="last7">7 Days</option>
           <option value="last30">30 Days</option>
           <option value="all">All Time</option>
         </select>
-        <a href="weather_log.csv" class="btn" download>📥 CSV</a>
+        <a href="weather_log.csv" class="glass-btn" download>📥 CSV</a>
       </div>
     </header>
 
     <div class="dashboard-grid">
-      <!-- Hero: Average AQI -->
-      <div class="card hero-card">
-        <div id="lastUpdated" class="last-updated">Updating...</div>
-        <div class="aqi-circle" id="heroAqiCircle">
-          <span class="aqi-value" id="heroAqiVal">--</span>
-          <span class="aqi-label">Avg PM2.5</span>
+      <!-- HERO -->
+      <div class="glass-card hero-card">
+        <div class="updated-badge" id="lastUpdated">Updating...</div>
+        <div class="hero-aqi-display">
+          <div class="hero-ring" id="heroRing"></div>
+          <span class="hero-val" id="heroAqiVal">--</span>
         </div>
-        <div class="hero-status" id="heroStatus">Loading...</div>
+        <div class="hero-content">
+          <div class="hero-status-text" id="heroStatus">Scanning...</div>
+          <div class="hero-label">Average PM2.5 in Ulaanbaatar</div>
+        </div>
       </div>
 
-      <!-- Weather Summary -->
-      <div class="card weather-card">
-        <div class="weather-item">
+      <!-- WEATHER -->
+      <div class="glass-card weather-card">
+        <div class="weather-col">
           <div class="weather-icon">🌡️</div>
-          <div class="weather-val" id="weatherTemp">--°</div>
-          <div class="weather-desc" data-i18n="temperature">Temp</div>
+          <div class="weather-reading" id="weatherTemp">--°</div>
+          <div class="weather-caption" data-i18n="temperature">Temp</div>
         </div>
-        <div class="weather-item">
+        <div class="weather-col">
+          <div class="weather-icon">🧣</div>
+          <div class="weather-reading" id="weatherFeels">--°</div>
+          <div class="weather-caption" data-i18n="feels_like">Feels Like</div>
+        </div>
+        <div class="weather-col">
           <div class="weather-icon">💧</div>
-          <div class="weather-val" id="weatherHum">--%</div>
-          <div class="weather-desc" data-i18n="humidity">Humidity</div>
+          <div class="weather-reading" id="weatherHum">--%</div>
+          <div class="weather-caption" data-i18n="humidity">Humidity</div>
         </div>
-        <div class="weather-item">
+        <div class="weather-col">
           <div class="weather-icon">💨</div>
-          <div class="weather-val" id="weatherWind">--</div>
-          <div class="weather-desc" data-i18n="wind">Wind (m/s)</div>
+          <div class="weather-reading" id="weatherWind">--</div>
+          <div class="weather-caption" data-i18n="wind">Wind</div>
         </div>
       </div>
 
-      <!-- Station Cards -->
-      <div class="stations-container" id="stationsGrid">
-        <!-- Injected via JS -->
-      </div>
+      <!-- STATIONS -->
+      <div class="stations-wrapper" id="stationsGrid"></div>
     </div>
 
-    <div class="charts-grid">
-      <div class="card chart-card full-width">
+    <div class="charts-section">
+      <div class="glass-card chart-box wide">
         <canvas id="pmChart"></canvas>
       </div>
-      <div class="card chart-card">
+      <div class="glass-card chart-box">
         <canvas id="tempChart"></canvas>
       </div>
-      <div class="card chart-card">
+      <div class="glass-card chart-box">
         <canvas id="windChart"></canvas>
       </div>
     </div>
 
     <footer>
-      <span data-i18n="footer_desc">Data from weather.gov.mn & embassies. Refreshes every 30min.</span>
+      <span data-i18n="footer">Data sourced from weather.gov.mn & Local IQAir Stations</span> ·
       <a href="https://github.com/chuk-a/chuk-a.github.io">GitHub</a>
     </footer>
   </div>
 
   <script>
-    // CONFIG & STATE
+    // --- CONFIG ---
     const stations = [
       { id: 'french', label: 'French Embassy', flag: '🇫🇷' },
       { id: 'eu', label: 'EU Delegation', flag: '🇪🇺' },
       { id: 'czech', label: 'Czech Embassy', flag: '🇨🇿' },
-      { id: 'yarmag', label: 'Yarmag City', flag: '🏙️' },
-      { id: 'chd9', label: 'CHD 9 Khoroo', flag: '🏙️' },
-      { id: 'mandakh', label: 'Mandakh Naran', flag: '🏙️' },
-      { id: 'chd6', label: 'CHD 6 Horoo', flag: '🏙️' },
-      { id: 'airv', label: 'Air V Station', flag: '📡' }
+      { id: 'yarmag', label: 'Yarmag', flag: '🏙️' },
+      { id: 'chd9', label: 'CHD 9', flag: '🏙️' },
+      { id: 'mandakh', label: 'Mandakh', flag: '🏙️' },
+      { id: 'chd6', label: 'CHD 6', flag: '🏙️' },
+      { id: 'airv', label: 'Air V', flag: '📡' }
     ];
 
-    let rawData = null;
     const translations = {
-      en: {
-        title: "UB Air & Weather",
-        desc: "Real-time environmental monitoring",
-        temperature: "Temp",
-        humidity: "Humidity",
-        wind: "Wind (m/s)",
-        footer_desc: "Data from weather.gov.mn & embassies. Refreshes every 30min."
-      },
-      mn: {
-        title: "УБ Цаг Агаар & Агаар",
-        desc: "Бодит цагийн орчны хяналт",
-        temperature: "Темп",
-        humidity: "Чийгшил",
-        wind: "Салхи (м/с)",
-        footer_desc: "weather.gov.mn болон элчин сайдын яамдаас мэдээлэл авдаг."
-      }
+      en: { title: "UB Air", desc: "Atmospheric Monitoring", temperature: "Temp", feels_like: "Feels Like", humidity: "Humidity", wind: "Wind", footer: "Data sourced from weather.gov.mn & Local IQAir Stations" },
+      mn: { title: "УБ Агаар", desc: "Агаарын Чанарын Хяналт", temperature: "Темп", feels_like: "Мэдрэгдэх", humidity: "Чийгшил", wind: "Салхи", footer: "Мэдээллийг weather.gov.mn болон Элчин сайдын яамдаас" }
     };
 
-    // HELPERS
+    let rawData = null;
+
+    // --- HELPERS ---
     function getLang() { return localStorage.getItem("lang") || "en"; }
-
-    function getAQIMeta(pm25) {
-      if (pm25 == null) return { color: '#e5e7eb', label: 'N/A', class: 'nodata' };
-      if (pm25 <= 12) return { color: '#10b981', label: 'Good', class: 'good' };
-      if (pm25 <= 35) return { color: '#f59e0b', label: 'Moderate', class: 'moderate' };
-      if (pm25 <= 55) return { color: '#f97316', label: 'Unhealthy for sensitive', class: 'sensitive' };
-      if (pm25 <= 150) return { color: '#ef4444', label: 'Unhealthy', class: 'unhealthy' };
-      return { color: '#7f1d1d', label: 'Hazardous', class: 'hazardous' };
-    }
-
     function cleanNumber(val) {
       if (!val || val === "ERROR") return null;
       const n = parseFloat(String(val).replace(/[^\d.-]/g, ''));
       return Number.isFinite(n) ? n : null;
     }
+    function getAQIMeta(pm25) {
+      if (pm25 == null) return { color: '#94a3b8', label: 'Offline' };
+      if (pm25 <= 12) return { color: '#10b981', label: 'Good' }; // Green
+      if (pm25 <= 35) return { color: '#f59e0b', label: 'Moderate' }; // Yellow
+      if (pm25 <= 55) return { color: '#f97316', label: 'Sensitive' }; // Orange
+      if (pm25 <= 150) return { color: '#ef4444', label: 'Unhealthy' }; // Red
+      return { color: '#7f1d1d', label: 'Hazardous' }; // Maroon
+    }
 
-    // --- DATA LOADING & PARSING ---
+    // --- CORE LOGIC ---
     async function loadCSV() {
       const sources = ['weather_log.csv', 'https://raw.githubusercontent.com/chuk-a/chuk-a.github.io/main/weather_log.csv'];
       for (const src of sources) {
@@ -474,11 +532,10 @@
 
     function parseCSV(text) {
       const res = Papa.parse(text.trim(), { header: true, skipEmptyLines: true });
-
-      // Arrays
       const data = {
         timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: [],
-        french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: []
+        french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: [],
+        time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: []
       };
 
       res.data.forEach(row => {
@@ -488,90 +545,98 @@
         data.humidities.push(cleanNumber(row.humidity));
         data.windSpeeds.push(cleanNumber(row.wind_speed));
 
-        // Stations
         stations.forEach(s => {
           data[s.id].push(cleanNumber(row[`pm25_${s.id}`]));
+          data[`time_${s.id}`].push(row[`time_${s.id}`]);
         });
       });
-
+      console.log('Parsed:', data.timestamps.length, 'rows');
       rawData = data;
       renderDashboard();
     }
 
-    async function renderDashboard() {
+    function renderDashboard() {
       if (!rawData) return;
 
-      const range = document.getElementById('rangeSelect').value;
-      const filtered = filterDataByRange(rawData, range);
+      const rangeSelect = document.getElementById('rangeSelect');
+      const filtered = filterDataByRange(rawData, rangeSelect.value);
 
-      updateLatestValues(rawData); // Always show absolute latest for cards
-      renderCharts(filtered);
+      updateWidgets(rawData); // Widgets always show NOW
+      renderCharts(filtered); // Charts show HISTORY
+
+      // Update Texts
+      const lang = getLang();
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (translations[lang][key]) el.textContent = translations[lang][key];
+      });
     }
 
     function filterDataByRange(data, range) {
       if (range === 'all') return data;
-
       const now = new Date();
       const days = range === 'today' ? 1 : (range === 'last7' ? 7 : 30);
-      const cutoff = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000));
+      const ms = days * 24 * 60 * 60 * 1000;
+      const cutoff = new Date(now.getTime() - ms);
 
-      // Find start index
-      let startIdx = 0;
+      let start = 0;
       for (let i = data.timestamps.length - 1; i >= 0; i--) {
         if (new Date(data.timestamps[i]) < cutoff) {
-          startIdx = i + 1;
+          start = i + 1;
           break;
         }
       }
+      if (start <= 0) return data;
 
-      if (startIdx <= 0) return data; // Return all if range is too wide or default
-
-      // Slice all arrays
       const sliced = {};
-      Object.keys(data).forEach(key => {
-        sliced[key] = data[key].slice(startIdx);
+      Object.keys(data).forEach(k => {
+        sliced[k] = data[k].slice(start);
       });
       return sliced;
     }
 
-    function updateLatestValues(data) {
+    function updateWidgets(data) {
       const idx = data.timestamps.length - 1;
       if (idx < 0) return;
 
-      // 1. Hero Section (Average PM2.5)
+      // Hero
       const currentVals = stations.map(s => data[s.id][idx]).filter(v => v != null);
-      const avgPM = currentVals.length ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length) : 0;
-      const meta = getAQIMeta(avgPM);
+      const avg = currentVals.length ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length) : 0;
+      const meta = getAQIMeta(avg);
 
-      const heroCircle = document.getElementById('heroAqiCircle');
-      heroCircle.style.borderColor = meta.color;
-      heroCircle.style.color = meta.color;
-      document.getElementById('heroAqiVal').textContent = avgPM;
+      document.getElementById('heroAqiVal').textContent = avg;
       document.getElementById('heroStatus').textContent = meta.label;
+      document.getElementById('heroRing').style.borderTopColor = meta.color;
+      document.getElementById('heroRing').style.boxShadow = `0 0 20px ${meta.color}40`;
 
-      document.getElementById('lastUpdated').textContent = `Updated: ${data.timestamps[idx]}`;
+      document.getElementById('lastUpdated').textContent = `Sync: ${data.timestamps[idx]}`;
 
-      // 2. Weather Cards
-      document.getElementById('weatherTemp').textContent = (data.temps[idx] ?? '--') + '°';
-      document.getElementById('weatherHum').textContent = (data.humidities[idx] ?? '--') + '%';
-      document.getElementById('weatherWind').textContent = data.windSpeeds[idx] ?? '--';
+      // Weather
+      document.getElementById('weatherTemp').textContent = (data.temps[idx] || '--') + '°';
+      document.getElementById('weatherFeels').textContent = (data.feels[idx] || '--') + '°';
+      document.getElementById('weatherHum').textContent = (data.humidities[idx] || '--') + '%';
+      document.getElementById('weatherWind').textContent = data.windSpeeds[idx] || '--';
 
-      // 3. Station Grid
+      // Stations
       const grid = document.getElementById('stationsGrid');
       grid.innerHTML = '';
-
       stations.forEach(s => {
         const val = data[s.id][idx];
+        const time = data[`time_${s.id}`][idx];
         const sMeta = getAQIMeta(val);
-        const div = document.createElement('div');
-        div.className = 'station-card';
-        div.style.borderLeftColor = sMeta.color;
-        div.innerHTML = `
-        <div class="station-name">${s.flag} ${s.label}</div>
-        <div class="station-val" style="color: ${sMeta.color}">${val ?? '--'} <span style="font-size:0.8rem; color:var(--text-sub)">µg/m³</span></div>
-        <div class="station-trend">${sMeta.label}</div>
-      `;
-        grid.appendChild(div);
+
+        const el = document.createElement('div');
+        el.className = 'station-unit';
+        el.innerHTML = `
+            <div class="status-dot" style="background:${sMeta.color}; box-shadow: 0 0 10px ${sMeta.color}"></div>
+            <div class="station-title">${s.flag} ${s.label}</div>
+            <div class="station-number" style="color:${sMeta.color}">${val ?? '--'}</div>
+            <div class="station-meta">
+                <span style="font-size:0.8rem; font-weight:600; color:${sMeta.color}">${sMeta.label}</span>
+                ${time ? `<span class="station-time">🕒 ${time}</span>` : ''}
+            </div>
+          `;
+        grid.appendChild(el);
       });
     }
 
@@ -580,32 +645,29 @@
       const ctxTemp = document.getElementById('tempChart');
       const ctxWind = document.getElementById('windChart');
 
-      // Destroy existing
+      // Cleanup
       Chart.getChart("pmChart")?.destroy();
       Chart.getChart("tempChart")?.destroy();
       Chart.getChart("windChart")?.destroy();
 
-      // Chart Defaults
-      Chart.defaults.font.family = "'Inter', sans-serif";
-      Chart.defaults.color = document.body.classList.contains('dark') ? '#94a3b8' : '#64748b';
-      const gridColor = document.body.classList.contains('dark') ? '#334155' : '#e2e8f0';
+      const isDark = document.body.classList.contains('dark');
+      Chart.defaults.color = isDark ? '#94a3b8' : '#475569';
+      const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
 
-      const commonOptions = {
+      const opts = {
         responsive: true,
         maintainAspectRatio: false,
-        elements: { point: { radius: 0, hitRadius: 10 } },
         scales: {
-          x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } },
+          x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } },
           y: { grid: { color: gridColor }, border: { display: false } }
         },
         plugins: {
-          tooltip: { mode: 'index', intersect: false, backgroundColor: 'rgba(0,0,0,0.8)', padding: 10, cornerRadius: 8 },
-          legend: { position: 'top', align: 'end', labels: { usePointStyle: true, boxWidth: 8 } }
+          legend: { labels: { usePointStyle: true, boxWidth: 6, padding: 20 } },
+          tooltip: { backgroundColor: isDark ? 'rgba(0,0,0,0.8)' : 'rgba(255,255,255,0.9)', titleColor: isDark ? '#fff' : '#000', bodyColor: isDark ? '#ccc' : '#333', borderColor: gridColor, borderWidth: 1 }
         },
-        interaction: { mode: 'nearest', axis: 'x', intersect: false }
+        interaction: { mode: 'index', intersect: false }
       };
 
-      // 1. PM2.5 Chart
       new Chart(ctxPM, {
         type: 'line',
         data: {
@@ -614,19 +676,15 @@
             label: s.label,
             data: data[s.id],
             borderColor: getStationColor(s.id),
-            backgroundColor: getStationColor(s.id) + '20', // Transparent fill
+            backgroundColor: 'transparent',
             borderWidth: 2,
-            tension: 0.4,
-            fill: false
+            pointRadius: 0,
+            tension: 0.4
           }))
         },
-        options: {
-          ...commonOptions,
-          plugins: { ...commonOptions.plugins, title: { display: true, text: "PM2.5 History (µg/m³)", align: "start", font: { size: 16, family: 'Outfit' } } }
-        }
+        options: { ...opts, plugins: { ...opts.plugins, title: { display: true, text: "District Pollution Levels", align: 'start', font: { size: 16, weight: 'bold' } } } }
       });
 
-      // 2. Temp Chart (Area)
       new Chart(ctxTemp, {
         type: 'line',
         data: {
@@ -634,26 +692,21 @@
           datasets: [{
             label: 'Temperature',
             data: data.temps,
-            borderColor: '#f59e0b',
-            backgroundColor: (context) => {
-              const ctx = context.chart.ctx;
-              const gradient = ctx.createLinearGradient(0, 0, 0, 300);
-              gradient.addColorStop(0, 'rgba(245, 158, 11, 0.5)');
-              gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
-              return gradient;
+            borderColor: '#eab308',
+            backgroundColor: (ctx) => {
+              const g = ctx.chart.ctx.createLinearGradient(0, 0, 0, 300);
+              g.addColorStop(0, 'rgba(234, 179, 8, 0.5)');
+              g.addColorStop(1, 'rgba(234, 179, 8, 0.0)');
+              return g;
             },
-            borderWidth: 2,
             fill: true,
-            tension: 0.4
+            tension: 0.4,
+            pointRadius: 0
           }]
         },
-        options: {
-          ...commonOptions,
-          plugins: { ...commonOptions.plugins, title: { display: true, text: "Temperature (°C)", align: "start", font: { size: 16, family: 'Outfit' } } }
-        }
+        options: { ...opts }
       });
 
-      // 3. Wind Chart (Bar)
       new Chart(ctxWind, {
         type: 'bar',
         data: {
@@ -666,35 +719,42 @@
           }]
         },
         options: {
-          ...commonOptions,
-          plugins: { ...commonOptions.plugins, title: { display: true, text: "Wind Speed (m/s)", align: "start", font: { size: 16, family: 'Outfit' } } }
+          ...opts,
+          plugins: {
+            ...opts.plugins,
+            annotation: {
+              annotations: {
+                lightAir: { type: 'line', yMin: 0.5, yMax: 0.5, borderColor: 'rgba(255,255,255,0.3)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Light Air', display: true, color: 'rgba(255,255,255,0.6)', font: { size: 10 }, position: 'start' } },
+                lightBreeze: { type: 'line', yMin: 1.6, yMax: 1.6, borderColor: 'rgba(16, 185, 129, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Light Breeze', display: true, color: 'rgba(16, 185, 129, 0.8)', font: { size: 10 }, position: 'start' } },
+                gentleBreeze: { type: 'line', yMin: 3.4, yMax: 3.4, borderColor: 'rgba(59, 130, 246, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Gentle Breeze', display: true, color: 'rgba(59, 130, 246, 0.8)', font: { size: 10 }, position: 'start' } },
+                moderateBreeze: { type: 'line', yMin: 5.5, yMax: 5.5, borderColor: 'rgba(245, 158, 11, 0.4)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Moderate', display: true, color: 'rgba(245, 158, 11, 0.8)', font: { size: 10 }, position: 'start' } },
+                freshBreeze: { type: 'line', yMin: 8.0, yMax: 8.0, borderColor: 'rgba(249, 115, 22, 0.5)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Fresh', display: true, color: 'rgba(249, 115, 22, 0.8)', font: { size: 10 }, position: 'start' } },
+                strongBreeze: { type: 'line', yMin: 10.8, yMax: 10.8, borderColor: 'rgba(239, 68, 68, 0.5)', borderWidth: 1, borderDash: [4, 4], label: { content: 'Strong', display: true, color: 'rgba(239, 68, 68, 0.8)', font: { size: 10 }, position: 'start' } },
+                gale: { type: 'line', yMin: 13.9, yMax: 13.9, borderColor: 'rgba(127, 29, 29, 0.6)', borderWidth: 2, borderDash: [4, 4], label: { content: 'Gale', display: true, color: 'rgba(127, 29, 29, 0.8)', font: { size: 10 }, position: 'start' } }
+              }
+            }
+          }
         }
       });
     }
 
     function getStationColor(id) {
-      const map = {
-        french: '#3b82f6', eu: '#8b5cf6', czech: '#ec4899', yarmag: '#10b981',
-        chd9: '#f97316', mandakh: '#f59e0b', chd6: '#6366f1', airv: '#14b8a6'
-      };
-      return map[id] || '#999';
+      const c = { french: '#2563eb', eu: '#7c3aed', czech: '#db2777', yarmag: '#059669', chd9: '#ea580c', mandakh: '#d97706', chd6: '#4f46e5', airv: '#0891b2' };
+      return c[id] || '#999';
     }
 
-    // --- UI TOGGLES ---
     function toggleDarkMode() {
       document.body.classList.toggle('dark');
-      renderCharts(filterDataByRange(rawData, document.getElementById('rangeSelect').value));
+      renderDashboard(); // Re-render charts for color update
     }
     function toggleLanguage() {
       const cur = localStorage.getItem("lang") || "en";
       localStorage.setItem("lang", cur === "en" ? "mn" : "en");
-      location.reload(); // Simple reload to apply strings for now
+      location.reload();
     }
 
     // Init
     loadCSV();
-    setInterval(loadCSV, 600000); // 10 min refresh
-
   </script>
 </body>
 
