@@ -68,7 +68,7 @@ function App() {
     );
 
     return (
-        <div className="h-screen bg-background text-foreground font-sans overflow-hidden flex flex-col transition-colors duration-300">
+        <div className="min-h-screen lg:h-screen bg-background text-foreground font-sans flex flex-col transition-colors duration-300 overflow-x-hidden">
 
             {/* HAZARD ALERT BANNER */}
             {metrics?.avgAQI > 150 && (
@@ -114,10 +114,10 @@ function App() {
             </nav>
 
             {/* COMMAND CENTER CONTENT */}
-            <main className="flex-1 p-6 overflow-hidden flex flex-col gap-6">
+            <main className="flex-1 p-4 lg:p-6 overflow-y-auto lg:overflow-hidden flex flex-col gap-4 lg:gap-6">
 
                 {/* Metric Layer */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 shrink-0">
                     <MetricCard
                         title="City Concentration"
                         value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
@@ -155,7 +155,7 @@ function App() {
                 </div>
 
                 {/* Intelligence Layer */}
-                <div className="flex-1 grid grid-cols-1 lg:grid-cols-7 gap-6 min-h-0 overflow-hidden">
+                <div className="flex-1 grid grid-cols-1 lg:grid-cols-7 gap-6 min-h-[800px] lg:min-h-0">
 
                     {/* Visual Intelligence (Map & Trends) */}
                     <Card className="lg:col-span-4 bg-card border-border flex flex-col overflow-hidden shadow-sm">
