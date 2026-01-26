@@ -131,8 +131,8 @@ pm25_kind280, time_kind280 = scrape_pm25("https://www.iqair.com/mongolia/ulaanba
 
 driver.quit()
 
-# Define output path
-output_path = os.path.join(os.path.dirname(__file__), "public", "weather_log.csv")
+# Standardized output path relative to project root
+output_path = "public/weather_log.csv"
 
 # Write header if file is empty
 if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
