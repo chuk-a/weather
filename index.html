@@ -5,12 +5,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>UB Air</title>
-  <script type="module" crossorigin src="/weather/assets/index-DeyCL-sZ.js"></script>
-  <link rel="stylesheet" crossorigin href="/weather/assets/index-PKNFKOC2.css">
+  <script type="module" crossorigin src="./assets/index-DeyCL-sZ.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-PKNFKOC2.css">
 </head>
 
 <body>
   <div id="root"></div>
+  <script>
+    window.onerror = function (msg, url, line, col, error) {
+      document.body.innerHTML += '<div style="color:red; padding:20px; background:white; position:fixed; top:0; left:0; z-index:9999;">JS Error: ' + msg + ' at ' + line + ':' + col + '</div>';
+      return false;
+    };
+  </script>
 </body>
 
 </html>
