@@ -145,11 +145,12 @@ function App() {
 
                     {/* Visual Intelligence (Map & Trends) */}
                     <Card className="lg:col-span-4 bg-card border-border flex flex-col overflow-hidden shadow-sm">
-                        <Tabs defaultValue="map" className="flex-1 flex flex-col overflow-hidden">
+                        <Tabs defaultValue="radar" className="flex-1 flex flex-col overflow-hidden">
                             <CardHeader className="flex flex-row items-center justify-between pb-1 h-14 shrink-0 border-b border-border/50 px-4">
                                 <TabsList className="bg-muted/50 h-8">
-                                    <TabsTrigger value="map" className="text-[10px] font-bold py-1 flex items-center gap-1.5"><MapIcon className="w-3 h-3" /> Spatial Map</TabsTrigger>
+                                    <TabsTrigger value="radar" className="text-[10px] font-bold py-1 flex items-center gap-1.5">Distribution</TabsTrigger>
                                     <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">Pollution</TabsTrigger>
+                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">Wind Speed</TabsTrigger>
                                     <TabsTrigger value="temp" className="text-[10px] font-bold py-1">Climate</TabsTrigger>
                                 </TabsList>
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
@@ -158,11 +159,14 @@ function App() {
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 p-4 min-h-0 overflow-hidden">
-                                <TabsContent value="map" className="h-full m-0 outline-none">
-                                    <DistrictMap metrics={metrics} stations={stations} />
+                                <TabsContent value="radar" className="h-full m-0 outline-none">
+                                    <SpatialRadarChart stations={stations} metrics={metrics} />
                                 </TabsContent>
                                 <TabsContent value="pollution" className="h-full m-0 outline-none">
                                     <ComparisonChart data={chartData} stations={stations} highlightedIds={selectedDistricts} />
+                                </TabsContent>
+                                <TabsContent value="wind" className="h-full m-0 outline-none">
+                                    <WindVelocityChart data={chartData} />
                                 </TabsContent>
                                 <TabsContent value="temp" className="h-full m-0 outline-none">
                                     <AtmosphereTrendChart data={chartData} />
