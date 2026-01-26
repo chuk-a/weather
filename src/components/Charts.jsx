@@ -8,7 +8,7 @@ const usePivotData = (data, keys) => {
         return data.timestamps.map((t, i) => {
             const row = { time: t };
 
-            // OPTION A: Calculate Average ("Market Index")
+            // OPTION A: Calculate Average ("City Mean")
             if (!keys || keys.length === 0) {
                 let sum = 0;
                 let count = 0;
@@ -19,7 +19,7 @@ const usePivotData = (data, keys) => {
                 });
                 row.value = count > 0 ? Math.round(sum / count) : null;
             }
-            // OPTION B: Specific Keys (Comparison)
+            // OPTION B: Specific Keys (Regional Comparison)
             else {
                 keys.forEach(k => {
                     row[k] = data[k][i];
@@ -30,7 +30,7 @@ const usePivotData = (data, keys) => {
     }, [data, keys]);
 };
 
-export function MarketChart({ data }) {
+export function CityMeanChart({ data }) {
     const chartData = usePivotData(data, []);
 
     return (

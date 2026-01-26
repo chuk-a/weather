@@ -16,7 +16,7 @@ export function TickerTape({ stations, metrics }) {
     const tickerItems = [...stations, ...stations, ...stations];
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 h-10 bg-zinc-950 border-t border-zinc-800 flex items-center overflow-hidden z-50">
+        <div className="h-full bg-zinc-950 flex items-center overflow-hidden">
             <div className="flex whitespace-nowrap animate-ticker">
                 {tickerItems.map((s, i) => {
                     const val = metrics?.stations.find(st => st.id === s.id)?.val;
