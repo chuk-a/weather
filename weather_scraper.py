@@ -68,29 +68,25 @@ def scrape_weather():
 def scrape_pm25(url, label):
     print(f"Scraping {label} PM2.5...")
     if not safe_get(url):
-        return "ERROR"
-    xpath_val = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[2]/div/div[1]/div[3]/p'
-    xpath_time = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[1]/div[1]/div/div[2]/h2'
-    xpath_time_alt = '//*[@id="main-content"]/div[3]/div[2]/div[1]/div[2]/div[1]/div[1]/div/div[2]/div[2]'
+        return "ERROR", "ERROR"
     
-    val = get_text(xpath_val, f"{label} PM2.5")
-    time_val = get_text(xpath_time, f"{label} Time (Primary)")
+    # Robust Value Extraction (Searching for unit)
+    # 1. Search for the standard card structure
+    # 2. Fallback to searching for the text 'µg/m³' and finding its sibling/parent
+    xpath_val = '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p'
+    xpath_val_alt = "//span[contains(text(), 'µg/m³')]/preceding-sibling::span"
     
-    # If primary time doesn't look right (missing "Local time"), try alternate
-    if "Local time" not in time_val:
-        print(f"Primary time extraction failed for {label}, trying alternate...")
-        try:
-             # Try to get text from the alternate div
-             alt_val = wait.until(EC.presence_of_element_located((By.XPATH, xpath_time_alt))).text.strip()
-             if "Local time" in alt_val:
-                 time_val = alt_val
-                 print(f"Alternate time found: {time_val}")
-        except Exception as e:
-            print(f"Alternate time extraction failed for {label}: {e}")
+    val = get_text(xpath_val, f"{label} PM2.5 (Primary)")
+    if val == "ERROR" or not val:
+        val = get_text(xpath_val_alt, f"{label} PM2.5 (Alt)")
+    
+    # Robust Time Extraction (Searching for text 'Local time')
+    xpath_time = '//*[contains(text(), "Local time")]'
+    time_val = get_text(xpath_time, f"{label} Time")
             
     return val, time_val
 
-def clean(val):
+def clean(val, is_time=False):
     if isinstance(val, str):
         # Remove embedding newlines and extra spaces
         val = val.replace("\r", " ").replace("\n", " ").strip()
@@ -98,26 +94,24 @@ def clean(val):
         if "ERROR" in val:
             return "ERROR"
         
-        # Extract timestamp if it matches HH:mm, MMM DD (IQAir format)
-        ts_match = re.search(r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})", val)
-        if ts_match:
-            return f"{ts_match.group(1)}, {ts_match.group(2)}"
+        if is_time:
+            # Extract timestamp if it matches HH:mm, MMM DD (IQAir format)
+            ts_match = re.search(r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})", val)
+            if ts_match:
+                return f"{ts_match.group(1)}, {ts_match.group(2)}"
+            return val
 
         # Check for specific IQAir "No current data" patterns
         if "No current data" in val:
              return "OFFLINE"
 
         # Standard cleaning for numbers/units
-        return (
-            val.replace("°", "")
-               .replace("C", "")
-               .replace("Feels like", "")
-               .replace("µg/m³", "")
-               .replace("%", "")
-               .replace("м/с", "")
-               .replace("|", "")
-               .strip()
-        )
+        # Extract only the numeric part if it's a value
+        num_match = re.search(r"(\d+(\.\d+)?)", val)
+        if num_match:
+            return num_match.group(1)
+
+        return val.strip()
     return val
 
 # Scrape all data
@@ -169,16 +163,16 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
         clean(feels_like),
         clean(wind_speed),
         clean(humidity),
-        clean(pm25_french), clean(time_french),
-        clean(pm25_eu), clean(time_eu),
-        clean(pm25_czech), clean(time_czech),
-        clean(pm25_yarmag), clean(time_yarmag),
-        clean(pm25_chd9), clean(time_chd9),
-        clean(pm25_mandakh), clean(time_mandakh),
-        clean(pm25_chd6), clean(time_chd6),
-        clean(pm25_airv), clean(time_airv),
-        clean(pm25_school17), clean(time_school17),
-        clean(pm25_school72), clean(time_school72),
-        clean(pm25_chd12), clean(time_chd12),
-        clean(pm25_kind280), clean(time_kind280)
+        clean(pm25_french), clean(time_french, is_time=True),
+        clean(pm25_eu), clean(time_eu, is_time=True),
+        clean(pm25_czech), clean(time_czech, is_time=True),
+        clean(pm25_yarmag), clean(time_yarmag, is_time=True),
+        clean(pm25_chd9), clean(time_chd9, is_time=True),
+        clean(pm25_mandakh), clean(time_mandakh, is_time=True),
+        clean(pm25_chd6), clean(time_chd6, is_time=True),
+        clean(pm25_airv), clean(time_airv, is_time=True),
+        clean(pm25_school17), clean(time_school17, is_time=True),
+        clean(pm25_school72), clean(time_school72, is_time=True),
+        clean(pm25_chd12), clean(time_chd12, is_time=True),
+        clean(pm25_kind280), clean(time_kind280, is_time=True)
     ])
