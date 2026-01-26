@@ -35,8 +35,11 @@ export function StationTable({ stations, metrics, isCompact = false }) {
                     </Button>
                 ),
                 cell: ({ row }) => (
-                    <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-zinc-300 leading-none">{row.getValue("label")}</span>
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-zinc-300 leading-tight">{row.getValue("label")}</span>
+                        <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-tighter">
+                            SYNC: {row.original.time?.split(',')[0] || '--'}
+                        </span>
                     </div>
                 ),
             },
