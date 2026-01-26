@@ -51,6 +51,29 @@ export function useWeatherData() {
         return Number.isFinite(n) ? n : null;
     };
 
+    const cleanTime = (rawStr) => {
+        if (!rawStr) return null;
+        // Handle "No current data \n Last update..." mess
+        const clean = rawStr.replace(/(\r\n|\n|\r)/gm, " ").trim();
+
+        // Try to match standard "YYYY-MM-DD HH:mm"
+        if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/.test(clean)) return clean;
+
+        // Try to match standard "HH:mm, MMM DD"
+        const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
+        if (stdMatch) return `${stdMatch[1]}, ${stdMatch[2]}`;
+
+        // Try to match "Last update HH:mmJan DD" (Scraper glitch format)
+        const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
+        if (messyMatch) return `${messyMatch[1]}, ${messyMatch[2]}`;
+
+        return clean; // Fallback
+    };
+
+    // Helper to convert "HH:mm, MMM DD" back to comparable Date if possible
+    // (Assuming current year for rough filtering, or keep generic if not needed)
+    // For now, we just ensure the timestamp string stored is clean.
+
     const processData = (rows) => {
         const raw = {
             timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: [],
@@ -59,7 +82,28 @@ export function useWeatherData() {
         };
 
         rows.forEach(row => {
-            raw.timestamps.push(row.timestamp);
+            // Clean the main timestamp
+            // Standardize to YYYY-MM-DD HH:mm for Chart XAxis if it was messy?
+            // "18:00, Jan 25" -> standard XAxis parser "slice(11,16)" expects "YYYY-MM-DD HH:mm"
+            // We need to construct a fake ISO string if we want the chart slicer to work 100% same way
+            // OR we update the Chart XAxis formatter.
+            // Let's normalize everything to "YYYY-MM-DD HH:mm" if we can infer year.
+
+            let ts = cleanTime(row.timestamp);
+
+            // If it's "18:00, Jan 25", convert to "2026-01-25 18:00" for consistency
+            if (ts && ts.includes(',')) {
+                const [time, date] = ts.split(',').map(s => s.trim()); // 18:00, Jan 25
+                // date is "Jan 25". Convert to "01-25"
+                const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+                const [monName, day] = date.split(' ');
+                const mon = months[monName] || '01';
+                const dayFmt = day.padStart(2, '0');
+                const year = new Date().getFullYear(); // Assume current year
+                ts = `${year}-${mon}-${dayFmt} ${time}`;
+            }
+
+            raw.timestamps.push(ts);
             raw.temps.push(cleanNumber(row.temperature));
             raw.feels.push(cleanNumber(row.feels_like));
             raw.humidities.push(cleanNumber(row.humidity));
@@ -73,48 +117,6 @@ export function useWeatherData() {
 
         setData(raw);
         setLoading(false);
-    };
-
-    const getFilteredData = (range) => {
-        if (!data || range === 'all') return data;
-
-        const now = new Date();
-        const days = range === 'today' ? 1 : (range === 'last7' ? 7 : 30);
-        const ms = days * 24 * 60 * 60 * 1000;
-        const cutoff = new Date(now.getTime() - ms);
-
-        let start = 0;
-        for (let i = data.timestamps.length - 1; i >= 0; i--) {
-            // Assuming timestamp format YYYY-MM-DD HH:mm
-            if (new Date(data.timestamps[i]) < cutoff) {
-                start = i + 1;
-                break;
-            }
-        }
-
-        if (start <= 0) return data;
-
-        const sliced = {};
-        Object.keys(data).forEach(k => {
-            sliced[k] = data[k].slice(start);
-        });
-        return sliced;
-    };
-
-    const cleanTime = (rawStr) => {
-        if (!rawStr) return null;
-        // Handle "No current data \n Last update..." mess
-        const clean = rawStr.replace(/(\r\n|\n|\r)/gm, " ").trim();
-
-        // Try to match standard "HH:mm, MMM DD"
-        const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (stdMatch) return `${stdMatch[1]}, ${stdMatch[2]}`;
-
-        // Try to match "Last update HH:mmJan DD" (Scraper glitch format)
-        const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (messyMatch) return `${messyMatch[1]}, ${messyMatch[2]}`;
-
-        return clean; // Fallback
     };
 
     const getLatestMetrics = () => {
