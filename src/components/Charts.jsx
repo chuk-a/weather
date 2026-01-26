@@ -1,5 +1,5 @@
 import React from 'react';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend } from "recharts";
 
 // --- HELPER: Pivot Data (Columns -> Rows) ---
 const usePivotData = (data, keys) => {
@@ -8,7 +8,7 @@ const usePivotData = (data, keys) => {
         return data.timestamps.map((t, i) => {
             const row = { time: t };
 
-            // Calculate average for the "Market Index" if no specific keys provided
+            // OPTION A: Calculate Average ("Market Index")
             if (!keys || keys.length === 0) {
                 let sum = 0;
                 let count = 0;
@@ -19,13 +19,19 @@ const usePivotData = (data, keys) => {
                 });
                 row.value = count > 0 ? Math.round(sum / count) : null;
             }
+            // OPTION B: Specific Keys (Comparison)
+            else {
+                keys.forEach(k => {
+                    row[k] = data[k][i];
+                });
+            }
             return row;
         });
     }, [data, keys]);
 };
 
 export function MarketChart({ data }) {
-    const chartData = usePivotData(data, []); // Empty keys = calculate average
+    const chartData = usePivotData(data, []);
 
     return (
         <div className="w-full h-full min-h-[300px]">
@@ -69,6 +75,56 @@ export function MarketChart({ data }) {
                         animationDuration={1500}
                     />
                 </AreaChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+export function ComparisonChart({ data, stations }) {
+    const chartData = usePivotData(data, stations.map(s => s.id));
+    const colors = [
+        "#10b981", "#3b82f6", "#f59e0b", "#ef4444",
+        "#8b5cf6", "#ec4899", "#14b8a6", "#f97316"
+    ];
+
+    return (
+        <div className="w-full h-full min-h-[400px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid vertical={false} stroke="#27272a" strokeDasharray="3 3" />
+                    <XAxis
+                        dataKey="time"
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
+                        tickFormatter={(value) => value.slice(11, 16)}
+                        minTickGap={50}
+                    />
+                    <YAxis
+                        tickLine={false}
+                        axisLine={false}
+                        tick={{ fill: '#52525b', fontSize: 10, fontFamily: 'monospace' }}
+                        domain={[0, 'auto']}
+                    />
+                    <Tooltip
+                        contentStyle={{ backgroundColor: '#18181b', borderColor: '#27272a', color: '#f4f4f5' }}
+                        labelStyle={{ color: '#71717a', fontSize: '10px', fontFamily: 'monospace', marginBottom: '4px' }}
+                        labelFormatter={(l) => `TIME: ${l}`}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '10px', fontFamily: 'monospace', paddingTop: '20px' }} />
+                    {stations.map((s, i) => (
+                        <Line
+                            key={s.id}
+                            type="monotone"
+                            dataKey={s.id}
+                            stroke={colors[i % colors.length]}
+                            strokeWidth={2}
+                            name={s.label}
+                            dot={false}
+                            activeDot={{ r: 4 }}
+                        />
+                    ))}
+                </LineChart>
             </ResponsiveContainer>
         </div>
     );
