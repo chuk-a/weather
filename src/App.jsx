@@ -122,31 +122,32 @@ function App() {
                         title="City Concentration"
                         value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
                         unit="µg/m³"
+                        desc={`${metrics?.activeCount}/${metrics?.totalCount} Active Signals | 2H Filtering Enabled`}
                         trend={metrics?.avgAQI > 50 ? "up" : "down"}
-                        status={metrics?.avgAQI > 150 ? "emergency" : "normal"}
-                    />
-                    <MetricCard
-                        title="Ambient Temperature"
-                        value={metrics?.temp}
-                        unit="°C"
-                        trend="stable"
-                    />
-                    <MetricCard
-                        title="Wind Velocity"
-                        value={metrics?.wind}
-                        unit="m/s"
-                        desc="Blowing North-West"
-                        color="text-blue-500"
-                        icon={<div className="animate-pulse flex items-center justify-center p-2"><Navigation className="w-6 h-6 text-blue-500 -rotate-45" /></div>}
+                        icon={<AirRadialChart value={metrics?.avgAQI} />}
                         isSplit={true}
                     />
                     <MetricCard
-                        title="Ambient Atmosphere"
+                        title="Health Safeguard"
+                        value={healthData?.level}
+                        unit="STATUS"
+                        desc={healthData?.advice}
+                        color={healthData?.color}
+                        icon={<ShieldCheck className="w-5 h-5 opacity-20" />}
+                    />
+                    <MetricCard
+                        title="Atmosphere"
                         value={`${metrics?.temp}°`}
-                        unit="TEMP"
-                        desc={`${metrics?.feels}° Feels | ${metrics?.humidity}% Humidity`}
-                        color="text-amber-500"
-                        icon={<ThermometerSun className="w-4 h-4 text-amber-500 opacity-20" />}
+                        unit="C"
+                        desc={`Feels like ${metrics?.feels}°C | T-Zone Sync`}
+                        icon={<ThermometerSun className="w-5 h-5 opacity-20" />}
+                    />
+                    <MetricCard
+                        title="Composition"
+                        value={`${metrics?.humidity}`}
+                        unit="%"
+                        desc={`Wind: ${metrics?.wind} m/s | ${metrics?.humidity}% Humidity`}
+                        icon={<Droplets className="w-5 h-5 opacity-20" />}
                     />
                 </div>
 
@@ -228,26 +229,32 @@ function NavButton({ children, active, icon }) {
     );
 }
 
-function MetricCard({ title, value, unit, desc, icon, color, isSplit = false }) {
+function MetricCard({ title, value, unit, desc, icon, color, isSplit = false, trend }) {
     return (
-        <Card className="bg-card border-border group hover:border-accent transition-all duration-300 shadow-sm overflow-hidden text-card-foreground">
-            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 text-muted-foreground">
-                <CardTitle className="text-[10px] font-mono font-bold uppercase tracking-widest">{title}</CardTitle>
-                {!isSplit && <div className="p-1 opacity-20">{icon}</div>}
+        <Card className="bg-card border-border group hover:border-border transition-all duration-300 shadow-sm overflow-hidden text-card-foreground">
+            <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 text-muted-foreground/60">
+                <CardTitle className="text-[9px] font-mono font-black uppercase tracking-widest flex items-center gap-2">
+                    {title}
+                    {trend === 'up' && <div className="w-1 h-1 rounded-full bg-rose-500 animate-pulse" />}
+                </CardTitle>
+                {!isSplit && <div className="p-1">{icon}</div>}
             </CardHeader>
             <CardContent>
                 <div className="flex items-center justify-between">
                     <div>
                         <div className="flex items-baseline gap-1.5">
                             <div className={cn("text-3xl font-black tracking-tighter tabular-nums leading-none", color)}>{value ?? '--'}</div>
-                            <div className="text-[10px] font-mono text-muted-foreground font-bold uppercase">{unit}</div>
+                            <div className="text-[10px] font-black font-mono text-muted-foreground/40 uppercase">{unit}</div>
                         </div>
-                        <p className="text-[9px] text-muted-foreground font-bold font-mono mt-2 uppercase tracking-tighter max-w-[160px] leading-relaxed">
-                            {desc}
-                        </p>
+                        <div className="mt-3 flex flex-col gap-0.5">
+                            <p className="text-[10px] font-bold font-mono text-foreground uppercase tracking-tight">
+                                {desc}
+                            </p>
+                            <div className="w-full h-[1px] bg-border/20 mt-1" />
+                        </div>
                     </div>
                     {isSplit && (
-                        <div className="w-20 h-20 -mr-2 flex items-center justify-center">
+                        <div className="w-16 h-16 flex items-center justify-center">
                             {icon}
                         </div>
                     )}

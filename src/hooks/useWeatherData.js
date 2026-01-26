@@ -248,6 +248,8 @@ export function useWeatherData() {
         return {
             lastUpdated: data.timestamps[idx],
             avgAQI: avg,
+            activeCount: currentVals.length,
+            totalCount: STATIONS.length,
             isOffline: avg === null || isCompletelyDead,
             temp: data.temps[idx],
             feels: data.feels[idx],
