@@ -24,12 +24,21 @@ export function useWeatherData() {
     useEffect(() => {
         async function fetchData() {
             try {
-                // Add cache-busting query parameter
+                // Primary: Fetch from GitHub Raw to bypass deployment lag (CORS supported)
+                const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
                 const cacheBust = `?t=${Date.now()}`;
-                let response = await fetch(`weather_log.csv${cacheBust}`);
+
+                let response = await fetch(`${RAW_URL}${cacheBust}`);
+
+                if (!response.ok) {
+                    // Fallback to local file
+                    response = await fetch(`weather_log.csv${cacheBust}`);
+                }
+
                 if (!response.ok) {
                     response = await fetch(`./weather_log.csv${cacheBust}`);
                 }
+
                 if (!response.ok) throw new Error('Failed to fetch data');
                 const text = await response.text();
 

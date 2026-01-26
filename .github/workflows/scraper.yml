@@ -1,4 +1,4 @@
-name: Weather Scraper
+name: Weather Scraper & Deploy
 
 on:
   schedule:
@@ -11,7 +11,7 @@ permissions:
   contents: write  # needed for auto-commit
 
 jobs:
-  scrape:
+  scrape-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,40 +27,42 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install chromedriver-autoinstaller selenium pytz
-        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
     - name: Install Chrome
       run: |
         sudo apt update
-        sudo apt install -y wget unzip xvfb libxi6
         wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
         sudo apt install -y ./google-chrome-stable_current_amd64.deb
 
     - name: Run weather scraper
       run: python weather_scraper.py
 
-    - name: Debug workspace and file changes
-      run: |
-        echo "=== GITHUB_WORKSPACE ==="
-        echo "$GITHUB_WORKSPACE"
-        echo "=== Directory listing ==="
-        ls -al
-        echo "=== Find weather_log.csv ==="
-        find . -name weather_log.csv
-        echo "=== Git status ==="
-        git status
-        echo "=== Git diff ==="
-        git diff public/weather_log.csv || echo "No diff"
-        echo "=== End debug ==="
-
     - name: Auto-commit updated CSV
       run: |
         git config --global user.name "github-actions"
         git config --global user.email "github-actions@github.com"
         git add public/weather_log.csv
-        git status
-        git diff --stat public/weather_log.csv
         git commit -m "Update weather_log.csv [auto]" || echo "No changes to commit"
+
+    - name: Setup Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+
+    - name: Install Node Dependencies
+      run: npm install
+
+    - name: Build
+      run: npm run build
+
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+        publish_branch: gh-pages-build
+
+    - name: Push CSV changes to main
+      run: |
         git pull --rebase
         git push
-
