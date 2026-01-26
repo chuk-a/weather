@@ -55,7 +55,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                         className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground pl-0 h-auto py-0 font-bold"
                     >
-                        District
+                        Бүс / District
                         <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
                     </Button>
                 ),
@@ -86,7 +86,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                         className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground h-auto py-0 font-bold"
                     >
-                        Sync
+                        Цаг / Sync
                         <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
                     </Button>
                 ),
@@ -197,7 +197,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         if (!rows?.length) return (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
-                                    SEARCHING_FOR_SIGNALS...
+                                    СҮЛЖЭЭГ ШАЛГАЖ БАЙНА... / SEARCHING_FOR_SIGNALS...
                                 </TableCell>
                             </TableRow>
                         );
@@ -241,8 +241,8 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
 
                         return (
                             <>
-                                {renderRows(activeRows, "Active Signals", "bg-emerald-500")}
-                                {renderRows(staleRows, "Stale / Offline Nodes", "bg-red-500")}
+                                {renderRows(activeRows, "Active Signals / Идэвхтэй мэдээлэл", "bg-emerald-500")}
+                                {renderRows(staleRows, "Stale Nodes / Хоцрогдсон цэгүүд", "bg-red-500")}
                             </>
                         );
                     })()}

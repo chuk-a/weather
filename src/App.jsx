@@ -79,7 +79,7 @@ function App() {
                     </div>
                     <div className="h-4 w-px bg-white/20 hidden md:block" />
                     <div className="text-[10px] font-bold hidden md:block uppercase tracking-tighter opacity-90">
-                        City Average: {metrics.avgAQI} µg/m³ — Indoor filtration strictly recommended.
+                        City Mean: {metrics.avgAQI} µg/m³ — Indoor filtration strictly recommended. / Маск зүүж, агаарын шүүлтүүр ашиглана уу.
                     </div>
                 </div>
             )}
@@ -91,11 +91,11 @@ function App() {
                         <div className="w-6 h-6 bg-primary rounded flex items-center justify-center shadow-sm">
                             <Activity className="w-4 h-4 text-primary-foreground" />
                         </div>
-                        <span className="font-bold tracking-tighter text-lg">UB.PREMIER</span>
+                        <span className="font-bold tracking-tighter text-lg">UB AIR QUALITY / УЛААНБААТАР</span>
                     </div>
                     <div className="hidden md:flex items-center gap-4 text-sm font-medium">
-                        <NavButton active icon={<LayoutDashboard className="w-4 h-4" />}>Command</NavButton>
-                        <NavButton icon={<ShieldAlert className="w-4 h-4" />}>Health Hub</NavButton>
+                        <NavButton active icon={<LayoutDashboard className="w-4 h-4" />}>Command / Удирдах</NavButton>
+                        <NavButton icon={<ShieldAlert className="w-4 h-4" />}>Health / Эрүүл мэнд</NavButton>
                     </div>
                 </div>
 
@@ -119,16 +119,16 @@ function App() {
                 {/* Metric Layer */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 shrink-0">
                     <MetricCard
-                        title="City Concentration"
+                        title="City Concentration / Хотын агаарын чанар"
                         value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
                         unit="µg/m³"
-                        desc={`${metrics?.activeCount}/${metrics?.totalCount} Active Signals | 2H Filtering Enabled`}
+                        desc={`${metrics?.activeCount}/${metrics?.totalCount} Active Signals | 2H Filtering`}
                         trend={metrics?.avgAQI > 50 ? "up" : "down"}
                         icon={<AirRadialChart value={metrics?.avgAQI} />}
                         isSplit={true}
                     />
                     <MetricCard
-                        title="Health Safeguard"
+                        title="Health Safeguard / Эрүүл мэнд"
                         value={healthData?.level}
                         unit="STATUS"
                         desc={healthData?.advice}
@@ -136,17 +136,17 @@ function App() {
                         icon={<ShieldCheck className="w-5 h-5 opacity-20" />}
                     />
                     <MetricCard
-                        title="Atmosphere"
+                        title="Atmosphere / Цаг агаар"
                         value={`${metrics?.temp}°`}
                         unit="C"
-                        desc={`Feels like ${metrics?.feels}°C | T-Zone Sync`}
+                        desc={`Feels ${metrics?.feels}°C | Мэдрэгдэх`}
                         icon={<ThermometerSun className="w-5 h-5 opacity-20" />}
                     />
                     <MetricCard
-                        title="Composition"
+                        title="Composition / Найрлага"
                         value={`${metrics?.humidity}`}
                         unit="%"
-                        desc={`Wind: ${metrics?.wind} m/s | ${metrics?.humidity}% Humidity`}
+                        desc={`Wind ${metrics?.wind}m/s | Чийгшил ${metrics?.humidity}%`}
                         icon={<Droplets className="w-5 h-5 opacity-20" />}
                     />
                 </div>
@@ -159,14 +159,14 @@ function App() {
                         <Tabs defaultValue="radar" className="flex-1 flex flex-col overflow-hidden">
                             <CardHeader className="flex flex-row items-center justify-between pb-1 h-14 shrink-0 border-b border-border/50 px-4">
                                 <TabsList className="bg-muted/50 h-8">
-                                    <TabsTrigger value="radar" className="text-[10px] font-bold py-1 flex items-center gap-1.5">Distribution</TabsTrigger>
-                                    <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">Pollution</TabsTrigger>
-                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">Wind Speed</TabsTrigger>
-                                    <TabsTrigger value="temp" className="text-[10px] font-bold py-1">Climate</TabsTrigger>
+                                    <TabsTrigger value="radar" className="text-[10px] font-bold py-1 flex items-center gap-1.5">Map / Газрын зураг</TabsTrigger>
+                                    <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">Pollution / Бохирдол</TabsTrigger>
+                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">Wind / Салхи</TabsTrigger>
+                                    <TabsTrigger value="temp" className="text-[10px] font-bold py-1">Climate / Цаг агаар</TabsTrigger>
                                 </TabsList>
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    PREDICTIVE_ACTIVE
+                                    SYSTEM_ACTIVE / ИДЭВХТЭЙ
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 p-4 min-h-0 overflow-hidden">
@@ -190,8 +190,8 @@ function App() {
                     <Card className="lg:col-span-3 bg-card border-border flex flex-col overflow-hidden shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between pb-3 h-14 shrink-0 border-b border-border/50">
                             <div>
-                                <CardTitle className="text-sm font-bold tracking-tight">Regional Signals</CardTitle>
-                                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase tracking-tighter">Live District Node Status</p>
+                                <CardTitle className="text-sm font-bold tracking-tight">Regional Signals / Бүс нутаг</CardTitle>
+                                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase tracking-tighter">Live District Node Status / Идэвхтэй цэгүүд</p>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-1 overflow-auto custom-scrollbar p-0">
