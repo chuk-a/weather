@@ -101,6 +101,22 @@ export function useWeatherData() {
         return sliced;
     };
 
+    const cleanTime = (rawStr) => {
+        if (!rawStr) return null;
+        // Handle "No current data \n Last update..." mess
+        const clean = rawStr.replace(/(\r\n|\n|\r)/gm, " ").trim();
+
+        // Try to match standard "HH:mm, MMM DD"
+        const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
+        if (stdMatch) return `${stdMatch[1]}, ${stdMatch[2]}`;
+
+        // Try to match "Last update HH:mmJan DD" (Scraper glitch format)
+        const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
+        if (messyMatch) return `${messyMatch[1]}, ${messyMatch[2]}`;
+
+        return clean; // Fallback
+    };
+
     const getLatestMetrics = () => {
         if (!data) return null;
         const idx = data.timestamps.length - 1;
@@ -110,13 +126,17 @@ export function useWeatherData() {
         const now = new Date();
         const currentVals = STATIONS.map(s => {
             const val = data[s.id][idx];
-            const tStr = data[`time_${s.id}`][idx];
+            let tStr = data[`time_${s.id}`][idx];
+            tStr = cleanTime(tStr);
 
             if (val == null) return null;
             if (!tStr) return val; // Assume fresh if no time
 
             try {
+                // Parse "10:00, Jan 26"
                 const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                if (!datePart) return val; // Logic fallback if split fails
+
                 const year = now.getFullYear();
                 const d = new Date(`${datePart}, ${year} ${timePart}`);
                 if (isNaN(d.getTime())) return val;
@@ -141,7 +161,7 @@ export function useWeatherData() {
             stations: STATIONS.map(s => ({
                 ...s,
                 val: data[s.id][idx],
-                time: data[`time_${s.id}`][idx],
+                time: cleanTime(data[`time_${s.id}`][idx]),
             }))
         };
     };
