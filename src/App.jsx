@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useWeatherData } from './hooks/useWeatherData';
-import { ComparisonChart } from './components/Charts';
+import { ComparisonChart, AtmosphereTrendChart, WindVelocityChart } from './components/Charts';
 import { StationTable } from './components/StationTable';
 import { TickerTape } from './components/TickerTape';
 import {
@@ -14,9 +14,11 @@ import {
     LayoutDashboard,
     BarChart3,
     FileText,
-    Download
+    Download,
+    Waves
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 function App() {
@@ -106,7 +108,7 @@ function App() {
                         icon={<Activity className="w-4 h-4 text-emerald-500" />}
                     />
                     <MetricCard
-                        title="High Pollution Alert"
+                        title="High Pollution"
                         value={derived?.peak}
                         unit="µg/m³"
                         desc="Peak regional recording"
@@ -125,7 +127,7 @@ function App() {
                         title="Atmosphere"
                         value={`${metrics?.temp}°`}
                         unit="TEMP"
-                        desc={`${metrics?.humidity}% Humid | ${metrics?.wind}m/s Wind`}
+                        desc={`${metrics?.feels || '--'}° Feels | ${metrics?.humidity}% Humid | ${metrics?.wind}m/s Wind`}
                         color="text-amber-600"
                         icon={<ThermometerSun className="w-4 h-4 text-amber-500" />}
                     />
@@ -134,21 +136,32 @@ function App() {
                 {/* Analytics Layer */}
                 <div className="flex-1 grid grid-cols-1 lg:grid-cols-7 gap-6 min-h-0 overflow-hidden">
 
-                    {/* Trends */}
+                    {/* Trends Tab System */}
                     <Card className="lg:col-span-4 bg-white border-zinc-200 flex flex-col overflow-hidden shadow-sm">
-                        <CardHeader className="flex flex-row items-center justify-between pb-3 h-14 shrink-0 border-b border-zinc-50">
-                            <div>
-                                <CardTitle className="text-sm font-bold text-zinc-900 tracking-tight">Pollution Trend Analysis</CardTitle>
-                                <p className="text-[10px] text-zinc-500 font-mono mt-0.5 uppercase tracking-tighter">Temporal Concentration Mapping</p>
-                            </div>
-                            <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                NETWORK_ONLINE
-                            </div>
-                        </CardHeader>
-                        <CardContent className="flex-1 p-4 min-h-0">
-                            <ComparisonChart data={chartData} stations={stations} isLight={true} />
-                        </CardContent>
+                        <Tabs defaultValue="pollution" className="flex-1 flex flex-col overflow-hidden">
+                            <CardHeader className="flex flex-row items-center justify-between pb-1 h-14 shrink-0 border-b border-zinc-50 px-4">
+                                <TabsList className="bg-zinc-100/50 h-8">
+                                    <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">Pollution</TabsTrigger>
+                                    <TabsTrigger value="temp" className="text-[10px] font-bold py-1">Temperature</TabsTrigger>
+                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">Wind</TabsTrigger>
+                                </TabsList>
+                                <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    LIVE_ANALYSIS
+                                </div>
+                            </CardHeader>
+                            <CardContent className="flex-1 p-4 min-h-0 overflow-hidden">
+                                <TabsContent value="pollution" className="h-full m-0 outline-none">
+                                    <ComparisonChart data={chartData} stations={stations} isLight={true} />
+                                </TabsContent>
+                                <TabsContent value="temp" className="h-full m-0 outline-none">
+                                    <AtmosphereTrendChart data={chartData} />
+                                </TabsContent>
+                                <TabsContent value="wind" className="h-full m-0 outline-none">
+                                    <WindVelocityChart data={chartData} />
+                                </TabsContent>
+                            </CardContent>
+                        </Tabs>
                     </Card>
 
                     {/* Standings */}
@@ -158,9 +171,6 @@ function App() {
                                 <CardTitle className="text-sm font-bold text-zinc-900 tracking-tight">Regional Standings</CardTitle>
                                 <p className="text-[10px] text-zinc-500 font-mono mt-0.5 uppercase tracking-tighter">Ranked by Atmospheric Index</p>
                             </div>
-                            <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest bg-zinc-50 px-1.5 py-0.5 rounded border border-zinc-100">
-                                Live Data
-                            </span>
                         </CardHeader>
                         <CardContent className="flex-1 overflow-auto custom-scrollbar p-0">
                             <StationTable stations={stations} metrics={metrics} isCompact={true} isLight={true} />
@@ -198,8 +208,8 @@ function MetricCard({ title, value, unit, desc, icon, color }) {
             <div className="absolute top-0 right-0 p-3 opacity-20 group-hover:opacity-40 transition-opacity">
                 {icon}
             </div>
-            <CardHeader className="flex flex-row items-center justify-between pb-1.5 space-y-0">
-                <CardTitle className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-widest">{title}</CardTitle>
+            <CardHeader className="flex flex-row items-center justify-between pb-1.5 space-y-0 text-zinc-400">
+                <CardTitle className="text-[10px] font-mono font-bold uppercase tracking-widest">{title}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div className="flex items-baseline gap-1.5 pt-1">

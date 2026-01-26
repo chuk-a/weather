@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
     LineChart,
     Line,
@@ -127,6 +127,128 @@ export function ComparisonChart({ data, stations }) {
                         />
                     ))}
                 </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+export function AtmosphereTrendChart({ data }) {
+    const chartData = useMemo(() => {
+        if (!data || !data.timestamps) return [];
+        return data.timestamps.map((t, i) => ({
+            time: t,
+            actual: data.temps[i],
+            feels: data.feels[i]
+        }));
+    }, [data]);
+
+    return (
+        <div className="w-full h-full min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
+                    <XAxis
+                        dataKey="time"
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
+                        minTickGap={60}
+                        axisLine={false}
+                        tickLine={false}
+                    />
+                    <YAxis
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        axisLine={false}
+                        tickLine={false}
+                        unit="°"
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #f1f1f2',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="actual"
+                        name="Actual Temp"
+                        stroke="#f59e0b"
+                        strokeWidth={4}
+                        dot={false}
+                        animationDuration={1000}
+                    />
+                    <Line
+                        type="monotone"
+                        dataKey="feels"
+                        name="Feels Like"
+                        stroke="#ef4444"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={false}
+                        animationDuration={1000}
+                    />
+                </LineChart>
+            </ResponsiveContainer>
+        </div>
+    );
+}
+
+export function WindVelocityChart({ data }) {
+    const chartData = useMemo(() => {
+        if (!data || !data.timestamps) return [];
+        return data.timestamps.map((t, i) => ({
+            time: t,
+            wind: data.windSpeeds[i]
+        }));
+    }, [data]);
+
+    return (
+        <div className="w-full h-full min-h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                        <linearGradient id="colorWind" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2} />
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                        </linearGradient>
+                    </defs>
+                    <CartesianGrid vertical={false} stroke="#f1f1f2" strokeDasharray="3 3" />
+                    <XAxis
+                        dataKey="time"
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        tickFormatter={(value) => value ? value.slice(11, 16) : ''}
+                        minTickGap={60}
+                        axisLine={false}
+                        tickLine={false}
+                    />
+                    <YAxis
+                        tick={{ fill: '#a1a1aa', fontSize: 9, fontWeight: '700' }}
+                        axisLine={false}
+                        tickLine={false}
+                        unit="m/s"
+                    />
+                    <Tooltip
+                        contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #f1f1f2',
+                            borderRadius: '8px',
+                            fontSize: '10px',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.05)'
+                        }}
+                    />
+                    <Area
+                        type="monotone"
+                        dataKey="wind"
+                        name="Wind Speed"
+                        stroke="#3b82f6"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#colorWind)"
+                        animationDuration={1000}
+                    />
+                </AreaChart>
             </ResponsiveContainer>
         </div>
     );
