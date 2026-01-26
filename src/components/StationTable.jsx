@@ -85,7 +85,7 @@ const columns = [
     {
         accessorKey: "time",
         header: "Last Update",
-        cell: ({ row }) => <div className="text-zinc-500 text-[10px] font-mono">{row.getValue("time")?.slice(11) || '--'}</div>,
+        cell: ({ row }) => <div className="text-zinc-500 text-[10px] font-mono">{row.getValue("time") || '--'}</div>,
     },
 ];
 

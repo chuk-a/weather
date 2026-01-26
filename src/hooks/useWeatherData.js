@@ -119,7 +119,16 @@ export function useWeatherData() {
 
     const getLatestMetrics = () => {
         if (!data) return null;
-        const idx = data.timestamps.length - 1;
+
+        // Find the last valid row with a timestamp
+        let idx = -1;
+        for (let i = data.timestamps.length - 1; i >= 0; i--) {
+            if (data.timestamps[i] && data.timestamps[i].length > 5) {
+                idx = i;
+                break;
+            }
+        }
+
         if (idx < 0) return null;
 
         // Smart Average Logic
