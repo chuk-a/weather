@@ -68,13 +68,25 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         offline: "bg-muted"
                     };
 
+                    const rawTime = row.original.time || "";
+                    let displayTime = "--";
+
+                    if (rawTime.includes(',')) {
+                        displayTime = rawTime.split(',')[0].trim();
+                    } else if (rawTime.includes(' ')) {
+                        // Extract HH:mm from "YYYY-MM-DD HH:mm"
+                        displayTime = rawTime.split(' ').pop();
+                    }
+
                     return (
                         <div className="flex items-center gap-3 py-1">
                             <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColors[status] || statusColors.offline)} />
                             <div className="flex flex-col">
-                                <span className="text-sm font-bold text-foreground leading-tight">{row.getValue("label")}</span>
+                                <span className="text-sm font-bold text-foreground leading-tight">
+                                    {row.original.flag} {row.getValue("label")}
+                                </span>
                                 <span className="text-[9px] font-mono text-muted-foreground uppercase font-bold tracking-tighter">
-                                    SYNC: {row.original.time?.split(',')[0].slice(0, 5) || '--'}
+                                    SYNC: {displayTime}
                                 </span>
                             </div>
                         </div>
@@ -128,15 +140,8 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
 
     // Merge static station info with dynamic metrics
     const data = useMemo(() => {
-        return stations.map(s => {
-            const m = metrics?.stations.find(st => st.id === s.id);
-            return {
-                ...s,
-                val: m?.val,
-                time: m?.time,
-                status: m?.val // dummy for accessor
-            };
-        });
+        if (!metrics) return stations.map(s => ({ ...s, val: null, time: null, status: 'offline', trend: 'stable' }));
+        return metrics.stations;
     }, [stations, metrics]);
 
     const table = useReactTable({
