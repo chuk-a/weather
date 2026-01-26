@@ -1,16 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useWeatherData } from './hooks/useWeatherData';
 import { HeroSection } from './components/HeroSection';
-import { MarketChart } from './components/Charts';
-import { TickerTape } from './components/TickerTape';
 import { AnalyticsView } from './components/AnalyticsView';
+import { TickerTape } from './components/TickerTape';
 import { RefreshCw } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 function App() {
     const { filteredData, getFilteredData, getLatestMetrics, loading, error, stations } = useWeatherData();
     const [range, setRange] = useState('today');
-    const [activeTab, setActiveTab] = useState('monitor'); // monitor | analytics
 
     const metrics = getLatestMetrics();
     const chartData = useMemo(() => getFilteredData(range), [getFilteredData, range]);
@@ -50,37 +47,17 @@ function App() {
                 </div>
             </header>
 
-            <main className="pt-24 container mx-auto px-4 max-w-5xl mb-20">
+            <main className="pt-24 container mx-auto px-4 max-w-5xl mb-20 space-y-12">
 
-                <Tabs defaultValue="monitor" value={activeTab} onValueChange={setActiveTab} className="w-full">
-                    <div className="flex justify-center mb-8">
-                        <TabsList className="bg-zinc-900/50 border border-zinc-800">
-                            <TabsTrigger value="monitor" className="text-xs uppercase tracking-widest data-[state=active]:bg-zinc-800 data-[state=active]:text-emerald-400">
-                                Live Monitor
-                            </TabsTrigger>
-                            <TabsTrigger value="analytics" className="text-xs uppercase tracking-widest data-[state=active]:bg-zinc-800 data-[state=active]:text-amber-400">
-                                Analytics
-                            </TabsTrigger>
-                        </TabsList>
-                    </div>
+                {/* SECTION 1: HERO (The "Price") */}
+                <section>
+                    <HeroSection metrics={metrics} lastUpdated={metrics?.lastUpdated} />
+                </section>
 
-                    <TabsContent value="monitor" className="outline-none">
-                        {/* The Big Number */}
-                        <HeroSection metrics={metrics} lastUpdated={metrics?.lastUpdated} />
-
-                        {/* The Market Chart */}
-                        <div className="mt-12 h-[400px] w-full border-t border-zinc-900/50 pt-8 animate-in sticky top-24">
-                            <h3 className="text-xs font-mono text-zinc-500 mb-4 tracking-widest uppercase">
-                                City Pollution Trend (PM2.5)
-                            </h3>
-                            <MarketChart data={chartData} />
-                        </div>
-                    </TabsContent>
-
-                    <TabsContent value="analytics" className="outline-none">
-                        <AnalyticsView chartData={chartData} stations={stations} metrics={metrics} />
-                    </TabsContent>
-                </Tabs>
+                {/* SECTION 2: ANALYTICS (Chart + Table) */}
+                <section className="animate-in slide-in-from-bottom-8 duration-1000 delay-300 fill-mode-backwards">
+                    <AnalyticsView chartData={chartData} stations={stations} metrics={metrics} />
+                </section>
 
             </main>
 
