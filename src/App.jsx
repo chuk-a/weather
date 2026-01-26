@@ -33,11 +33,79 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
+const TRANSLATIONS = {
+    en: {
+        brand: 'UB AIR QUALITY',
+        city: 'ULAANBAATAR',
+        command: 'Command',
+        health: 'Health Hub',
+        hazardBanner: 'CRITICAL ATMOSPHERIC HAZARD DETECTED',
+        hazardAdvice: 'Indoor filtration strictly recommended.',
+        cityMean: 'City Mean',
+        cityConc: 'City Concentration',
+        activeSignals: 'Active Signals',
+        filtering: '2H Filtering',
+        guard: 'Health Safeguard',
+        atmosphere: 'Atmosphere',
+        feels: 'Feels',
+        composition: 'Composition',
+        wind: 'Wind',
+        humidity: 'Humidity',
+        map: 'Map',
+        pollution: 'Pollution',
+        windSpeed: 'Wind Speed',
+        climate: 'Climate',
+        systemActive: 'SYSTEM_ACTIVE',
+        regional: 'Regional Signals',
+        nodeStatus: 'Live District Node Status',
+        sync: 'Sync',
+        heartbeat: 'Telemetry Heartbeat',
+        loading: 'SYNCHRONIZING SECURE NETWORK...',
+        unitStatus: 'STATUS',
+        unitTemp: 'C',
+        unitHumidity: '%',
+    },
+    mn: {
+        brand: 'АГААРЫН ЧАНАР',
+        city: 'УЛААНБААТАР',
+        command: 'Удирдах',
+        health: 'Эрүүл мэнд',
+        hazardBanner: 'АГААРЫН БОХИРДОЛ САЛТАРЛАА',
+        hazardAdvice: 'Агаар шүүгч ашиглахыг зөвлөж байна.',
+        cityMean: 'Хотын Дундаж',
+        cityConc: 'Хотын Агаарын Чанар',
+        activeSignals: 'Идэвхтэй Цэгүүд',
+        filtering: '2Ц Шүүлтүүр',
+        guard: 'Эрүүл Мэнд',
+        atmosphere: 'Цаг Агаар',
+        feels: 'Мэдрэгдэх',
+        composition: 'Найрлага',
+        wind: 'Салхи',
+        humidity: 'Чийгшил',
+        map: 'Газрын зураг',
+        pollution: 'Бохирдол',
+        windSpeed: 'Салхины хурд',
+        climate: 'Цаг уур',
+        systemActive: 'СҮЛЖЭЭ_ИДЭВХТЭЙ',
+        regional: 'Бүс Нутгийн Мэдээ',
+        nodeStatus: 'Дүүргүүдийн Төлөв',
+        sync: 'Синх',
+        heartbeat: 'Сүлжээний дохио',
+        loading: 'СҮЛЖЭЭГ ШАЛГАЖ БАЙНА...',
+        unitStatus: 'ТӨЛӨВ',
+        unitTemp: 'Хэм',
+        unitHumidity: '%',
+    }
+};
+
 function App() {
     const { getFilteredData, getLatestMetrics, loading, error, stations } = useWeatherData();
     const [range, setRange] = useState('today');
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+    const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en');
     const [selectedDistricts, setSelectedDistricts] = useState([]);
+
+    const t = (key) => TRANSLATIONS[lang][key] || key;
 
     const metrics = getLatestMetrics();
     const chartData = useMemo(() => getFilteredData(range), [getFilteredData, range]);
@@ -49,20 +117,42 @@ function App() {
         localStorage.setItem('theme', theme);
     }, [theme]);
 
+    useEffect(() => {
+        localStorage.setItem('lang', lang);
+    }, [lang]);
+
     const healthData = useMemo(() => {
         if (!metrics) return null;
         const aqi = metrics.avgAQI;
-        if (aqi <= 12) return { level: 'OPTIMAL', color: 'text-emerald-500', advice: 'Ideal conditions. Perfect for outdoor exercise.', mask: false };
-        if (aqi <= 35) return { level: 'MODERATE', color: 'text-amber-500', advice: 'Fair air. Sensitive individuals should monitor symptoms.', mask: false };
-        if (aqi <= 55) return { level: 'SENSITIVE', color: 'text-orange-500', advice: 'High risk for respiratory groups. Wear mask if sensitive.', mask: true };
-        if (aqi <= 150) return { level: 'UNHEALTHY', color: 'text-red-500', advice: 'Avoid outdoor exertion. High-efficiency masks required.', mask: true };
-        return { level: 'HAZARDOUS', color: 'text-rose-600', advice: 'Critical emergency. Remain indoors with air purifiers.', mask: true };
-    }, [metrics]);
+        const langMap = {
+            en: {
+                optimal: { level: 'OPTIMAL', advice: 'Ideal conditions. Perfect for outdoor exercise.' },
+                moderate: { level: 'MODERATE', advice: 'Fair air. Sensitive individuals should monitor symptoms.' },
+                sensitive: { level: 'SENSITIVE', advice: 'High risk for respiratory groups. Wear mask if sensitive.' },
+                unhealthy: { level: 'UNHEALTHY', advice: 'Avoid outdoor exertion. High-efficiency masks required.' },
+                hazardous: { level: 'HAZARDOUS', advice: 'Critical emergency. Remain indoors with air purifiers.' }
+            },
+            mn: {
+                optimal: { level: 'МАШ САЙН', advice: 'Агаарын чанар маш сайн. Гадаад орчинд дасгал хийхэд тохиромжтой.' },
+                moderate: { level: 'ХЭВИЙН', advice: 'Агаарын чанар хэвийн. Мэдрэмтгий хүмүүс өөрийн биеийн байдлыг анхаарна уу.' },
+                sensitive: { level: 'МЭДРЭМТГИЙ', advice: 'Агаарын бохирдолд мэдрэмтгий бүлгийнхэнд эрсдэлтэй. Маск зүүнэ үү.' },
+                unhealthy: { level: 'БОХИРДОЛТОЙ', advice: 'Гадаад орчинд ажиллах, дасгал хийхээс татгалзаж, маск зүүх шаардлагатай.' },
+                hazardous: { level: 'МАШ БОХИР', advice: 'Агаарт маш их бохирдолтой байна. Агаар шүүгч ажиллуулж, гэрээс гарахгүй байхыг зөвлөж байна.' }
+            }
+        };
+
+        const currentDict = langMap[lang];
+        if (aqi <= 12) return { ...currentDict.optimal, color: 'text-emerald-500', mask: false };
+        if (aqi <= 35) return { ...currentDict.moderate, color: 'text-amber-500', mask: false };
+        if (aqi <= 55) return { ...currentDict.sensitive, color: 'text-orange-500', mask: true };
+        if (aqi <= 150) return { ...currentDict.unhealthy, color: 'text-red-500', mask: true };
+        return { ...currentDict.hazardous, color: 'text-rose-600', mask: true };
+    }, [metrics, lang]);
 
     if (loading) return (
         <div className="h-screen flex items-center justify-center bg-background text-muted-foreground font-mono text-xs tracking-widest uppercase">
             <span className="animate-pulse flex items-center gap-2">
-                <RefreshCw className="w-3 h-3 animate-spin" /> SYNCHRONIZING SECURE NETWORK...
+                <RefreshCw className="w-3 h-3 animate-spin" /> {t('loading')}
             </span>
         </div>
     );
@@ -75,11 +165,11 @@ function App() {
                 <div className="bg-rose-600 text-white h-8 flex items-center justify-center gap-4 px-6 relative z-[100] overflow-hidden shadow-lg border-b border-rose-500">
                     <div className="animate-pulse flex items-center gap-2 font-black text-[11px] tracking-widest uppercase italic">
                         <AlertTriangle className="w-3.5 h-3.5 stroke-[3]" />
-                        CRITICAL ATMOSPHERIC HAZARD DETECTED
+                        {t('hazardBanner')}
                     </div>
                     <div className="h-4 w-px bg-white/20 hidden md:block" />
                     <div className="text-[10px] font-bold hidden md:block uppercase tracking-tighter opacity-90">
-                        City Mean: {metrics.avgAQI} µg/m³ — Indoor filtration strictly recommended. / Маск зүүж, агаарын шүүлтүүр ашиглана уу.
+                        {t('cityMean')}: {metrics.avgAQI} µg/m³ — {t('hazardAdvice')}
                     </div>
                 </div>
             )}
@@ -91,15 +181,25 @@ function App() {
                         <div className="w-6 h-6 bg-primary rounded flex items-center justify-center shadow-sm">
                             <Activity className="w-4 h-4 text-primary-foreground" />
                         </div>
-                        <span className="font-bold tracking-tighter text-lg">UB AIR QUALITY / УЛААНБААТАР</span>
+                        <span className="font-bold tracking-tighter text-lg">{t('brand')}</span>
                     </div>
                     <div className="hidden md:flex items-center gap-4 text-sm font-medium">
-                        <NavButton active icon={<LayoutDashboard className="w-4 h-4" />}>Command / Удирдах</NavButton>
-                        <NavButton icon={<ShieldAlert className="w-4 h-4" />}>Health / Эрүүл мэнд</NavButton>
+                        <NavButton active icon={<LayoutDashboard className="w-4 h-4" />}>{t('command')}</NavButton>
+                        <NavButton icon={<ShieldAlert className="w-4 h-4" />}>{t('health')}</NavButton>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3">
+                    {/* Language Selector */}
+                    <div className="flex bg-muted/50 rounded-lg p-1 mr-2 border border-border/50">
+                        <button onClick={() => setLang('en')} className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all duration-200 uppercase", lang === 'en' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                            EN
+                        </button>
+                        <button onClick={() => setLang('mn')} className={cn("px-2 py-1 rounded-md text-[10px] font-bold transition-all duration-200 uppercase", lang === 'mn' ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+                            MN
+                        </button>
+                    </div>
+
                     <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')} className="p-2 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
                         {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
                     </button>
@@ -119,34 +219,34 @@ function App() {
                 {/* Metric Layer */}
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 shrink-0">
                     <MetricCard
-                        title="City Concentration / Хотын агаарын чанар"
+                        title={t('cityConc')}
                         value={metrics?.isOffline ? "LOST" : metrics?.avgAQI}
                         unit="µg/m³"
-                        desc={`${metrics?.activeCount}/${metrics?.totalCount} Active Signals | 2H Filtering`}
+                        desc={`${metrics?.activeCount}/${metrics?.totalCount} ${t('activeSignals')} | ${t('filtering')}`}
                         trend={metrics?.avgAQI > 50 ? "up" : "down"}
                         icon={<AirRadialChart value={metrics?.avgAQI} />}
                         isSplit={true}
                     />
                     <MetricCard
-                        title="Health Safeguard / Эрүүл мэнд"
+                        title={t('guard')}
                         value={healthData?.level}
-                        unit="STATUS"
+                        unit={t('unitStatus')}
                         desc={healthData?.advice}
                         color={healthData?.color}
                         icon={<ShieldCheck className="w-5 h-5 opacity-20" />}
                     />
                     <MetricCard
-                        title="Atmosphere / Цаг агаар"
+                        title={t('atmosphere')}
                         value={`${metrics?.temp}°`}
-                        unit="C"
-                        desc={`Feels ${metrics?.feels}°C | Мэдрэгдэх`}
+                        unit={t('unitTemp')}
+                        desc={`${t('feels')} ${metrics?.feels}°C | SYNC`}
                         icon={<ThermometerSun className="w-5 h-5 opacity-20" />}
                     />
                     <MetricCard
-                        title="Composition / Найрлага"
+                        title={t('composition')}
                         value={`${metrics?.humidity}`}
-                        unit="%"
-                        desc={`Wind ${metrics?.wind}m/s | Чийгшил ${metrics?.humidity}%`}
+                        unit={t('unitHumidity')}
+                        desc={`${t('wind')} ${metrics?.wind}m/s | ${t('humidity')} ${metrics?.humidity}%`}
                         icon={<Droplets className="w-5 h-5 opacity-20" />}
                     />
                 </div>
@@ -159,14 +259,14 @@ function App() {
                         <Tabs defaultValue="radar" className="flex-1 flex flex-col overflow-hidden">
                             <CardHeader className="flex flex-row items-center justify-between pb-1 h-14 shrink-0 border-b border-border/50 px-4">
                                 <TabsList className="bg-muted/50 h-8">
-                                    <TabsTrigger value="radar" className="text-[10px] font-bold py-1 flex items-center gap-1.5">Map / Газрын зураг</TabsTrigger>
-                                    <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">Pollution / Бохирдол</TabsTrigger>
-                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">Wind / Салхи</TabsTrigger>
-                                    <TabsTrigger value="temp" className="text-[10px] font-bold py-1">Climate / Цаг агаар</TabsTrigger>
+                                    <TabsTrigger value="radar" className="text-[10px] font-bold py-1 flex items-center gap-1.5">{t('map')}</TabsTrigger>
+                                    <TabsTrigger value="pollution" className="text-[10px] font-bold py-1">{t('pollution')}</TabsTrigger>
+                                    <TabsTrigger value="wind" className="text-[10px] font-bold py-1">{t('windSpeed')}</TabsTrigger>
+                                    <TabsTrigger value="temp" className="text-[10px] font-bold py-1">{t('climate')}</TabsTrigger>
                                 </TabsList>
                                 <div className="flex items-center gap-2 text-[10px] font-bold text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
                                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                    SYSTEM_ACTIVE / ИДЭВХТЭЙ
+                                    {t('systemActive')}
                                 </div>
                             </CardHeader>
                             <CardContent className="flex-1 p-4 min-h-0 overflow-hidden">
@@ -190,8 +290,8 @@ function App() {
                     <Card className="lg:col-span-3 bg-card border-border flex flex-col overflow-hidden shadow-sm">
                         <CardHeader className="flex flex-row items-center justify-between pb-3 h-14 shrink-0 border-b border-border/50">
                             <div>
-                                <CardTitle className="text-sm font-bold tracking-tight">Regional Signals / Бүс нутаг</CardTitle>
-                                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase tracking-tighter">Live District Node Status / Идэвхтэй цэгүүд</p>
+                                <CardTitle className="text-sm font-bold tracking-tight">{t('regional')}</CardTitle>
+                                <p className="text-[10px] text-muted-foreground font-mono mt-0.5 uppercase tracking-tighter">{t('nodeStatus')}</p>
                             </div>
                         </CardHeader>
                         <CardContent className="flex-1 overflow-auto custom-scrollbar p-0">
@@ -200,11 +300,25 @@ function App() {
                                 metrics={metrics}
                                 isCompact={true}
                                 onSelectionChange={setSelectedDistricts}
+                                lang={lang}
                             />
                         </CardContent>
                     </Card>
 
                 </div>
+
+                {/* Telemetry Heartbeat */}
+                {metrics?.lastUpdated && (
+                    <div className="flex items-center gap-2 px-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
+                        <span className="text-[10px] font-mono font-bold tracking-tighter text-muted-foreground/60 uppercase">
+                            {t('heartbeat')}: <span className="text-foreground/80">{new Date(metrics.lastUpdated).toLocaleString(lang === 'mn' ? 'mn-MN' : 'en-GB', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}</span>
+                        </span>
+                        <div className="ml-auto flex items-center gap-2">
+                            <span className="text-[9px] font-black tracking-widest text-muted-foreground/30 uppercase">System_Active</span>
+                        </div>
+                    </div>
+                )}
 
             </main>
 

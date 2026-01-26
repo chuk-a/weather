@@ -17,9 +17,31 @@ import { ArrowUpDown, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export function StationTable({ stations, metrics, isCompact = false, onSelectionChange }) {
+export function StationTable({ stations, metrics, isCompact = false, onSelectionChange, lang = 'en' }) {
     const [sorting, setSorting] = useState([{ id: 'val', desc: true }]);
     const [rowSelection, setRowSelection] = useState({});
+
+    const t = (key) => {
+        const dict = {
+            en: {
+                district: 'District',
+                sync: 'Sync',
+                active: 'Active Signals',
+                stale: 'Stale Nodes',
+                nodes: 'NODES',
+                searching: 'SEARCHING_FOR_SIGNALS...'
+            },
+            mn: {
+                district: 'Дүүрэг',
+                sync: 'Цаг',
+                active: 'Идэвхтэй Мэдээлэл',
+                stale: 'Хоцрогдсон Цэгүүд',
+                nodes: 'ЦЭГ',
+                searching: 'СҮЛЖЭЭГ ШАЛГАЖ БАЙНА...'
+            }
+        };
+        return dict[lang][key] || key;
+    };
 
     useEffect(() => {
         const selectedIds = Object.keys(rowSelection);
@@ -55,7 +77,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                         className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground pl-0 h-auto py-0 font-bold"
                     >
-                        Бүс / District
+                        {t('district')}
                         <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
                     </Button>
                 ),
@@ -86,7 +108,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
                         className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground h-auto py-0 font-bold"
                     >
-                        Цаг / Sync
+                        {t('sync')}
                         <ArrowUpDown className="ml-1.5 h-2.5 w-2.5" />
                     </Button>
                 ),
@@ -150,7 +172,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
         ];
 
         return cols;
-    }, []);
+    }, [lang]);
 
     // Merge static station info with dynamic metrics
     const data = useMemo(() => {
@@ -197,7 +219,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         if (!rows?.length) return (
                             <TableRow>
                                 <TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
-                                    СҮЛЖЭЭГ ШАЛГАЖ БАЙНА... / SEARCHING_FOR_SIGNALS...
+                                    {t('searching')}
                                 </TableCell>
                             </TableRow>
                         );
@@ -205,7 +227,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                         const activeRows = rows.filter(r => r.original.status === 'live' || r.original.status === 'delayed');
                         const staleRows = rows.filter(r => r.original.status === 'stale' || r.original.status === 'offline');
 
-                        const renderRows = (rowGroup, title, colorClass) => (
+                        const renderRows = (rowGroup, titleKey, colorClass) => (
                             <>
                                 {rowGroup.length > 0 && (
                                     <TableRow className="bg-muted/10 hover:bg-muted/10 border-y border-border/20 pointer-events-none">
@@ -213,7 +235,7 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
                                             <div className="flex items-center gap-2">
                                                 <div className={cn("w-1 h-3 rounded-full", colorClass)} />
                                                 <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/80">
-                                                    {title} <span className="ml-1 opacity-50">[{rowGroup.length} NODES]</span>
+                                                    {t(titleKey)} <span className="ml-1 opacity-50">[{rowGroup.length} {t('nodes')}]</span>
                                                 </span>
                                             </div>
                                         </TableCell>
@@ -241,8 +263,8 @@ export function StationTable({ stations, metrics, isCompact = false, onSelection
 
                         return (
                             <>
-                                {renderRows(activeRows, "Active Signals / Идэвхтэй мэдээлэл", "bg-emerald-500")}
-                                {renderRows(staleRows, "Stale Nodes / Хоцрогдсон цэгүүд", "bg-red-500")}
+                                {renderRows(activeRows, "active", "bg-emerald-500")}
+                                {renderRows(staleRows, "stale", "bg-red-500")}
                             </>
                         );
                     })()}
