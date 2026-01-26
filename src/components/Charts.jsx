@@ -76,15 +76,15 @@ const needle = (value, data, cx, cy, iR, oR, color) => {
     ];
 };
 
-// --- NEW: AUTHENTIC AQI NEEDLE GAUGE ---
+// --- NEW: AUTHENTIC PM2.5 NEEDLE GAUGE ---
 export function AirRadialChart({ value }) {
     const data = [
-        { name: 'Good', value: 50, fill: '#10b981' },
-        { name: 'Moderate', value: 50, fill: '#fbbf24' },
-        { name: 'Sensitive', value: 50, fill: '#f97316' },
-        { name: 'Unhealthy', value: 50, fill: '#ef4444' },
-        { name: 'Very Unhealthy', value: 100, fill: '#8b5cf6' },
-        { name: 'Hazardous', value: 200, fill: '#7f1d1d' },
+        { name: 'Good', value: 12, fill: '#10b981' },         // 0-12
+        { name: 'Moderate', value: 23, fill: '#fbbf24' },     // 12-35
+        { name: 'Sensitive', value: 20, fill: '#f97316' },    // 35-55
+        { name: 'Unhealthy', value: 95, fill: '#ef4444' },    // 55-150
+        { name: 'Very Unhealthy', value: 100, fill: '#8b5cf6' }, // 150-250
+        { name: 'Hazardous', value: 250, fill: '#7f1d1d' },   // 250-500
     ];
 
     const cx = 80;
