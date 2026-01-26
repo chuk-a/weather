@@ -130,6 +130,10 @@ pm25_chd9, time_chd9     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaat
 pm25_mandakh, time_mandakh = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/mandakh-naran-tuv", "Mandakh Naran Tuv")
 pm25_chd6, time_chd6     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-6-horoo", "CHD 6 Horoo")
 pm25_airv, time_airv     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/air-v", "Air V")
+pm25_school17, time_school17 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-17", "School 17")
+pm25_school72, time_school72 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-72", "School 72")
+pm25_chd12, time_chd12   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-12-khoroo", "CHD 12")
+pm25_kind280, time_kind280 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--280", "Kindergarden 280")
 
 driver.quit()
 
@@ -149,7 +153,11 @@ if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
             "pm25_chd9", "time_chd9",
             "pm25_mandakh", "time_mandakh",
             "pm25_chd6", "time_chd6",
-            "pm25_airv", "time_airv"
+            "pm25_airv", "time_airv",
+            "pm25_school17", "time_school17",
+            "pm25_school72", "time_school72",
+            "pm25_chd12", "time_chd12",
+            "pm25_kind280", "time_kind280"
         ])
 
 # Append latest data with UB-local timestamp
@@ -168,5 +176,9 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
         clean(pm25_chd9), clean(time_chd9),
         clean(pm25_mandakh), clean(time_mandakh),
         clean(pm25_chd6), clean(time_chd6),
-        clean(pm25_airv), clean(time_airv)
+        clean(pm25_airv), clean(time_airv),
+        clean(pm25_school17), clean(time_school17),
+        clean(pm25_school72), clean(time_school72),
+        clean(pm25_chd12), clean(time_chd12),
+        clean(pm25_kind280), clean(time_kind280)
     ])

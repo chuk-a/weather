@@ -32,7 +32,7 @@ const usePivotData = (data, keys) => {
             if (!keys || keys.length === 0) {
                 let sum = 0;
                 let count = 0;
-                const stationIds = ['french', 'eu', 'czech', 'yarmag', 'chd9', 'mandakh', 'chd6', 'airv'];
+                const stationIds = ['french', 'eu', 'czech', 'yarmag', 'chd9', 'mandakh', 'chd6', 'airv', 'school17', 'school72', 'chd12', 'kind280'];
                 stationIds.forEach(id => {
                     const v = data[id][i];
                     if (v != null) { sum += v; count++; }

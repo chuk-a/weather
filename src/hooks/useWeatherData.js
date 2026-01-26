@@ -9,7 +9,11 @@ const STATIONS = [
     { id: 'chd9', label: 'CHD 9', flag: '🏙️' },
     { id: 'mandakh', label: 'Mandakh', flag: '🏙️' },
     { id: 'chd6', label: 'CHD 6', flag: '🏙️' },
-    { id: 'airv', label: 'Air V', flag: '📡' }
+    { id: 'airv', label: 'Air V', flag: '📡' },
+    { id: 'school17', label: 'School No. 17', flag: '🏫' },
+    { id: 'school72', label: 'School No. 72', flag: '🏫' },
+    { id: 'chd12', label: 'CHD 12 Khoroo', flag: '🏢' },
+    { id: 'kind280', label: 'Kindergarden 280', flag: '🎒' }
 ];
 
 export function useWeatherData() {
@@ -82,8 +86,8 @@ export function useWeatherData() {
     const processData = (rows) => {
         const raw = {
             timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: [],
-            french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: [],
-            time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: []
+            french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: [], school17: [], school72: [], chd12: [], kind280: [],
+            time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: [], time_school17: [], time_school72: [], time_chd12: [], time_kind280: []
         };
 
         rows.forEach(row => {
