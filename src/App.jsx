@@ -32,14 +32,15 @@ function App() {
         <div className="min-h-screen bg-zinc-950 text-zinc-50 selection:bg-emerald-500/30 font-sans pb-20 overflow-x-hidden">
 
             {/* Header */}
+            {/* Header */}
             <header className="fixed top-0 left-0 right-0 z-40 flex justify-between items-center px-6 py-4 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-900">
                 <div className="text-sm font-bold tracking-tighter flex items-center gap-2">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                    UB.AIR <span className="text-zinc-600 font-mono font-normal">TERMINAL</span>
+                    UB.AIR <span className="text-zinc-600 font-mono font-normal">MONITOR</span>
                 </div>
 
                 <div className="flex items-center gap-4 text-[10px] font-mono font-medium text-zinc-500">
-                    <span className="hidden sm:inline-block">MARKET: OPEN</span>
+                    <span className="hidden sm:inline-block">SENSORS: ACTIVE</span>
                     <span className="text-zinc-700">|</span>
                     <button onClick={() => setRange('today')} className={range === 'today' ? "text-zinc-100" : "hover:text-zinc-300"}>1D</button>
                     <button onClick={() => setRange('last7')} className={range === 'last7' ? "text-zinc-100" : "hover:text-zinc-300"}>1W</button>
@@ -56,7 +57,7 @@ function App() {
                 {/* The Market Chart */}
                 <div className="mt-12 h-[400px] w-full border-t border-zinc-900/50 pt-8 animate-in sticky top-24">
                     <h3 className="text-xs font-mono text-zinc-500 mb-4 tracking-widest uppercase">
-                        Market Trend (PM2.5 AVG)
+                        City Pollution Trend (PM2.5)
                     </h3>
                     <MarketChart data={chartData} />
                 </div>

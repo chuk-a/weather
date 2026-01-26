@@ -18,12 +18,13 @@ export function HeroSection({ metrics, lastUpdated }) {
         <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in duration-700">
 
             {/* Badge */}
+            {/* Badge */}
             <div className={cn("px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest mb-6 flex items-center gap-2 border border-current/20", meta.color, meta.bg)}>
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
                 </span>
-                {meta.label} MARKET
+                {meta.label} AIR
             </div>
 
             {/* The Big Number */}
@@ -34,7 +35,7 @@ export function HeroSection({ metrics, lastUpdated }) {
             <div className="mt-4 flex items-center gap-6 text-zinc-400 font-mono text-sm">
                 <span className="flex items-center gap-2 text-emerald-400">
                     <ArrowUpRight className="w-4 h-4" />
-                    LIVE INDEX
+                    REAL-TIME INDEX
                 </span>
                 <span>
                     UB.CITY • {lastUpdated?.slice(11) || '--:--'}
