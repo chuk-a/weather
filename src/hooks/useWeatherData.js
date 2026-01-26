@@ -118,7 +118,8 @@ export function useWeatherData() {
 
             STATIONS.forEach(s => {
                 raw[s.id].push(cleanNumber(row[`pm25_${s.id}`]));
-                raw[`time_${s.id}`].push(row[`time_${s.id}`]);
+                // Fallback to main timestamp if station time is missing
+                raw[`time_${s.id}`].push(row[`time_${s.id}`] || row.timestamp);
             });
         });
 
@@ -201,18 +202,17 @@ export function useWeatherData() {
 
             if (tStr) {
                 try {
-                    // tStr is "10:00, Jan 26"
                     const [timePart, datePart] = tStr.split(',').map(x => x.trim());
-                    // Create string like "Jan 26, 2026 10:00" which is widely supported by Date()
                     const d = new Date(`${datePart}, ${now.getFullYear()} ${timePart}`);
-
                     if (!isNaN(d.getTime())) {
                         const diffHrs = (now - d) / (1000 * 60 * 60);
                         if (diffHrs < 0.5) status = 'live';
-                        else if (diffHrs < 1.5) status = 'delayed';
+                        else if (diffHrs < 3) status = 'delayed'; // 3 hours lenience
                         else status = 'stale';
                     }
-                } catch (e) { status = 'offline'; }
+                } catch (e) {
+                    status = 'offline';
+                }
             }
 
             return {
@@ -224,18 +224,23 @@ export function useWeatherData() {
             };
         });
 
+        // Use any station that has a value, even if it's stale (better than nothing)
         const currentVals = processedStations
-            .filter(s => s.status !== 'stale' && s.status !== 'offline' && s.val != null)
+            .filter(s => s.val != null)
             .map(s => s.val);
 
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
             : null;
 
+        // Severe disconnection: Only hide if data is > 12 hours old or null
+        const lastTs = new Date(data.timestamps[idx]);
+        const isCompletelyDead = (now - lastTs) / (1000 * 60 * 60) > 12;
+
         return {
             lastUpdated: data.timestamps[idx],
             avgAQI: avg,
-            isOffline: avg === null,
+            isOffline: avg === null || isCompletelyDead,
             temp: data.temps[idx],
             feels: data.feels[idx],
             humidity: data.humidities[idx],
