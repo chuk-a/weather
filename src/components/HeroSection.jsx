@@ -1,65 +1,66 @@
 import React from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Thermometer, Wind, Droplets, Sun } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import { ArrowUpRight, Cloud, Wind, Droplets } from 'lucide-react';
 
 const getAQIMeta = (pm25) => {
-    if (pm25 == null) return { color: 'text-zinc-400', label: 'Loading...', border: 'border-zinc-200' };
-    if (pm25 <= 12) return { color: 'text-emerald-500', label: 'Good', border: 'border-emerald-500' };
-    if (pm25 <= 35) return { color: 'text-amber-500', label: 'Moderate', border: 'border-amber-500' };
-    if (pm25 <= 55) return { color: 'text-orange-500', label: 'Sensitive', border: 'border-orange-500' };
-    if (pm25 <= 150) return { color: 'text-red-500', label: 'Unhealthy', border: 'border-red-500' };
-    return { color: 'text-rose-900', label: 'Hazardous', border: 'border-rose-900' };
+    if (pm25 == null) return { color: 'text-zinc-500', bg: 'bg-zinc-500/10', label: 'OFFLINE' };
+    if (pm25 <= 12) return { color: 'text-emerald-400', bg: 'bg-emerald-400/10', label: 'GOOD' };
+    if (pm25 <= 35) return { color: 'text-amber-400', bg: 'bg-amber-400/10', label: 'MODERATE' };
+    if (pm25 <= 55) return { color: 'text-orange-400', bg: 'bg-orange-400/10', label: 'SENSITIVE' };
+    if (pm25 <= 150) return { color: 'text-red-500', bg: 'bg-red-500/10', label: 'UNHEALTHY' };
+    return { color: 'text-rose-600', bg: 'bg-rose-600/10', label: 'HAZARDOUS' };
 };
 
 export function HeroSection({ metrics, lastUpdated }) {
     const meta = getAQIMeta(metrics?.avgAQI);
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-full">
-            {/* Main Gauge Card */}
-            <Card className="flex flex-col items-center justify-center p-8 bg-white/40 dark:bg-slate-950/40 backdrop-blur-xl border-white/20 dark:border-slate-800/50 shadow-xl relative overflow-hidden h-full min-h-[300px]">
-                {/* Abstract Background Glow */}
-                <div className={cn("absolute inset-0 opacity-10 blur-3xl rounded-full scale-150 transition-colors duration-1000", meta.color.replace('text-', 'bg-'))} />
+        <div className="flex flex-col items-center justify-center py-20 animate-in fade-in zoom-in duration-700">
 
-                <div className="relative z-10 text-center">
-                    <div className="text-xs uppercase tracking-widest text-zinc-500 font-semibold mb-4">City Average</div>
-
-                    <div className="relative w-48 h-48 flex items-center justify-center mb-6 mx-auto">
-                        <div className={cn("absolute w-full h-full rounded-full border-[12px] border-zinc-100 dark:border-zinc-800 transition-colors duration-500 opacity-30")} />
-                        <div
-                            className={cn("absolute w-full h-full rounded-full border-[12px] border-transparent border-t-current rotate-[-45deg] transition-all duration-1000", meta.color)}
-                            style={{ filter: `drop-shadow(0 0 10px currentColor)` }}
-                        />
-                        <span className={cn("text-7xl font-bold tracking-tight", meta.color)}>
-                            {metrics ? metrics.avgAQI : '--'}
-                        </span>
-                    </div>
-
-                    <div className="text-3xl font-light text-zinc-700 dark:text-zinc-200">{meta.label}</div>
-                    <div className="mt-4 inline-flex items-center px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800/50 text-xs text-zinc-500 font-medium font-mono">
-                        Sync: {lastUpdated?.slice(11, 16) || '--:--'}
-                    </div>
-                </div>
-            </Card>
-
-            {/* Weather Stats Grid */}
-            <div className="grid grid-cols-2 gap-4">
-                <StatBox icon={Thermometer} label="Temperature" value={metrics?.temp ? `${metrics.temp}°` : '--'} color="text-yellow-500" />
-                <StatBox icon={Sun} label="Feels Like" value={metrics?.feels ? `${metrics.feels}°` : '--'} color="text-orange-500" />
-                <StatBox icon={Droplets} label="Humidity" value={metrics?.humidity ? `${metrics.humidity}%` : '--'} color="text-blue-500" />
-                <StatBox icon={Wind} label="Wind Speed" value={metrics?.wind ?? '--'} color="text-slate-500" />
+            {/* Badge */}
+            <div className={cn("px-3 py-1 rounded-full text-[10px] uppercase font-bold tracking-widest mb-6 flex items-center gap-2 border border-current/20", meta.color, meta.bg)}>
+                <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-current"></span>
+                </span>
+                {meta.label} MARKET
             </div>
+
+            {/* The Big Number */}
+            <h1 className={cn("text-9xl md:text-[12rem] font-black tracking-tighter leading-none tabular-nums", meta.color)}>
+                {metrics ? metrics.avgAQI : '--'}
+            </h1>
+
+            <div className="mt-4 flex items-center gap-6 text-zinc-400 font-mono text-sm">
+                <span className="flex items-center gap-2 text-emerald-400">
+                    <ArrowUpRight className="w-4 h-4" />
+                    LIVE INDEX
+                </span>
+                <span>
+                    UB.CITY • {lastUpdated?.slice(11) || '--:--'}
+                </span>
+            </div>
+
+            {/* Grid Stats */}
+            <div className="mt-16 grid grid-cols-2 md:grid-cols-3 gap-12 w-full max-w-2xl px-6 border-t border-zinc-800 pt-8">
+                <Stat label="TEMP" value={metrics?.temp ? `${metrics.temp}°` : '--'} icon={Cloud} />
+                <Stat label="WIND" value={metrics?.wind ? `${metrics.wind}` : '--'} unit="m/s" icon={Wind} />
+                <Stat label="HUMID" value={metrics?.humidity ? `${metrics.humidity}` : '--'} unit="%" icon={Droplets} />
+            </div>
+
         </div>
     );
 }
 
-function StatBox({ icon: Icon, label, value, color }) {
+function Stat({ label, value, unit, icon: Icon }) {
     return (
-        <Card className="flex flex-col items-center justify-center p-4 bg-white/40 dark:bg-slate-950/40 backdrop-blur-md border-white/20 dark:border-slate-800/50 shadow-sm hover:shadow-md transition-all">
-            <Icon className={cn("w-6 h-6 mb-2", color)} />
-            <div className="text-2xl font-bold text-zinc-800 dark:text-zinc-100">{value}</div>
-            <div className="text-[10px] uppercase tracking-wider text-zinc-500 font-medium">{label}</div>
-        </Card>
+        <div className="flex flex-col items-center gap-1 group">
+            <div className="text-zinc-500 text-[10px] font-mono uppercase tracking-widest mb-1 group-hover:text-zinc-300 transition-colors flex items-center gap-2">
+                <Icon className="w-3 h-3" /> {label}
+            </div>
+            <div className="text-3xl font-bold text-zinc-100 tabular-nums">
+                {value}<span className="text-zinc-600 text-lg ml-0.5">{unit}</span>
+            </div>
+        </div>
     )
 }
