@@ -138,25 +138,27 @@ export function SpatialRadarChart({ stations, metrics }) {
                     <PolarGrid stroke="rgba(255,255,255,0.05)" />
                     <PolarAngleAxis
                         dataKey="subject"
-                        tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: '900' }}
+                        tick={{ fill: '#22d3ee', fontSize: 8, fontWeight: '900', opacity: 0.8 }}
                     />
                     <Radar
                         name="AQI"
                         dataKey="value"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        fill="hsl(var(--primary))"
-                        fillOpacity={0.2}
-                        animationDuration={1500}
+                        stroke="#22d3ee"
+                        strokeWidth={4}
+                        fill="#22d3ee"
+                        fillOpacity={0.15}
+                        isAnimationActive={true}
+                        animationDuration={2000}
+                        animationBegin={300}
                     />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: '#0F0A1E',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            border: '1px solid #22d3ee33',
                             borderRadius: '8px',
                             fontSize: '10px',
                             fontWeight: 'bold',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                            boxShadow: '0 0 15px rgba(34, 211, 238, 0.15)'
                         }}
                     />
                 </RadarChart>
@@ -205,7 +207,7 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                     <CartesianGrid vertical={false} stroke="white" strokeOpacity={0.05} strokeDasharray="3 3" />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: 'white', opacity: 0.2, fontSize: 8, fontWeight: '900' }}
+                        tick={{ fill: '#22d3ee', opacity: 0.6, fontSize: 8, fontWeight: '900' }}
                         tickFormatter={(value) => {
                             if (!value) return '';
                             try {
@@ -217,18 +219,18 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: 'white', opacity: 0.2, fontSize: 8, fontWeight: '900' }}
+                        tick={{ fill: '#22d3ee', opacity: 0.6, fontSize: 8, fontWeight: '900' }}
                         axisLine={false}
                         tickLine={false}
                     />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: '#0F0A1E',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            border: '1px solid #22d3ee33',
                             borderRadius: '8px',
                             fontSize: '10px',
                             fontWeight: 'bold',
-                            boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
+                            boxShadow: '0 0 15px rgba(34, 211, 238, 0.15)'
                         }}
                         itemStyle={{ color: 'white' }}
                         labelStyle={{ color: '#aaa', marginBottom: '4px' }}
@@ -246,8 +248,8 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             dot={{ r: 2, strokeWidth: 0, fill: stationColors[index % stationColors.length] }}
                             activeDot={{ r: 5 }}
                             connectNulls={true}
-                            animationDuration={0} // Disable animation for instant feedback
-                            isAnimationActive={false}
+                            animationDuration={1500}
+                            isAnimationActive={true}
                         />
                     ))}
                 </LineChart>
@@ -278,25 +280,26 @@ export function AtmosphereTrendChart({ data }) {
                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: '#f59e0b', opacity: 0.6, fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: '#f59e0b', opacity: 0.6, fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
                         tickLine={false}
                         unit="°"
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
+                            backgroundColor: '#0F0A1E',
+                            border: '1px solid #f59e0b33',
                             borderRadius: '8px',
                             fontSize: '10px',
-                            color: 'hsl(var(--foreground))'
+                            color: 'white',
+                            boxShadow: '0 0 15px rgba(245, 158, 11, 0.15)'
                         }}
                     />
                     <Line
@@ -347,25 +350,26 @@ export function WindVelocityChart({ data }) {
                     <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" opacity={0.5} />
                     <XAxis
                         dataKey="time"
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: '#3b82f6', opacity: 0.6, fontSize: 9, fontWeight: '700' }}
                         tickFormatter={(value) => value ? value.slice(11, 16) : ''}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
                     />
                     <YAxis
-                        tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 9, fontWeight: '700' }}
+                        tick={{ fill: '#3b82f6', opacity: 0.6, fontSize: 9, fontWeight: '700' }}
                         axisLine={false}
                         tickLine={false}
                         unit="m/s"
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: 'hsl(var(--card))',
-                            border: '1px solid hsl(var(--border))',
+                            backgroundColor: '#0F0A1E',
+                            border: '1px solid #3b82f633',
                             borderRadius: '8px',
                             fontSize: '10px',
-                            color: 'hsl(var(--foreground))'
+                            color: 'white',
+                            boxShadow: '0 0 15px rgba(59, 130, 246, 0.15)'
                         }}
                     />
                     <Area

@@ -39,7 +39,7 @@ const TRANSLATIONS = {
         cityConc: 'CITY CONCENTRATION',
         guard: 'HEALTH ADVISORY',
         atmosphere: 'ATMOSPHERE',
-        composition: 'HUMIDITY & WIND',
+        composition: 'WIND & HUMIDITY',
         map: 'Map',
         pollution: 'Pollution',
         windSpeed: 'Wind Speed',
@@ -64,7 +64,7 @@ const TRANSLATIONS = {
         cityConc: 'ДУНДАЖ АГУУЛАМЖ',
         guard: 'ЭРҮҮЛ МЭНДИЙН ЗӨВЛӨМЖ',
         atmosphere: 'ЦАГ АГААР',
-        composition: 'ЧИЙГШИЛ БА САЛХИ',
+        composition: 'САЛХИ БА ЧИЙГШИЛ',
         map: 'Газрын зураг',
         pollution: 'Бохирдол',
         windSpeed: 'Салхины хурд',
@@ -91,7 +91,8 @@ const TRANSLATIONS = {
 function App() {
     const { getFilteredData, getLatestMetrics, loading, error, stations } = useWeatherData();
     const [timeRange, setTimeRange] = useState('today');
-    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+    // Force dark mode
+    const [theme] = useState('dark');
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en');
 
     const [selectedStations, setSelectedStations] = useState([]);
@@ -155,11 +156,11 @@ function App() {
             {/* Header Layer */}
             <header className="flex items-center justify-between z-10 shrink-0 mb-1 relative">
                 <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded border border-primary/20 flex items-center justify-center backdrop-blur-sm">
-                        <Activity className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 bg-emerald-500/10 rounded border border-emerald-500/20 flex items-center justify-center backdrop-blur-sm shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                        <Activity className="w-4 h-4 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)] animate-pulse" />
                     </div>
                     <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground leading-none font-sans">
+                        <h1 className="text-xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 leading-none font-sans drop-shadow-[0_0_10px_rgba(34,211,238,0.3)]">
                             {t('brand')}
                         </h1>
                         <p className="text-[8px] uppercase tracking-[0.2em] font-medium text-muted-foreground mt-1 opacity-70">
@@ -170,7 +171,7 @@ function App() {
 
                 <div className="flex items-center gap-4">
                     <div className="flex flex-col items-end mr-4">
-                        <span className="text-[9px] uppercase font-black tracking-widest text-primary/60">Location</span>
+                        <span className="text-[9px] font-black uppercase tracking-widest text-cyan-500/80 drop-shadow-[0_0_5px_rgba(6,182,212,0.5)]">Location</span>
                         <span className="text-sm font-bold tracking-tight">{t('location')}</span>
                     </div>
 
@@ -204,18 +205,12 @@ function App() {
                                 </button>
                             ))}
                         </div>
-                        <button
-                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="p-2 rounded-lg bg-card/50 hover:bg-white/10 transition-colors border border-border backdrop-blur-sm shadow-sm"
-                        >
-                            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                        </button>
                     </div>
                 </div>
             </header>
 
             {/* Primary Metrics Layer (Restored 4nd-card header) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0 relative">
+            < div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0 relative" >
                 <MetricCard
                     label={t('cityConc')}
                     value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
@@ -223,6 +218,7 @@ function App() {
                     icon={<AirRadialChart value={metrics.avgAQI} />}
                     subValue={`${metrics.activeCount}/${metrics.totalCount} ${t('activeSignals')} | ${t('filtering')}`}
                     isSplit
+                    statusColor={getHealthLevel(metrics.avgAQI).text}
                 />
                 <MetricCard
                     label={t('guard')}
@@ -236,27 +232,29 @@ function App() {
                     label={t('atmosphere')}
                     value={metrics.temp != null ? `${metrics.temp}°` : '--'}
                     unit="C"
-                    icon={<ThermometerSun className="w-6 h-6 text-sky-400 opacity-40" />}
+                    icon={<ThermometerSun className="w-6 h-6 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]" />}
                     subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | T-ZONE`}
+                    statusColor="text-amber-500"
                 />
                 <MetricCard
                     label={t('composition')}
-                    value={metrics.humidity || '--'}
-                    unit="%"
-                    icon={<Droplets className="w-6 h-6 text-blue-400 opacity-40" />}
-                    subValue={`WIND ${metrics.wind || '--'} m/s (${metrics.wind ? (metrics.wind * 3.6).toFixed(1) : '--'} km/h) | RH ${metrics.humidity || '--'}%`}
+                    value={metrics.wind || '--'}
+                    unit="m/s"
+                    icon={<Wind className="w-6 h-6 text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.4)]" />}
+                    subValue={`SPEED ${metrics.wind ? (metrics.wind * 3.6).toFixed(1) : '--'} km/h | RELATIVE HUMIDITY ${metrics.humidity || '--'} %`}
+                    statusColor="text-blue-500"
                 />
-            </div>
+            </div >
 
             {/* Main Intelligence Grid (Hybrid 70/30) */}
-            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden relative">
+            < main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden relative" >
 
                 {/* Left Section (70%): Tabs Restore */}
-                <Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80">
+                < Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80" >
                     <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
                         <div className="px-6 pt-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
-                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60">Data Visualization</span>
+                                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-cyan-500/80 drop-shadow-[0_0_5px_rgba(6,182,212,0.3)]">Data Visualization</span>
                                 <div className="h-2 w-px bg-white/10" />
                                 {/* Removed flavor text */}
                             </div>
@@ -283,7 +281,7 @@ function App() {
                             </TabsContent>
                         </div>
                     </Tabs>
-                </Card>
+                </Card >
 
                 <div className="md:col-span-3 flex flex-col min-h-0">
                     <Card className="flex-1 border-border bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col relative p-0 shadow-sm transition-all hover:bg-card/80">
@@ -298,20 +296,20 @@ function App() {
 
                         <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
+                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                                <span className="text-[9px] font-black text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
                             </div>
                             {/* <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span> */}
                         </div>
                     </Card>
                 </div>
-            </main>
+            </main >
 
             {/* Global Telemetry Footprint */}
-            <footer className="px-3 py-1 border-t border-border bg-muted/40 backdrop-blur-md flex items-center justify-between shrink-0 relative z-20">
+            < footer className="px-3 py-1 border-t border-border bg-muted/40 backdrop-blur-md flex items-center justify-between shrink-0 relative z-20" >
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
                         <span className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-widest leading-none">
                             {t('heartbeat')}: <span className="text-primary/40 ml-1">{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}</span>
                         </span>
@@ -320,29 +318,45 @@ function App() {
                 <div>
                     <span className="text-[8px] font-medium uppercase tracking-[0.2em] text-foreground/10">DATA ENGINE v1.0</span>
                 </div>
-            </footer>
-        </div>
+            </footer >
+        </div >
     );
 }
 
 function MetricCard({ label, value, unit, icon, subValue, isSplit = false, statusColor }) {
+    // Determine glow color based on statusColor class
+    const getGlowClass = (colorClass) => {
+        if (!colorClass) return "";
+        if (colorClass.includes('emerald')) return "drop-shadow-[0_0_15px_rgba(16,185,129,0.5)]";
+        if (colorClass.includes('amber')) return "drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]";
+        if (colorClass.includes('orange')) return "drop-shadow-[0_0_15px_rgba(249,115,22,0.5)]";
+        if (colorClass.includes('red')) return "drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]";
+        if (colorClass.includes('rose')) return "drop-shadow-[0_0_15px_rgba(225,29,72,0.5)]";
+        if (colorClass.includes('blue') || colorClass.includes('cyan')) return "drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]";
+        return "";
+    };
+
     return (
-        <Card className="group p-2 px-3 border-border bg-card relative overflow-hidden transition-all hover:shadow-md">
+        <Card className="group p-2 px-3 border-border bg-card relative overflow-hidden transition-all hover:shadow-lg hover:bg-card/90">
             <div className="flex items-center justify-between mb-1 flex-nowrap">
-                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 border-l border-primary/40 pl-2">{label}</span>
+                <span className="text-[8px] font-black uppercase tracking-[0.2em] text-cyan-400 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)] border-l-2 border-primary/40 pl-2">{label}</span>
                 {!isSplit && icon}
             </div>
 
             <div className="flex items-end justify-between">
                 <div className="flex items-baseline gap-1">
-                    <span className={cn("text-2xl font-bold tracking-tight leading-none tabular-nums", statusColor)}>{value}</span>
-                    <span className="text-[9px] font-bold text-muted-foreground/20 uppercase tracking-wider">{unit}</span>
+                    <span className={cn("text-3xl font-black tracking-tighter leading-none tabular-nums animate-in fade-in slide-in-from-left duration-700", statusColor, getGlowClass(statusColor))}>
+                        {value}
+                    </span>
+                    <span className={cn("text-[8px] font-black uppercase tracking-widest drop-shadow-[0_0_8px_rgba(255,255,255,0.1)]", statusColor ? statusColor : "text-white/40")}>
+                        {unit}
+                    </span>
                 </div>
-                {isSplit && <div className="w-16 h-8 flex items-center justify-center opacity-60">{icon}</div>}
+                {isSplit && <div className="w-16 h-8 flex items-center justify-center scale-110">{icon}</div>}
             </div>
 
             <div className="mt-2 pt-1 border-t border-border">
-                <p className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-tight truncate">
+                <p className="text-[8px] font-bold text-white/50 uppercase tracking-widest truncate group-hover:text-cyan-400/80 transition-colors">
                     {subValue}
                 </p>
             </div>
