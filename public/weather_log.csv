@@ -1,4 +1,4 @@
-﻿timestamp,temperature,feels_like,wind_speed,humidity,pm25_french,time_french,pm25_eu,time_eu,pm25_czech,time_czech,pm25_yarmag,time_yarmag,pm25_chd9,time_chd9,pm25_mandakh,time_mandakh,pm25_chd6,time_chd6,pm25_airv,time_airv,pm25_school17,time_school17,pm25_school72,time_school72,pm25_chd12,time_chd12,pm25_kind280,time_kind280
+﻿timestamp,temperature,feels_like,wind_speed,humidity,pm25_french,time_french,pm25_eu,time_eu,pm25_czech,time_czech,pm25_yarmag,time_yarmag,pm25_chd9,time_chd9,pm25_mandakh,time_mandakh,pm25_chd6,time_chd6,pm25_airv,time_airv,pm25_school17,time_school17,pm25_school72,time_school72,pm25_chd12,time_chd12,pm25_kind280,time_kind280,pm25_school49,time_school49,pm25_kind154,time_kind154,pm25_kind298,time_kind298,pm25_kind292,time_kind292,pm25_neocity,time_neocity,pm25_school138,time_school138
 2025-09-30 00:18,9,2,2,57,35,,ERROR,,39,,36,,,,,,,,,,,,,,,,,
 2025-09-30 00:39,9,2,2,57,35,,ERROR,,39,,36,,,,,,,,,,,,,,,,,
 2025-09-30 01:15,7,2,1,63,30,,ERROR,,36,,47,,,,,,,,,,,,,,,,,

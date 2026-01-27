@@ -72,7 +72,7 @@ export function useWeatherData() {
     }, []);
 
     const cleanNumber = (val) => {
-        if (!val || val === "ERROR") return null;
+        if (!val || val === "ERROR" || val === "OFFLINE") return null;
         const n = parseFloat(String(val).replace(/[^\d.-]/g, ''));
         return Number.isFinite(n) ? n : null;
     };
