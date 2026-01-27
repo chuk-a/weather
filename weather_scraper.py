@@ -189,6 +189,11 @@ pm25_chd12, time_chd12   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaat
 pm25_kind280, time_kind280 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--280", "Kindergarden 280")
 pm25_school49, time_school49 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/49-r-surguuli", "School 49")
 pm25_kind154, time_kind154 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--154", "Kindergarden 154")
+pm25_kind298, time_kind298 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--298", "Kindergarden 298")
+pm25_kind292, time_kind292 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--292", "Kindergarden 292")
+pm25_neocity, time_neocity = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/neo-city", "Neo City")
+pm25_school138, time_school138 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
+
 
 
 driver.quit()
@@ -215,7 +220,11 @@ if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
             "pm25_chd12", "time_chd12",
             "pm25_kind280", "time_kind280",
             "pm25_school49", "time_school49",
-            "pm25_kind154", "time_kind154"
+            "pm25_kind154", "time_kind154",
+            "pm25_kind298", "time_kind298",
+            "pm25_kind292", "time_kind292",
+            "pm25_neocity", "time_neocity",
+            "pm25_school138", "time_school138"
         ])
 
 # Append latest data with UB-local timestamp
@@ -240,5 +249,9 @@ with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
         clean(pm25_chd12), clean(time_chd12, is_time=True),
         clean(pm25_kind280), clean(time_kind280, is_time=True),
         clean(pm25_school49), clean(time_school49, is_time=True),
-        clean(pm25_kind154), clean(time_kind154, is_time=True)
+        clean(pm25_kind154), clean(time_kind154, is_time=True),
+        clean(pm25_kind298), clean(time_kind298, is_time=True),
+        clean(pm25_kind292), clean(time_kind292, is_time=True),
+        clean(pm25_neocity), clean(time_neocity, is_time=True),
+        clean(pm25_school138), clean(time_school138, is_time=True)
     ])
