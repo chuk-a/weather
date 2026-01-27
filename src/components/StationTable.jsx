@@ -122,12 +122,13 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
             cell: ({ row }) => {
                 const rawTime = row.getValue("time") || "";
                 let displayTime = "--";
-                if (rawTime.includes(',')) {
-                    displayTime = rawTime.split(',')[0].trim();
-                } else if (rawTime.includes(' ')) {
-                    displayTime = rawTime.split(' ').pop();
-                } else {
+                // Display the full timestamp with date for clarity
+                if (rawTime && rawTime !== "ERROR" && rawTime !== "OFFLINE") {
                     displayTime = rawTime;
+                } else if (rawTime === "ERROR" || rawTime === "OFFLINE") {
+                    displayTime = rawTime;
+                } else {
+                    displayTime = "--";
                 }
                 return (
                     <div className="text-[10px] font-black text-muted-foreground/30 tabular-nums uppercase">
