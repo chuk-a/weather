@@ -72,6 +72,27 @@
     @apply bg-background text-foreground antialiased transition-colors duration-300;
     font-family: 'Rajdhani', sans-serif;
     letter-spacing: 0.02em;
+    /* Futuristic hexagonal grid overlay */
+    background-image:
+      radial-gradient(circle at 25% 25%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(circle at 75% 75%, rgba(255, 0, 255, 0.05) 0%, transparent 50%),
+      repeating-linear-gradient(0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 240, 255, 0.03) 2px,
+        rgba(0, 240, 255, 0.03) 4px),
+      repeating-linear-gradient(60deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 240, 255, 0.03) 2px,
+        rgba(0, 240, 255, 0.03) 4px),
+      repeating-linear-gradient(120deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 240, 255, 0.03) 2px,
+        rgba(0, 240, 255, 0.03) 4px);
+    background-size: 100% 100%, 100% 100%, 60px 104px, 60px 104px, 60px 104px;
+    animation: backgroundPulse 20s ease-in-out infinite;
   }
 }
 
@@ -143,5 +164,33 @@
 
   100% {
     transform: translateX(-50%);
+  }
+}
+
+@keyframes backgroundPulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.95;
+  }
+}
+
+@keyframes glowPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.2),
+      0 0 40px rgba(0, 240, 255, 0.1),
+      inset 0 0 20px rgba(0, 240, 255, 0.05);
+  }
+
+  50% {
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.4),
+      0 0 60px rgba(0, 240, 255, 0.2),
+      inset 0 0 30px rgba(0, 240, 255, 0.1);
   }
 }
