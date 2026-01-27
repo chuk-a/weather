@@ -205,18 +205,21 @@ export function useWeatherData() {
             let val = data[s.id][idx];
             let tStr = cleanTime(data[`time_${s.id}`][idx]);
 
-            // If current value is null/empty, look backwards for last known value
-            if (val == null || val === '') {
+            // If current value is null/empty OR time is ERROR/null, look backwards for last known valid data
+            if (val == null || val === '' || !tStr || tStr === 'ERROR' || tStr.includes('ERROR')) {
                 for (let i = idx - 1; i >= 0; i--) {
                     const histVal = data[s.id][i];
                     const histTime = cleanTime(data[`time_${s.id}`][i]);
-                    if (histVal != null && histVal !== '') {
+                    // Only use historical row if it has BOTH valid value AND valid time
+                    if (histVal != null && histVal !== '' &&
+                        histTime && histTime !== 'ERROR' && !histTime.includes('ERROR')) {
                         val = histVal;
                         tStr = histTime;
                         break;
                     }
                 }
             }
+
 
             let status = 'offline';
 
