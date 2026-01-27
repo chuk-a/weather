@@ -166,6 +166,12 @@ export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
 
+        console.log("ComparisonChart render:", {
+            selectedStations,
+            availableKeys: Object.keys(data),
+            sampleData: data[selectedStations[0]] ? data[selectedStations[0]].slice(-5) : 'N/A'
+        });
+
         return data.timestamps.map((t, i) => {
             const point = { time: t };
 
@@ -226,6 +232,7 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             stroke={stationColors[index % stationColors.length]}
                             strokeWidth={3}
                             dot={false}
+                            connectNulls={true}
                             animationDuration={800}
                         />
                     ))}
