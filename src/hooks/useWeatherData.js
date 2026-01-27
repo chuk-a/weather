@@ -30,22 +30,28 @@ export function useWeatherData() {
     useEffect(() => {
         async function fetchData() {
             try {
-                // Primary: Fetch from GitHub Raw to bypass deployment lag (CORS supported)
-                const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
+                // PRIORITIZE LOCAL DATA for Scraper interactions
+                // We try to fetch the local file first. 
+                // Only if that fails do we go to GitHub (fallback).
+
                 const cacheBust = `?t=${Date.now()}`;
+                let response;
 
-                let response = await fetch(`${RAW_URL}${cacheBust}`);
-
-                if (!response.ok) {
-                    // Fallback to local file
-                    response = await fetch(`weather_log.csv${cacheBust}`);
+                // 1. Try local file (root relative)
+                try {
+                    response = await fetch(`/weather_log.csv${cacheBust}`);
+                } catch (e) {
+                    console.log("Local fetch failed, trying fallback...");
                 }
 
-                if (!response.ok) {
-                    response = await fetch(`./weather_log.csv${cacheBust}`);
+                // 2. Try GitHub if local failed
+                if (!response || !response.ok) {
+                    console.log("Using remote/fallback data source");
+                    const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
+                    response = await fetch(`${RAW_URL}${cacheBust}`);
                 }
 
-                if (!response.ok) throw new Error('Failed to fetch data');
+                if (!response.ok) throw new Error('Failed to fetch data from both local and remote');
                 const text = await response.text();
 
                 Papa.parse(text.trim(), {
