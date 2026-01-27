@@ -162,79 +162,52 @@ export function SpatialRadarChart({ stations, metrics }) {
 }
 
 // --- NEW: TEMPORAL ANALYSIS (Selected Lines Only) ---
+// --- NEW: TEMPORAL ANALYSIS (Selected Lines Only) ---
 export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
 
-        // If dataset is small enough (e.g. < 2000 points, which is roughly 24h of minute data), 
-        // show ALL data to preserve fidelity and sparse points.
-        if (data.timestamps.length < 2000) {
-            return data.timestamps.map((t, i) => {
-                const point = { time: t };
-                selectedStations.forEach(id => {
-                    if (data[id]) {
-                        const val = data[id][i];
-                        if (val !== null && val !== undefined) point[id] = val;
-                    }
-                });
-                return point;
-            });
-        }
-
-        // For large datasets, sample smartly to ~500 points
-        const targetPoints = 500;
-        const step = Math.ceil(data.timestamps.length / targetPoints);
         const d = [];
+        // Iterate through all global timestamps
+        for (let i = 0; i < data.timestamps.length; i++) {
+            const point = { time: data.timestamps[i] };
+            let hasData = false;
 
-        for (let i = 0; i < data.timestamps.length; i += step) {
-            let bestIndex = i;
-
-            // Search this chunk for the "most interesting" data point
-            // Prioritize points where selected stations have data
-            const limit = Math.min(i + step, data.timestamps.length);
-            for (let j = i; j < limit; j++) {
-                const hasData = selectedStations.some(id => {
-                    const val = data[id] ? data[id][j] : null;
-                    return val !== null && val !== undefined;
-                });
-
-                if (hasData) {
-                    bestIndex = j;
-                    // Optional: Could try to find the 'peak' value here? 
-                    // For now just finding ANY valid data is enough to prevent emptiness.
-                    break;
-                }
-            }
-
-            const point = { time: data.timestamps[bestIndex] };
-
+            // Direct mapping: For each selected station, grab the value at index 'i'
             selectedStations.forEach(id => {
-                const val = data[id] ? data[id][bestIndex] : null;
-                if (val !== null && val !== undefined) {
-                    point[id] = val;
+                const val = data[id] ? data[id][i] : null;
+                // Only add if value is valid number
+                if (val !== null && val !== undefined && val !== "") {
+                    point[id] = Number(val);
+                    hasData = true;
                 }
             });
 
-            d.push(point);
+            // Only add point if at least one selected station has data
+            if (hasData) {
+                d.push(point);
+            }
         }
         return d;
     }, [data, selectedStations]);
 
     // Color palette for selected stations
-    const stationColors = ['#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#facc15', '#fb923c'];
+    const stationColors = ['#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#facc15', '#fb923c', '#ef4444', '#ec4899', '#8b5cf6', '#14b8a6'];
 
     return (
         <div className="w-full h-full min-h-[200px]">
             <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                        {/* Gradients removed as we are using clean lines now */}
-                    </defs>
+                <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <CartesianGrid vertical={false} stroke="white" strokeOpacity={0.05} strokeDasharray="3 3" />
                     <XAxis
                         dataKey="time"
                         tick={{ fill: 'white', opacity: 0.2, fontSize: 8, fontWeight: '900' }}
-                        tickFormatter={(value) => value ? value.split(' ')[1] : ''}
+                        tickFormatter={(value) => {
+                            if (!value) return '';
+                            try {
+                                return value.split(' ')[1].slice(0, 5);
+                            } catch (e) { return value; }
+                        }}
                         minTickGap={60}
                         axisLine={false}
                         tickLine={false}
@@ -254,6 +227,7 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
                         }}
                         itemStyle={{ color: 'white' }}
+                        labelStyle={{ color: '#aaa', marginBottom: '4px' }}
                     />
 
                     {/* Dynamic Lines for Selected Stations */}
@@ -262,16 +236,17 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             key={stationId}
                             type="monotone"
                             dataKey={stationId}
-                            name={stationId.toUpperCase()} // Ideally map to label if available
+                            name={stationId.toUpperCase()}
                             stroke={stationColors[index % stationColors.length]}
                             strokeWidth={2}
-                            dot={{ r: 3, strokeWidth: 1 }}
+                            dot={{ r: 2, strokeWidth: 0, fill: stationColors[index % stationColors.length] }}
                             activeDot={{ r: 5 }}
                             connectNulls={true}
-                            animationDuration={800}
+                            animationDuration={0} // Disable animation for instant feedback
+                            isAnimationActive={false}
                         />
                     ))}
-                </AreaChart>
+                </LineChart>
             </ResponsiveContainer>
         </div>
     );
