@@ -32,23 +32,23 @@ import { cn } from "@/lib/utils";
 
 const TRANSLATIONS = {
     en: {
-        brand: 'ATMOSPHERIC NEXUS',
-        system: 'QUANTUM AIR ANALYSIS SYSTEM',
-        location: 'ULAANBAATAR GRID',
+        brand: 'AIR MONITORING',
+        system: 'ULAANBAATAR AIR QUALITY NETWORK',
+        location: 'ULAANBAATAR, MN',
         cityConc: 'CITY CONCENTRATION',
-        guard: 'HEALTH SAFEGUARD',
+        guard: 'HEALTH ADVISORY',
         atmosphere: 'ATMOSPHERE',
-        composition: 'COMPOSITION',
+        composition: 'HUMIDITY & WIND',
         map: 'Map',
         pollution: 'Pollution',
         windSpeed: 'Wind Speed',
         climate: 'Climate',
-        activeSignals: 'Active Signals',
-        filtering: '2H Filtering',
+        activeSignals: 'Active Stations',
+        filtering: '2H Window',
         feels: 'Feels',
         sync: 'Sync',
-        heartbeat: 'Telemetry Heartbeat',
-        loading: 'SYNCHRONIZING SECURE NETWORK...',
+        heartbeat: 'Last Update',
+        loading: 'INITIALIZING DATA...',
         all: 'ALL',
         today: '1D',
         last7: '1W',
@@ -57,23 +57,27 @@ const TRANSLATIONS = {
         unitHumidity: '%'
     },
     mn: {
-        brand: 'ATMOSPHERIC NEXUS',
-        system: 'КВАНТ АГААРЫН ШИНЖИЛГЭ',
-        location: 'УЛААНБААТАР СҮЛЖЭЭ',
-        cityConc: 'ХОТЫН БОХИРДОЛ',
-        guard: 'ЭРҮҮЛ МЭНД',
+        brand: 'АГААРЫН МОНИТОРИНГ',
+        system: 'УЛААНБААТАР ХОТЫН АГААРЫН ЧАНАР',
+        location: 'УЛААНБААТАР, МН',
+        cityConc: 'ДУНДАЖ АГУУЛАМЖ',
+        guard: 'ЭРҮҮЛ МЭНДИЙН ЗӨВЛӨМЖ',
         atmosphere: 'ЦАГ АГААР',
-        composition: 'НАЙРЛАГА',
+        composition: 'ЧИЙГШИЛ БА САЛХИ',
         map: 'Газрын зураг',
         pollution: 'Бохирдол',
         windSpeed: 'Салхины хурд',
-        climate: 'Цаг уур',
-        activeSignals: 'Идэвхтэй Цэгүүд',
-        filtering: '2Ц Шүүлтүүр',
+        climate: 'Уур амьсгал',
+        activeSignals: 'Идэвхтэй цэгүүд',
+        filtering: 'Шүүлтийн цонх',
         feels: 'Мэдрэгдэх',
-        sync: 'Синх',
-        heartbeat: 'Сүлжээний дохио',
-        loading: 'СҮЛЖЭЭГ ШАЛГАЖ БАЙНА...',
+        sync: 'Синхрон',
+        heartbeat: 'Сүүлд шинэчлэгдсэн',
+        loading: 'ӨГӨГДЛИЙГ УНШИЖ БАЙНА...',
+        all: 'БҮГД',
+        today: '1Ө',
+        last7: '1Д',
+        last30: '1С',
         all: 'БҮГД',
         today: '1Ө',
         last7: '1Д',
@@ -138,16 +142,16 @@ function App() {
             <div className="scanline" />
 
             {/* Header Layer */}
-            <header className="flex items-center justify-between z-10 shrink-0">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-primary/20 rounded-lg flex items-center justify-center border border-primary/40 shadow-[0_0_15px_rgba(0,255,255,0.2)]">
-                        <Activity className="w-5 h-5 text-primary" />
+            <header className="flex items-center justify-between z-10 shrink-0 mb-1">
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-primary/10 rounded border border-primary/20 flex items-center justify-center">
+                        <Activity className="w-4 h-4 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-black tracking-tighter text-foreground leading-none font-rajdhani">
+                        <h1 className="text-xl font-bold tracking-tight text-foreground leading-none font-sans">
                             {t('brand')}
                         </h1>
-                        <p className="text-[9px] uppercase tracking-[0.3em] font-bold text-muted-foreground mt-1">
+                        <p className="text-[8px] uppercase tracking-[0.2em] font-medium text-muted-foreground mt-1 opacity-70">
                             {t('system')}
                         </p>
                     </div>
@@ -165,8 +169,8 @@ function App() {
                                 key={range}
                                 onClick={() => setTimeRange(range)}
                                 className={cn(
-                                    "px-3 h-full rounded-md text-[9px] font-black uppercase tracking-widest transition-all duration-300",
-                                    timeRange === range ? "bg-primary text-primary-foreground shadow-[0_0_10px_rgba(0,255,255,0.4)]" : "text-muted-foreground hover:text-foreground"
+                                    "px-2 h-full rounded text-[8px] font-bold uppercase tracking-wider transition-all duration-300",
+                                    timeRange === range ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                                 )}
                             >
                                 {t(range)}
@@ -241,9 +245,9 @@ function App() {
                     <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
                         <div className="px-6 pt-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
-                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Intelligence Layer</span>
-                                <div className="h-3 w-px bg-white/10" />
-                                {/* Removed SYSTEM_ACTIVE pill */}
+                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60">Data Visualization</span>
+                                <div className="h-2 w-px bg-white/10" />
+                                {/* Removed flavor text */}
                             </div>
                             <TabsList className="bg-white/5 border border-white/5 gap-1 h-9">
                                 <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
@@ -292,17 +296,17 @@ function App() {
             </main>
 
             {/* Global Telemetry Footprint */}
-            <footer className="h-6 flex items-center justify-between z-10 shrink-0 px-2 lg:px-4">
+            <footer className="px-3 py-1 border-t border-white/5 bg-black/20 flex items-center justify-between shrink-0 relative z-20">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.2em] text-foreground/30">
-                            {t('heartbeat')}: <span className="text-primary/60 ml-1">[{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}]</span>
+                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                        <span className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-widest leading-none">
+                            {t('heartbeat')}: <span className="text-primary/40 ml-1">{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}</span>
                         </span>
                     </div>
                 </div>
                 <div>
-                    <span className="text-[9px] font-black uppercase tracking-[0.4em] text-foreground/20 italic">QUANTUM NEXUS TERMINAL v2.7</span>
+                    <span className="text-[8px] font-medium uppercase tracking-[0.2em] text-foreground/10">DATA ENGINE v1.0</span>
                 </div>
             </footer>
         </div>
@@ -311,22 +315,22 @@ function App() {
 
 function MetricCard({ label, value, unit, icon, subValue, isSplit = false, statusColor }) {
     return (
-        <Card className="glass-panel group p-4 border-white/5 bg-background/20 relative overflow-hidden transition-all hover:border-primary/40">
-            <div className="flex items-center justify-between mb-4 flex-nowrap">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-muted-foreground/50 border-l-2 border-primary/20 pl-2">{label}</span>
+        <Card className="glass-panel group p-2 px-3 border-white/5 bg-background/20 relative overflow-hidden transition-all hover:bg-white/[0.02]">
+            <div className="flex items-center justify-between mb-1 flex-nowrap">
+                <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 border-l border-primary/40 pl-2">{label}</span>
                 {!isSplit && icon}
             </div>
 
             <div className="flex items-end justify-between">
-                <div className="flex items-baseline gap-2">
-                    <span className={cn("text-4xl font-black tracking-tighter leading-none tabular-nums", statusColor)}>{value}</span>
-                    <span className="text-[10px] font-black text-muted-foreground/30 uppercase tracking-widest">{unit}</span>
+                <div className="flex items-baseline gap-1">
+                    <span className={cn("text-2xl font-bold tracking-tight leading-none tabular-nums", statusColor)}>{value}</span>
+                    <span className="text-[9px] font-bold text-muted-foreground/20 uppercase tracking-wider">{unit}</span>
                 </div>
-                {isSplit && <div className="w-20 h-10 flex items-center justify-center opacity-80">{icon}</div>}
+                {isSplit && <div className="w-16 h-8 flex items-center justify-center opacity-60">{icon}</div>}
             </div>
 
-            <div className="mt-4 pt-2 border-t border-white/5">
-                <p className="text-[9px] font-black text-muted-foreground/80 uppercase tracking-tighter truncate">
+            <div className="mt-2 pt-1 border-t border-white/5">
+                <p className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-tight truncate">
                     {subValue}
                 </p>
             </div>

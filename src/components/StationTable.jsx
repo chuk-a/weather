@@ -292,5 +292,6 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                     );
                 })()}
             </div>
-            );
+        </div>
+    );
 }
