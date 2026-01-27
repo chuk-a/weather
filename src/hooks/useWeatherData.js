@@ -192,7 +192,12 @@ export function useWeatherData() {
             raw.windSpeeds.push(cleanNumber(row.wind_speed));
 
             STATIONS.forEach(s => {
+                // Use global timestamp (A1) for chart alignment as requested
+                // This simplifes the data structure and ensures all values share the same X-axis
                 raw[s.id].push(cleanNumber(row[`pm25_${s.id}`]));
+
+                // We still valid 'time_station' for status checks (live/offline logic), 
+                // but for the main data array which feeds the chart, we rely on the row's main timestamp.
                 raw[`time_${s.id}`].push(row[`time_${s.id}`] || row[tsKey]);
             });
         });
