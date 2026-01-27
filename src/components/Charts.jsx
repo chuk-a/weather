@@ -230,8 +230,9 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             dataKey={stationId}
                             name={stationId.toUpperCase()} // Ideally map to label if available
                             stroke={stationColors[index % stationColors.length]}
-                            strokeWidth={3}
-                            dot={false}
+                            strokeWidth={2}
+                            dot={{ r: 3, strokeWidth: 1 }}
+                            activeDot={{ r: 5 }}
                             connectNulls={true}
                             animationDuration={800}
                         />
