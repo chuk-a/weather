@@ -130,7 +130,7 @@ function App() {
     );
 
     return (
-        <div className="min-h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-4 gap-4 transition-colors duration-500 group">
+        <div className="h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-2 gap-2 transition-colors duration-500 group">
             {/* Cyber-Grid Background */}
             <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
 
@@ -234,7 +234,7 @@ function App() {
             </div>
 
             {/* Main Intelligence Grid (Hybrid 70/30) */}
-            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-4 z-10 min-h-0 overflow-hidden mb-2">
+            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden">
 
                 {/* Left Section (70%): Tabs Restore */}
                 <Card className="md:col-span-7 glass-panel border-white/5 bg-background/20 relative overflow-hidden flex flex-col p-0 border-none">
@@ -243,10 +243,7 @@ function App() {
                             <div className="flex items-center gap-4">
                                 <span className="text-[10px] font-black uppercase tracking-[0.3em] text-primary/80">Intelligence Layer</span>
                                 <div className="h-3 w-px bg-white/10" />
-                                <div className="flex items-center gap-2 px-3 py-1 rounded-lg bg-black/40 border border-white/5 backdrop-blur-md">
-                                    <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(0,255,255,0.8)]" />
-                                    <span className="text-[9px] font-black text-primary/80 uppercase">SYSTEM_ACTIVE</span>
-                                </div>
+                                {/* Removed SYSTEM_ACTIVE pill */}
                             </div>
                             <TabsList className="bg-white/5 border border-white/5 gap-1 h-9">
                                 <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
@@ -286,9 +283,9 @@ function App() {
                         <div className="p-4 border-t border-white/5 bg-black/60 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest">SECURE_LINK</span>
+                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
                             </div>
-                            <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span>
+                            {/* <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span> */}
                         </div>
                     </Card>
                 </div>
