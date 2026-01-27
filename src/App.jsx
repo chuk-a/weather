@@ -247,10 +247,10 @@ function App() {
             </div >
 
             {/* Main Intelligence Grid (Hybrid 70/30) */}
-            < main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden relative" >
+            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-y-auto md:overflow-hidden relative" >
 
                 {/* Left Section (70%): Tabs Restore */}
-                < Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80" >
+                <Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80 min-h-[450px] md:min-h-0" >
                     <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
                         <div className="px-6 pt-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
@@ -283,7 +283,7 @@ function App() {
                     </Tabs>
                 </Card >
 
-                <div className="md:col-span-3 flex flex-col min-h-0">
+                <div className="md:col-span-3 flex flex-col min-h-[600px] md:min-h-0">
                     <Card className="flex-1 border-border bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col relative p-0 shadow-sm transition-all hover:bg-card/80">
                         <div className="flex-1 min-h-0 overflow-hidden">
                             <StationTable
