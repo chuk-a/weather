@@ -29,6 +29,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { HeroSection } from "@/components/ui/hero-section";
 
 const TRANSLATIONS = {
     en: {
@@ -134,176 +135,196 @@ function App() {
     );
 
     return (
-        <div className="h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-2 gap-2 transition-colors duration-500 group">
-            {/* Header Layer */}
-            <header className="flex items-center justify-between z-10 shrink-0 mb-1">
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-primary/10 rounded border border-primary/20 flex items-center justify-center">
-                        <Activity className="w-4 h-4 text-primary" />
-                    </div>
-                    <div>
-                        <h1 className="text-xl font-bold tracking-tight text-foreground leading-none font-sans">
-                            {t('brand')}
-                        </h1>
-                        <p className="text-[8px] uppercase tracking-[0.2em] font-medium text-muted-foreground mt-1 opacity-70">
-                            {t('system')}
-                        </p>
-                    </div>
-                </div>
 
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end mr-4">
-                        <span className="text-[9px] uppercase font-black tracking-widest text-primary/60">Location</span>
-                        <span className="text-sm font-bold tracking-tight">{t('location')}</span>
-                    </div>
-
-                    <div className="flex bg-muted rounded-lg border border-border p-1 h-9 items-center">
-                        {['today', 'last7', 'last30'].map((range) => (
-                            <button
-                                key={range}
-                                onClick={() => setTimeRange(range)}
-                                className={cn(
-                                    "px-2 h-full rounded text-[8px] font-bold uppercase tracking-wider transition-all duration-300",
-                                    timeRange === range ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                                )}
-                            >
-                                {t(range)}
-                            </button>
-                        ))}
+        <HeroSection
+            title={t('brand')}
+            subtitle={{
+                regular: "Real-time air monitoring for ",
+                gradient: t('location'),
+            }}
+            description="Comprehensive network of sensors delivering live air quality data, atmospherics, and pollution metrics for Ulaanbaatar."
+            ctaText="View Data"
+            ctaHref="#dashboard"
+            gridOptions={{
+                angle: 65,
+                opacity: 0.4,
+                cellSize: 50,
+                lightLineColor: "#4a4a4a",
+                darkLineColor: "#2a2a2a",
+            }}
+            className="w-full bg-background"
+        >
+            <div id="dashboard" className="h-[800px] w-full bg-background text-foreground relative overflow-hidden flex flex-col p-2 gap-2 transition-colors duration-500 group rounded-xl">
+                {/* Header Layer */}
+                <header className="flex items-center justify-between z-10 shrink-0 mb-1">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-primary/10 rounded border border-primary/20 flex items-center justify-center">
+                            <Activity className="w-4 h-4 text-primary" />
+                        </div>
+                        <div>
+                            <h1 className="text-xl font-bold tracking-tight text-foreground leading-none font-sans">
+                                {t('brand')}
+                            </h1>
+                            <p className="text-[8px] uppercase tracking-[0.2em] font-medium text-muted-foreground mt-1 opacity-70">
+                                {t('system')}
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex items-center gap-2 ml-4">
-                        <div className="flex bg-muted rounded-lg border border-border p-1">
-                            {['en', 'mn'].map(l => (
+                    <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-end mr-4">
+                            <span className="text-[9px] uppercase font-black tracking-widest text-primary/60">Location</span>
+                            <span className="text-sm font-bold tracking-tight">{t('location')}</span>
+                        </div>
+
+                        <div className="flex bg-muted rounded-lg border border-border p-1 h-9 items-center">
+                            {['today', 'last7', 'last30'].map((range) => (
                                 <button
-                                    key={l}
-                                    onClick={() => setLang(l)}
+                                    key={range}
+                                    onClick={() => setTimeRange(range)}
                                     className={cn(
-                                        "px-2 py-0.5 text-[9px] font-black uppercase rounded transition-all",
-                                        lang === l ? "bg-white/10 text-primary" : "text-muted-foreground"
+                                        "px-2 h-full rounded text-[8px] font-bold uppercase tracking-wider transition-all duration-300",
+                                        timeRange === range ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                                     )}
                                 >
-                                    {l}
+                                    {t(range)}
                                 </button>
                             ))}
                         </div>
-                        <button
-                            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                            className="p-2 rounded-lg glass-panel hover:bg-white/10 transition-colors"
-                        >
-                            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                        </button>
+
+                        <div className="flex items-center gap-2 ml-4">
+                            <div className="flex bg-muted rounded-lg border border-border p-1">
+                                {['en', 'mn'].map(l => (
+                                    <button
+                                        key={l}
+                                        onClick={() => setLang(l)}
+                                        className={cn(
+                                            "px-2 py-0.5 text-[9px] font-black uppercase rounded transition-all",
+                                            lang === l ? "bg-white/10 text-primary" : "text-muted-foreground"
+                                        )}
+                                    >
+                                        {l}
+                                    </button>
+                                ))}
+                            </div>
+                            <button
+                                onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                                className="p-2 rounded-lg bg-card hover:bg-white/10 transition-colors border border-border"
+                            >
+                                {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                            </button>
+                        </div>
                     </div>
+                </header>
+
+                {/* Primary Metrics Layer (Restored 4nd-card header) */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0">
+                    <MetricCard
+                        label={t('cityConc')}
+                        value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
+                        unit="µg/m³"
+                        icon={<AirRadialChart value={metrics.avgAQI} />}
+                        subValue={`${metrics.activeCount}/${metrics.totalCount} ${t('activeSignals')} | ${t('filtering')}`}
+                        isSplit
+                    />
+                    <MetricCard
+                        label={t('guard')}
+                        value={metrics.avgAQI ? getHealthLevel(metrics.avgAQI).status : '--'}
+                        unit="STATUS"
+                        icon={<ShieldCheck className="w-6 h-6 text-emerald-500 opacity-40" />}
+                        subValue="IDEAL CONDITIONS. PERFECT FOR OUTDOOR EXERCISE."
+                        statusColor={getHealthLevel(metrics.avgAQI).text}
+                    />
+                    <MetricCard
+                        label={t('atmosphere')}
+                        value={metrics.temp != null ? `${metrics.temp}°` : '--'}
+                        unit="C"
+                        icon={<ThermometerSun className="w-6 h-6 text-sky-400 opacity-40" />}
+                        subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | T-ZONE`}
+                    />
+                    <MetricCard
+                        label={t('composition')}
+                        value={metrics.humidity || '--'}
+                        unit="%"
+                        icon={<Droplets className="w-6 h-6 text-blue-400 opacity-40" />}
+                        subValue={`WIND ${metrics.wind || '--'}m/s | RH ${metrics.humidity || '--'}%`}
+                    />
                 </div>
-            </header>
 
-            {/* Primary Metrics Layer (Restored 4nd-card header) */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0">
-                <MetricCard
-                    label={t('cityConc')}
-                    value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
-                    unit="µg/m³"
-                    icon={<AirRadialChart value={metrics.avgAQI} />}
-                    subValue={`${metrics.activeCount}/${metrics.totalCount} ${t('activeSignals')} | ${t('filtering')}`}
-                    isSplit
-                />
-                <MetricCard
-                    label={t('guard')}
-                    value={metrics.avgAQI ? getHealthLevel(metrics.avgAQI).status : '--'}
-                    unit="STATUS"
-                    icon={<ShieldCheck className="w-6 h-6 text-emerald-500 opacity-40" />}
-                    subValue="IDEAL CONDITIONS. PERFECT FOR OUTDOOR EXERCISE."
-                    statusColor={getHealthLevel(metrics.avgAQI).text}
-                />
-                <MetricCard
-                    label={t('atmosphere')}
-                    value={metrics.temp != null ? `${metrics.temp}°` : '--'}
-                    unit="C"
-                    icon={<ThermometerSun className="w-6 h-6 text-sky-400 opacity-40" />}
-                    subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | T-ZONE`}
-                />
-                <MetricCard
-                    label={t('composition')}
-                    value={metrics.humidity || '--'}
-                    unit="%"
-                    icon={<Droplets className="w-6 h-6 text-blue-400 opacity-40" />}
-                    subValue={`WIND ${metrics.wind || '--'}m/s | RH ${metrics.humidity || '--'}%`}
-                />
-            </div>
+                {/* Main Intelligence Grid (Hybrid 70/30) */}
+                <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden">
 
-            {/* Main Intelligence Grid (Hybrid 70/30) */}
-            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden">
-
-                {/* Left Section (70%): Tabs Restore */}
-                <Card className="md:col-span-7 border-border bg-card relative overflow-hidden flex flex-col p-0 shadow-sm">
-                    <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
-                        <div className="px-6 pt-4 flex items-center justify-between shrink-0">
-                            <div className="flex items-center gap-4">
-                                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60">Data Visualization</span>
-                                <div className="h-2 w-px bg-white/10" />
-                                {/* Removed flavor text */}
+                    {/* Left Section (70%): Tabs Restore */}
+                    <Card className="md:col-span-7 border-border bg-card relative overflow-hidden flex flex-col p-0 shadow-sm">
+                        <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
+                            <div className="px-6 pt-4 flex items-center justify-between shrink-0">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-primary/60">Data Visualization</span>
+                                    <div className="h-2 w-px bg-white/10" />
+                                    {/* Removed flavor text */}
+                                </div>
+                                <TabsList className="bg-muted border border-border gap-1 h-9">
+                                    <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
+                                    <TabsTrigger value="pollution" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('pollution')}</TabsTrigger>
+                                    <TabsTrigger value="wind" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('windSpeed')}</TabsTrigger>
+                                    <TabsTrigger value="climate" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('climate')}</TabsTrigger>
+                                </TabsList>
                             </div>
-                            <TabsList className="bg-muted border border-border gap-1 h-9">
-                                <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
-                                <TabsTrigger value="pollution" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('pollution')}</TabsTrigger>
-                                <TabsTrigger value="wind" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('windSpeed')}</TabsTrigger>
-                                <TabsTrigger value="climate" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('climate')}</TabsTrigger>
-                            </TabsList>
-                        </div>
 
-                        <div className="flex-1 min-h-0 relative">
-                            <TabsContent value="map" className="h-full m-0 p-0 relative border-none outline-none">
-                                <RadarChart stations={stations} metrics={metrics} />
-                            </TabsContent>
-                            <TabsContent value="pollution" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <PollutionChart data={filteredData} />
-                            </TabsContent>
-                            <TabsContent value="wind" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <WindVelocityChart data={filteredData} />
-                            </TabsContent>
-                            <TabsContent value="climate" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <AtmosphereTrendChart data={filteredData} />
-                            </TabsContent>
-                        </div>
-                    </Tabs>
-                </Card>
-
-                <div className="md:col-span-3 flex flex-col min-h-0">
-                    <Card className="flex-1 border-border bg-card overflow-hidden flex flex-col relative p-0 shadow-sm">
-                        <div className="flex-1 min-h-0 overflow-hidden">
-                            <StationTable
-                                stations={stations}
-                                metrics={metrics}
-                                lang={lang}
-                            />
-                        </div>
-
-                        <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                                <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
+                            <div className="flex-1 min-h-0 relative">
+                                <TabsContent value="map" className="h-full m-0 p-0 relative border-none outline-none">
+                                    <RadarChart stations={stations} metrics={metrics} />
+                                </TabsContent>
+                                <TabsContent value="pollution" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                    <PollutionChart data={filteredData} />
+                                </TabsContent>
+                                <TabsContent value="wind" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                    <WindVelocityChart data={filteredData} />
+                                </TabsContent>
+                                <TabsContent value="climate" className="h-full m-0 p-0 relative border-none outline-none pt-4">
+                                    <AtmosphereTrendChart data={filteredData} />
+                                </TabsContent>
                             </div>
-                            {/* <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span> */}
-                        </div>
+                        </Tabs>
                     </Card>
-                </div>
-            </main>
 
-            {/* Global Telemetry Footprint */}
-            <footer className="px-3 py-1 border-t border-border bg-muted/40 flex items-center justify-between shrink-0 relative z-20">
-                <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                        <span className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-widest leading-none">
-                            {t('heartbeat')}: <span className="text-primary/40 ml-1">{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}</span>
-                        </span>
+                    <div className="md:col-span-3 flex flex-col min-h-0">
+                        <Card className="flex-1 border-border bg-card overflow-hidden flex flex-col relative p-0 shadow-sm">
+                            <div className="flex-1 min-h-0 overflow-hidden">
+                                <StationTable
+                                    stations={stations}
+                                    metrics={metrics}
+                                    lang={lang}
+                                />
+                            </div>
+
+                            <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
+                                </div>
+                                {/* <span className="text-[9px] font-black text-primary/40 uppercase tracking-widest">S_ACTIVE</span> */}
+                            </div>
+                        </Card>
                     </div>
-                </div>
-                <div>
-                    <span className="text-[8px] font-medium uppercase tracking-[0.2em] text-foreground/10">DATA ENGINE v1.0</span>
-                </div>
-            </footer>
-        </div>
+                </main>
+
+                {/* Global Telemetry Footprint */}
+                <footer className="px-3 py-1 border-t border-border bg-muted/40 flex items-center justify-between shrink-0 relative z-20">
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="w-1 h-1 rounded-full bg-emerald-500" />
+                            <span className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-widest leading-none">
+                                {t('heartbeat')}: <span className="text-primary/40 ml-1">{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}</span>
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <span className="text-[8px] font-medium uppercase tracking-[0.2em] text-foreground/10">DATA ENGINE v1.0</span>
+                    </div>
+                </footer>
+            </div>
+        </HeroSection>
     );
 }
 

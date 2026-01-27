@@ -56,6 +56,23 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --chart-5: 340 75% 55%;
+  }
+}
+
+@layer utilities {
+  @keyframes grid {
+    0% {
+      transform: translateY(-50%);
+    }
+
+    100% {
+      transform: translateY(0);
+    }
+  }
+
+  .animate-grid {
+    animation: grid 15s linear infinite;
   }
 }
 
