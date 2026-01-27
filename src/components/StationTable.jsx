@@ -21,6 +21,14 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
     const [sorting, setSorting] = useState([{ id: 'val', desc: true }]);
     const [rowSelection, setRowSelection] = useState({});
 
+    // Fixed widths to ensure alignment between active and stale tables
+    const colWidths = {
+        select: "w-[32px] min-w-[32px]",
+        label: "w-[40%] min-w-[120px]",
+        time: "w-[30%] min-w-[100px]",
+        val: "w-auto"
+    };
+
     const t = (key) => {
         const dict = {
             en: {
@@ -55,7 +63,7 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
     const columns = useMemo(() => [
         {
             id: "select",
-            header: () => <div className="w-10" />,
+            header: () => <div className="w-8" />,
             cell: ({ row }) => (
                 <div
                     onClick={(e) => {
@@ -93,14 +101,16 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                 };
 
                 return (
-                    <div className="flex items-center gap-4 py-2">
-                        <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", statusColors[status] || statusColors.offline)} />
-                        <div className="text-[10px] opacity-20 group-hover:opacity-40 transition-opacity shrink-0">
+                    <div className="flex items-center py-2">
+                        <div className="w-8 flex justify-center shrink-0 mr-2">
+                            <div className={cn("w-1.5 h-1.5 rounded-full", statusColors[status] || statusColors.offline)} />
+                        </div>
+                        <div className="w-6 flex justify-center shrink-0 mr-2 text-[10px] opacity-20 group-hover:opacity-40 transition-opacity">
                             {row.original.label.toLowerCase().includes('school') ? '🏫' :
                                 row.original.label.toLowerCase().includes('kinder') ? '🧸' :
                                     row.original.label.toLowerCase().includes('embassy') ? '🏛️' : '📡'}
                         </div>
-                        <span className="text-xs font-black uppercase tracking-tight text-foreground/80 group-hover:text-foreground transition-colors truncate">
+                        <span className="text-xs font-black uppercase tracking-tight text-foreground/80 group-hover:text-foreground transition-colors truncate flex-1">
                             {row.getValue("label")}
                         </span>
                     </div>
@@ -205,90 +215,104 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                     const staleRows = allRows.filter(r => r.original.status === 'stale' || r.original.status === 'offline');
 
                     return (
-                        <div className="flex flex-col gap-0">
-                            {/* ACTIVE / MAIN TABLE SECTION */}
-                            {activeRows.length > 0 && (
-                                <div className="flex flex-col">
-                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 sticky top-0 z-30">
-                                        <div className="w-1 h-2 rounded-full bg-primary mr-2" />
-                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-primary">
-                                            {t('active')} <span className="ml-1 text-muted-foreground">[{activeRows.length}]</span>
-                                        </span>
-                                    </div>
-                                    <Table className="relative z-10 border-collapse">
-                                        <TableHeader className="bg-card border-b border-border sticky top-8 z-30">
-                                            {table.getHeaderGroups().map((headerGroup) => (
-                                                <TableRow key={headerGroup.id} className="border-transparent hover:bg-transparent">
-                                                    {headerGroup.headers.map((header) => (
-                                                        <TableHead key={header.id} className="px-2 h-6 align-middle">
-                                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                                        </TableHead>
-                                                    ))}
-                                                </TableRow>
-                                            ))}
-                                        </TableHeader>
-                                        <TableBody>
-                                            {activeRows.map((row) => (
-                                                <TableRow
-                                                    key={row.id}
-                                                    onClick={() => row.toggleSelected()}
-                                                    className={cn(
-                                                        "border-border transition-all cursor-pointer group hover:bg-muted/50",
-                                                        row.getIsSelected() && "bg-muted/50 border-primary/20"
-                                                    )}
-                                                >
-                                                    {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id} className="px-2 py-0 h-6 border-none">
-                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                        </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                        <>
+                            <div className="flex flex-col h-full">
+                                <Table className="relative z-10 border-collapse table-fixed w-full">
+                                    <TableHeader className="bg-card border-b border-border z-30">
+                                        {table.getHeaderGroups().map((headerGroup) => (
+                                            <TableRow key={headerGroup.id} className="border-transparent hover:bg-transparent">
+                                                {headerGroup.headers.map((header) => (
+                                                    <TableHead
+                                                        key={header.id}
+                                                        className={cn("px-2 h-6 align-middle", colWidths[header.column.id])}
+                                                    >
+                                                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                                    </TableHead>
+                                                ))}
+                                            </TableRow>
+                                        ))}
+                                    </TableHeader>
+                                    <TableBody>
+                                        {/* ACTIVE SECTION HEADER */}
+                                        {activeRows.length > 0 && (
+                                            <TableRow className="hover:bg-transparent border-none">
+                                                <TableCell colSpan={4} className="p-0 border-none">
+                                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 sticky top-0 z-20">
+                                                        <div className="w-1 h-2 rounded-full bg-primary mr-2" />
+                                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-primary">
+                                                            {t('active')} <span className="ml-1 text-muted-foreground">[{activeRows.length}]</span>
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
 
-                            {/* STALE / BOTTOM LIST SECTION */}
-                            {staleRows.length > 0 && (
-                                <div className="flex flex-col pb-2">
-                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 mt-1">
-                                        <div className="w-1 h-2 rounded-full bg-destructive/60 mr-2" />
-                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-destructive/60">
-                                            {t('stale')} <span className="ml-1 opacity-40">[{staleRows.length}]</span>
-                                        </span>
-                                    </div>
-                                    <Table className="relative z-10 border-collapse opacity-50">
-                                        {/* Optional: Add headers for stale table if preferred, or hide them for brevity */}
-                                        <TableBody>
-                                            {staleRows.map((row) => (
-                                                <TableRow
-                                                    key={row.id}
-                                                    onClick={() => row.toggleSelected()}
-                                                    className={cn(
-                                                        "border-border transition-all cursor-pointer group hover:bg-muted/50",
-                                                        row.getIsSelected() && "bg-muted/50 border-primary/20"
-                                                    )}
-                                                >
-                                                    {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id} className="px-2 py-0 h-6 border-none">
-                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                                        </TableCell>
-                                                    ))}
-                                                </TableRow>
-                                            ))}
-                                        </TableBody>
-                                    </Table>
-                                </div>
-                            )}
+                                        {/* ACTIVE ROWS */}
+                                        {activeRows.map((row) => (
+                                            <TableRow
+                                                key={row.id}
+                                                onClick={() => row.toggleSelected()}
+                                                className={cn(
+                                                    "border-border transition-all cursor-pointer group hover:bg-muted/50",
+                                                    row.getIsSelected() && "bg-muted/50 border-primary/20"
+                                                )}
+                                            >
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell
+                                                        key={cell.id}
+                                                        className={cn("px-2 py-0 h-6 border-none", colWidths[cell.column.id])}
+                                                    >
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))}
+
+                                        {/* STALE SECTION HEADER (If exists) */}
+                                        {staleRows.length > 0 && (
+                                            <TableRow className="hover:bg-transparent border-none">
+                                                <TableCell colSpan={4} className="p-0 border-none">
+                                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 mt-1 sticky top-0 z-20">
+                                                        <div className="w-1 h-2 rounded-full bg-destructive/60 mr-2" />
+                                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-destructive/60">
+                                                            {t('stale')} <span className="ml-1 opacity-40">[{staleRows.length}]</span>
+                                                        </span>
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+
+                                        {/* STALE ROWS */}
+                                        {staleRows.map((row) => (
+                                            <TableRow
+                                                key={row.id}
+                                                onClick={() => row.toggleSelected()}
+                                                className={cn(
+                                                    "border-border transition-all cursor-pointer group hover:bg-muted/50 opacity-50",
+                                                    row.getIsSelected() && "bg-muted/50 border-primary/20 opacity-100"
+                                                )}
+                                            >
+                                                {row.getVisibleCells().map((cell) => (
+                                                    <TableCell
+                                                        key={cell.id}
+                                                        className={cn("px-2 py-0 h-6 border-none", colWidths[cell.column.id])}
+                                                    >
+                                                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                    </TableCell>
+                                                ))}
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
                             {allRows.length === 0 && (
-                                <div className="h-48 flex flex-col items-center justify-center gap-4 text-center">
+                                <div className="h-48 flex flex-col items-center justify-center gap-4 text-center absolute inset-0 bg-background/50 backdrop-blur-sm z-50">
                                     <div className="w-10 h-10 rounded-full border border-primary/20 border-t-primary animate-spin" />
                                     <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">INITIALIZING WEATHER DATA TERMINAL...</span>
                                 </div>
                             )}
-                        </div>
+                        </>
                     );
                 })()}
             </div>
