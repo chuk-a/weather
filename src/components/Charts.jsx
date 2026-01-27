@@ -161,42 +161,18 @@ export function SpatialRadarChart({ stations, metrics }) {
     );
 }
 
-// --- NEW: TEMPORAL ANALYSIS (Stacked Area + Selected Lines) ---
+// --- NEW: TEMPORAL ANALYSIS (Selected Lines Only) ---
 export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
 
-        // Log for debugging
-        console.log("ComparisonChart render:", { selectedStations, dataKeys: Object.keys(data) });
-
         return data.timestamps.map((t, i) => {
-            // 1. Calculate dynamic average for this timestamp
-            let sum = 0;
-            let count = 0;
-            // Iterate over all keys that are not 'timestamps'/'temps'/etc to find station data
-            Object.keys(data).forEach(key => {
-                const excluded = ['timestamps', 'temps', 'feels', 'humidities', 'windSpeeds', 'avgAqi'];
-                if (!excluded.includes(key) && !key.startsWith('time_') && Array.isArray(data[key])) {
-                    const val = data[key][i];
-                    if (val != null) {
-                        sum += val;
-                        count++;
-                    }
-                }
-            });
-            const avg = count > 0 ? Math.round(sum / count) : 0;
+            const point = { time: t };
 
-            const point = {
-                time: t,
-                AQI: avg,
-            };
-
-            // 2. Add data for selected stations dynamically
+            // Add data for selected stations dynamically
             selectedStations.forEach(id => {
                 if (data[id]) {
                     point[id] = data[id][i];
-                } else {
-                    console.warn(`Missing data for selected station: ${id}`);
                 }
             });
 
@@ -212,10 +188,7 @@ export function ComparisonChart({ data, selectedStations = [] }) {
             <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
-                        <linearGradient id="colorAQI" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                        </linearGradient>
+                        {/* Gradients removed as we are using clean lines now */}
                     </defs>
                     <CartesianGrid vertical={false} stroke="white" strokeOpacity={0.05} strokeDasharray="3 3" />
                     <XAxis
@@ -241,17 +214,6 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.5)'
                         }}
                         itemStyle={{ color: 'white' }}
-                    />
-
-                    {/* Background Average Area */}
-                    <Area
-                        type="monotone"
-                        dataKey="AQI"
-                        name="Avg City AQI"
-                        stroke="hsl(var(--primary))"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorAQI)"
                     />
 
                     {/* Dynamic Lines for Selected Stations */}
