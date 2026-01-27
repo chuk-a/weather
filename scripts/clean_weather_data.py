@@ -1,31 +1,49 @@
-import pandas as pd
-
-# Function to clean weather data
+import csv
+import re
 
 def clean_weather_data():
+    input_file = 'public/weather_log.csv'
+    output_file = 'public/weather_log_cleaned.csv'
+    
+    print("Starting data cleaning...")
+    
     # Read the CSV file
-    df = pd.read_csv('public/weather_log.csv', encoding='utf-8-sig')  # Remove BOM if present
-
-    # Strip whitespace from string values
-    df = df.applymap(lambda x: x.strip() if isinstance(x, str) else x)
-
-    # Replace "ERROR" with empty strings
-    df.replace('ERROR', '', inplace=True)
-
-    # Handle missing data
-    df.fillna('', inplace=True)  # Fill missing values with empty strings
-
-    # Validate numeric columns
-    for col in df.select_dtypes(include=['object']).columns:
-        df[col] = pd.to_numeric(df[col], errors='coerce')  # Convert to numbers, set errors to NaN
-
+    with open(input_file, 'r', encoding='utf-8-sig') as infile:
+        reader = csv.reader(infile)
+        rows = list(reader)
+    
+    # Get header
+    header = rows[0]
+    data_rows = rows[1:]
+    
+    cleaned_rows = []
+    error_count = 0
+    
+    for row in data_rows:
+        cleaned_row = []
+        for i, value in enumerate(row):
+            # Strip whitespace
+            value = value.strip()
+            
+            # Replace ERROR with empty string
+            if value == 'ERROR':
+                value = ''
+                error_count += 1
+            
+            cleaned_row.append(value)
+        
+        cleaned_rows.append(cleaned_row)
+    
     # Write cleaned data to new file
-    df.to_csv('public/weather_log_cleaned.csv', index=False)
+    with open(output_file, 'w', encoding='utf-8', newline='') as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(header)
+        writer.writerows(cleaned_rows)
+    
+    print(f"Data cleaning complete!")
+    print(f"- Total rows processed: {len(data_rows)}")
+    print(f"- ERROR values replaced: {error_count}")
+    print(f"- Output file: {output_file}")
 
-    # Print summary of issues
-    print('Data Cleaning Summary:')
-    print(df.isnull().sum())
-
-# Run the cleaning function
 if __name__ == '__main__':
     clean_weather_data()
