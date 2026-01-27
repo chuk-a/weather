@@ -70,19 +70,61 @@ def scrape_pm25(url, label):
     if not safe_get(url):
         return "ERROR", "ERROR"
     
-    # Robust Value Extraction (Searching for unit)
-    # 1. Search for the standard card structure
-    # 2. Fallback to searching for the text 'µg/m³' and finding its sibling/parent
-    xpath_val = '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p'
-    xpath_val_alt = "//span[contains(text(), 'µg/m³')]/preceding-sibling::span"
+    # Check for "No current data" message first
+    try:
+        page_source = driver.page_source
+        if "No current data" in page_source or "no current data" in page_source.lower():
+            print(f"{label}: No current data available")
+            return "OFFLINE", "OFFLINE"
+    except:
+        pass
     
-    val = get_text(xpath_val, f"{label} PM2.5 (Primary)")
-    if val == "ERROR" or not val:
-        val = get_text(xpath_val_alt, f"{label} PM2.5 (Alt)")
+    # Robust Value Extraction with multiple fallback strategies
+    val = "ERROR"
+    xpath_val_strategies = [
+        '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p',
+        "//span[contains(text(), 'µg/m³')]/preceding-sibling::span",
+        '//*[@id="main-content"]//div[contains(@class, "aqi-value")]//p[1]',
+        "//p[contains(text(), 'µg/m³')]/../p[1]",
+        "//div[contains(@class, 'pollutant-concentration-wrapper')]//p[1]",
+        "//main//p[contains(text(), 'µg/m³')]/preceding-sibling::*[1]",
+    ]
     
-    # Robust Time Extraction (Searching for text 'Local time')
-    xpath_time = '//*[contains(text(), "Local time")]'
-    time_val = get_text(xpath_time, f"{label} Time")
+    for i, xpath in enumerate(xpath_val_strategies):
+        try:
+            elem = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            val = elem.text.strip()
+            if val and val != "ERROR":
+                print(f"{label} PM2.5 (Strategy #{i+1}): {val}")
+                break
+        except Exception as e:
+            if i == len(xpath_val_strategies) - 1:
+                print(f"{label} PM2.5: All strategies failed")
+    
+    # Robust Time Extraction with multiple fallback strategies
+    time_val = "ERROR"
+    xpath_time_strategies = [
+        '//*[contains(text(), "Local time")]',
+        '//*[contains(text(), "local time")]',
+        "//time",
+        '//*[contains(@class, "time")]',
+        '//*[contains(text(), "Updated")]',
+        '//*[contains(text(), "updated")]',
+        "//div[contains(@class, 'date')]",
+        "//span[contains(@class, 'date')]",
+        "//p[contains(text(), ':') and (contains(text(), 'AM') or contains(text(), 'PM') or contains(text(), 'Jan') or contains(text(), 'Feb') or contains(text(), 'Mar') or contains(text(), 'Apr') or contains(text(), 'May') or contains(text(), 'Jun') or contains(text(), 'Jul') or contains(text(), 'Aug') or contains(text(), 'Sep') or contains(text(), 'Oct') or contains(text(), 'Nov') or contains(text(), 'Dec'))]",
+    ]
+    
+    for i, xpath in enumerate(xpath_time_strategies):
+        try:
+            elem = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            time_val = elem.text.strip()
+            if time_val and time_val != "ERROR" and len(time_val) > 0:
+                print(f"{label} Time (Strategy #{i+1}): {time_val}")
+                break
+        except Exception as e:
+            if i == len(xpath_time_strategies) - 1:
+                print(f"{label} Time: All strategies failed")
             
     return val, time_val
 
@@ -94,15 +136,32 @@ def clean(val, is_time=False):
         if "ERROR" in val:
             return "ERROR"
         
+        if "OFFLINE" in val:
+            return "OFFLINE"
+        
         if is_time:
             # Extract timestamp if it matches HH:mm, MMM DD (IQAir format)
-            ts_match = re.search(r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})", val)
-            if ts_match:
-                return f"{ts_match.group(1)}, {ts_match.group(2)}"
-            return val
+            # Try multiple time formats
+            patterns = [
+                r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "15:00, Jan 26"
+                r"Local time:\s*(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "Local time: 15:00, Jan 26"
+                r"Updated.*?(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "Updated 15:00, Jan 26"
+                r"(\d{1,2}:\d{2}\s*[AP]M),\s*([A-Za-z]{3}\s\d{1,2})",  # "3:00 PM, Jan 26"
+            ]
+            
+            for pattern in patterns:
+                ts_match = re.search(pattern, val, re.IGNORECASE)
+                if ts_match:
+                    return f"{ts_match.group(1)}, {ts_match.group(2)}"
+            
+            # If no pattern matches but we have a colon (likely a time), return as is
+            if ":" in val and len(val) < 50:
+                return val
+            
+            return "ERROR"
 
         # Check for specific IQAir "No current data" patterns
-        if "No current data" in val:
+        if "No current data" in val or "no current data" in val.lower():
              return "OFFLINE"
 
         # Standard cleaning for numbers/units
