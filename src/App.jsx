@@ -135,12 +135,6 @@ function App() {
 
     return (
         <div className="h-screen bg-background text-foreground relative overflow-hidden flex flex-col p-2 gap-2 transition-colors duration-500 group">
-            {/* Cyber-Grid Background */}
-            <div className="absolute inset-0 cyber-grid opacity-10 pointer-events-none" />
-
-            {/* Scanline Effect */}
-            <div className="scanline" />
-
             {/* Header Layer */}
             <header className="flex items-center justify-between z-10 shrink-0 mb-1">
                 <div className="flex items-center gap-3">
@@ -163,7 +157,7 @@ function App() {
                         <span className="text-sm font-bold tracking-tight">{t('location')}</span>
                     </div>
 
-                    <div className="flex bg-card/40 backdrop-blur-md rounded-lg border border-white/5 p-1 h-9 items-center">
+                    <div className="flex bg-muted rounded-lg border border-border p-1 h-9 items-center">
                         {['today', 'last7', 'last30'].map((range) => (
                             <button
                                 key={range}
@@ -179,7 +173,7 @@ function App() {
                     </div>
 
                     <div className="flex items-center gap-2 ml-4">
-                        <div className="flex bg-card/40 rounded-lg border border-white/5 p-1">
+                        <div className="flex bg-muted rounded-lg border border-border p-1">
                             {['en', 'mn'].map(l => (
                                 <button
                                     key={l}
@@ -241,7 +235,7 @@ function App() {
             <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-hidden">
 
                 {/* Left Section (70%): Tabs Restore */}
-                <Card className="md:col-span-7 glass-panel border-white/5 bg-background/20 relative overflow-hidden flex flex-col p-0 border-none">
+                <Card className="md:col-span-7 border-border bg-card relative overflow-hidden flex flex-col p-0 shadow-sm">
                     <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
                         <div className="px-6 pt-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
@@ -249,7 +243,7 @@ function App() {
                                 <div className="h-2 w-px bg-white/10" />
                                 {/* Removed flavor text */}
                             </div>
-                            <TabsList className="bg-white/5 border border-white/5 gap-1 h-9">
+                            <TabsList className="bg-muted border border-border gap-1 h-9">
                                 <TabsTrigger value="map" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('map')}</TabsTrigger>
                                 <TabsTrigger value="pollution" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('pollution')}</TabsTrigger>
                                 <TabsTrigger value="wind" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-[9px] font-black px-4 h-7">{t('windSpeed')}</TabsTrigger>
@@ -275,7 +269,7 @@ function App() {
                 </Card>
 
                 <div className="md:col-span-3 flex flex-col min-h-0">
-                    <Card className="flex-1 glass-panel border-white/5 bg-background/20 overflow-hidden flex flex-col relative p-0">
+                    <Card className="flex-1 border-border bg-card overflow-hidden flex flex-col relative p-0 shadow-sm">
                         <div className="flex-1 min-h-0 overflow-hidden">
                             <StationTable
                                 stations={stations}
@@ -284,7 +278,7 @@ function App() {
                             />
                         </div>
 
-                        <div className="p-4 border-t border-white/5 bg-black/60 flex items-center justify-between">
+                        <div className="p-4 border-t border-border bg-muted/20 flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                                 <span className="text-[9px] font-black text-emerald-500/80 uppercase tracking-widest leading-none">NETWORK STATUS: OPTIMAL</span>
@@ -296,7 +290,7 @@ function App() {
             </main>
 
             {/* Global Telemetry Footprint */}
-            <footer className="px-3 py-1 border-t border-white/5 bg-black/20 flex items-center justify-between shrink-0 relative z-20">
+            <footer className="px-3 py-1 border-t border-border bg-muted/40 flex items-center justify-between shrink-0 relative z-20">
                 <div className="flex items-center gap-4">
                     <div className="flex items-center gap-2">
                         <div className="w-1 h-1 rounded-full bg-emerald-500" />
@@ -315,7 +309,7 @@ function App() {
 
 function MetricCard({ label, value, unit, icon, subValue, isSplit = false, statusColor }) {
     return (
-        <Card className="glass-panel group p-2 px-3 border-white/5 bg-background/20 relative overflow-hidden transition-all hover:bg-white/[0.02]">
+        <Card className="group p-2 px-3 border-border bg-card relative overflow-hidden transition-all hover:shadow-md">
             <div className="flex items-center justify-between mb-1 flex-nowrap">
                 <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-muted-foreground/40 border-l border-primary/40 pl-2">{label}</span>
                 {!isSplit && icon}
@@ -329,7 +323,7 @@ function MetricCard({ label, value, unit, icon, subValue, isSplit = false, statu
                 {isSplit && <div className="w-16 h-8 flex items-center justify-center opacity-60">{icon}</div>}
             </div>
 
-            <div className="mt-2 pt-1 border-t border-white/5">
+            <div className="mt-2 pt-1 border-t border-border">
                 <p className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-tight truncate">
                     {subValue}
                 </p>

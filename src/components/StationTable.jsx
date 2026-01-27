@@ -191,11 +191,11 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
     });
 
     return (
-        <div className="bg-transparent h-full flex flex-col min-h-0 overflow-hidden font-rajdhani">
+        <div className="bg-transparent h-full flex flex-col min-h-0 overflow-hidden font-sans">
             {/* Header section remains sticky */}
-            <div className="px-3 py-2 border-b border-white/5 flex flex-col shrink-0 bg-white/[0.02] relative z-20">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t('regional')}</span>
-                <span className="text-[7px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('live')}</span>
+            <div className="px-3 py-2 border-b border-border flex flex-col shrink-0 bg-muted/30 relative z-20">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground/80">{t('regional')}</span>
+                <span className="text-[7px] font-bold text-muted-foreground uppercase tracking-widest">{t('live')}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar relative">
@@ -209,14 +209,14 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                             {/* ACTIVE / MAIN TABLE SECTION */}
                             {activeRows.length > 0 && (
                                 <div className="flex flex-col">
-                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-3 h-5 sticky top-0 z-30 backdrop-blur-md">
+                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 sticky top-0 z-30">
                                         <div className="w-1 h-2 rounded-full bg-primary mr-2" />
                                         <span className="text-[8px] font-black uppercase tracking-[.2em] text-primary">
-                                            {t('active')} <span className="ml-1 text-primary/40">[{activeRows.length}]</span>
+                                            {t('active')} <span className="ml-1 text-muted-foreground">[{activeRows.length}]</span>
                                         </span>
                                     </div>
                                     <Table className="relative z-10 border-collapse">
-                                        <TableHeader className="bg-transparent border-b border-white/5 sticky top-8 z-30 backdrop-blur-md">
+                                        <TableHeader className="bg-card border-b border-border sticky top-8 z-30">
                                             {table.getHeaderGroups().map((headerGroup) => (
                                                 <TableRow key={headerGroup.id} className="border-transparent hover:bg-transparent">
                                                     {headerGroup.headers.map((header) => (
@@ -233,8 +233,8 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                                                     key={row.id}
                                                     onClick={() => row.toggleSelected()}
                                                     className={cn(
-                                                        "border-white/5 transition-all cursor-pointer group hover:bg-white/[0.03]",
-                                                        row.getIsSelected() && "bg-primary/5 border-primary/20"
+                                                        "border-border transition-all cursor-pointer group hover:bg-muted/50",
+                                                        row.getIsSelected() && "bg-muted/50 border-primary/20"
                                                     )}
                                                 >
                                                     {row.getVisibleCells().map((cell) => (
@@ -252,9 +252,9 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                             {/* STALE / BOTTOM LIST SECTION */}
                             {staleRows.length > 0 && (
                                 <div className="flex flex-col pb-2">
-                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-3 h-5 mt-1">
-                                        <div className="w-1 h-2 rounded-full bg-rose-500/60 mr-2" />
-                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-rose-500/60">
+                                    <div className="bg-muted border-y border-border flex items-center px-3 h-5 mt-1">
+                                        <div className="w-1 h-2 rounded-full bg-destructive/60 mr-2" />
+                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-destructive/60">
                                             {t('stale')} <span className="ml-1 opacity-40">[{staleRows.length}]</span>
                                         </span>
                                     </div>
@@ -266,8 +266,8 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                                                     key={row.id}
                                                     onClick={() => row.toggleSelected()}
                                                     className={cn(
-                                                        "border-white/5 transition-all cursor-pointer group hover:bg-white/[0.03]",
-                                                        row.getIsSelected() && "bg-primary/5 border-primary/20"
+                                                        "border-border transition-all cursor-pointer group hover:bg-muted/50",
+                                                        row.getIsSelected() && "bg-muted/50 border-primary/20"
                                                     )}
                                                 >
                                                     {row.getVisibleCells().map((cell) => (
@@ -285,7 +285,7 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                             {allRows.length === 0 && (
                                 <div className="h-48 flex flex-col items-center justify-center gap-4 text-center">
                                     <div className="w-10 h-10 rounded-full border border-primary/20 border-t-primary animate-spin" />
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-primary/40">INITIALIZING WEATHER DATA TERMINAL...</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">INITIALIZING WEATHER DATA TERMINAL...</span>
                                 </div>
                             )}
                         </div>

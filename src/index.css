@@ -4,62 +4,58 @@
 
 @layer base {
   :root {
-    --background: 236 60% 98%;
-    --foreground: 224 71.4% 4.1%;
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
-    --card-foreground: 224 71.4% 4.1%;
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 71.4% 4.1%;
-    --primary: 180 100% 50%;
-    --primary-foreground: 210 20% 98%;
-    --secondary: 220 14.3% 95.9%;
-    --secondary-foreground: 220.9 39.3% 11%;
-    --muted: 220 14.3% 95.9%;
-    --muted-foreground: 220 8.9% 46.1%;
-    --accent: 300 100% 50%;
-    --accent-foreground: 220.9 39.3% 11%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 20% 98%;
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 224 71.4% 4.1%;
-    --radius: 1rem;
-
-    /* Figma Tokens - Quantum Nexus (Light - Placeholder) */
-    --cyber-cyan: 180 100% 50%;
-    --cyber-magenta: 300 100% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+    --radius: 0.5rem;
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
   }
 
   .dark {
-    --background: 233 66% 10%;
-    /* #0B0E2A - Deep blue/purple from Figma */
-    --foreground: 180 30% 96%;
-    --card: 233 50% 12%;
-    --card-foreground: 180 20% 98%;
-    --popover: 233 50% 12%;
-    --popover-foreground: 180 20% 98%;
-    --primary: 186 100% 50%;
-    /* #00F0FF - Electric cyan */
-    --primary-foreground: 233 66% 4%;
-    --secondary: 300 100% 50%;
-    /* #FF00FF - Vivid magenta */
-    --secondary-foreground: 233 66% 4%;
-    --muted: 233 30% 18%;
-    --muted-foreground: 233 10% 70%;
-    --accent: 186 100% 50%;
-    /* Cyan accent */
-    --accent-foreground: 233 66% 4%;
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 180 20% 98%;
-    --border: 233 40% 20%;
-    --input: 233 40% 20%;
-    --ring: 186 100% 50%;
-
-    /* Figma Tokens - Atmospheric Nexus (Futuristic Dark) */
-    --cyber-cyan: 186 100% 50%;
-    --cyber-magenta: 300 100% 50%;
-    --glow-cyan: rgba(0, 240, 255, 0.3);
-    --glow-magenta: rgba(255, 0, 255, 0.3);
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -69,188 +65,32 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased transition-colors duration-300;
-    font-family: 'Inter', 'Rajdhani', sans-serif;
-    letter-spacing: 0.01em;
+    @apply bg-background text-foreground;
   }
 }
 
 @layer utilities {
 
-  /* CLEAN MODERN GLASS PANELS */
+  /* Retain glass-panel class but map it to standard card styles for compatibility */
   .glass-panel {
-    @apply bg-card/60 backdrop-blur-xl border border-border/50 rounded-xl;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-      0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    @apply bg-card text-card-foreground border border-border shadow-sm rounded-xl;
   }
 
-  .glass-panel:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
-      0 4px 6px -4px rgba(0, 0, 0, 0.1);
-    transition: box-shadow 0.2s ease;
-  }
-
-  .glass-magenta {
-    border-color: hsl(var(--secondary) / 0.3) !important;
-  }
-
-  .glass-cyan {
-    border-color: hsl(var(--primary) / 0.3) !important;
-  }
-
-  /* Clean text styles - no glow */
+  /* Map legacy glow classes to nothing or standard text colors */
   .neon-text-cyan {
-    color: hsl(var(--primary));
+    @apply text-primary;
   }
 
   .neon-text-magenta {
-    color: hsl(var(--secondary));
+    @apply text-primary;
   }
 
-  .mega-glow {
-    /* No glow - just clean bold text */
-    font-weight: 700;
-  }
-
-  .cyber-grid {
-    /* Disabled - clean modern look */
-  }
-
-  .scanline {
-    width: 100%;
-    height: 100px;
-    z-index: 100;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(0, 0, 0, 0) 100%);
-    opacity: 0.1;
-    position: absolute;
-    bottom: 100%;
-    pointer-events: none;
-    animation: scanline 8s linear infinite;
-  }
-
-  .animate-ticker {
-    @apply animate-[ticker_60s_linear_infinite];
-  }
-
-  .pause-on-hover:hover {
-    @apply [animation-play-state:paused];
-  }
-
+  /* Remove scrollbar hiding if preferred, or keep standard thin style */
   .custom-scrollbar::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-muted-foreground/20 rounded-full hover:bg-muted-foreground/40;
-  }
-}
-
-@keyframes scanline {
-  0% {
-    bottom: 100%;
-  }
-
-  100% {
-    bottom: -100px;
-  }
-}
-
-@keyframes ticker {
-  0% {
-    transform: translateX(0);
-  }
-
-  100% {
-    transform: translateX(-50%);
-  }
-}
-
-@keyframes backgroundPulse {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.95;
-  }
-}
-
-@keyframes glowPulse {
-
-  0%,
-  100% {
-    box-shadow:
-      0 0 25px rgba(0, 240, 255, 0.25),
-      0 0 50px rgba(0, 240, 255, 0.12),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 20px rgba(0, 240, 255, 0.08);
-  }
-
-  50% {
-    box-shadow:
-      0 0 35px rgba(0, 240, 255, 0.35),
-      0 0 70px rgba(0, 240, 255, 0.18),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 30px rgba(0, 240, 255, 0.12);
-  }
-}
-
-@keyframes glowPulseMagenta {
-
-  0%,
-  100% {
-    box-shadow:
-      0 0 30px rgba(255, 0, 255, 0.3),
-      0 0 60px rgba(255, 0, 255, 0.15),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 25px rgba(255, 0, 255, 0.1);
-  }
-
-  50% {
-    box-shadow:
-      0 0 40px rgba(255, 0, 255, 0.4),
-      0 0 80px rgba(255, 0, 255, 0.2),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 35px rgba(255, 0, 255, 0.15);
-  }
-}
-
-@keyframes glowPulseCyan {
-
-  0%,
-  100% {
-    box-shadow:
-      0 0 30px rgba(0, 240, 255, 0.35),
-      0 0 60px rgba(0, 240, 255, 0.18),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 25px rgba(0, 240, 255, 0.12);
-  }
-
-  50% {
-    box-shadow:
-      0 0 45px rgba(0, 240, 255, 0.45),
-      0 0 90px rgba(0, 240, 255, 0.25),
-      0 8px 32px 0 rgba(0, 0, 0, 0.4),
-      inset 0 0 40px rgba(0, 240, 255, 0.18);
-  }
-}
-
-@keyframes textGlowPulse {
-
-  0%,
-  100% {
-    text-shadow:
-      0 0 15px currentColor,
-      0 0 30px currentColor,
-      0 0 45px currentColor;
-  }
-
-  50% {
-    text-shadow:
-      0 0 20px currentColor,
-      0 0 40px currentColor,
-      0 0 60px currentColor;
+    @apply bg-muted-foreground/30 rounded-full hover:bg-muted-foreground/50;
   }
 }
