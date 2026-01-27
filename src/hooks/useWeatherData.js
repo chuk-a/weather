@@ -85,6 +85,21 @@ export function useWeatherData() {
         if (stdMatch) return `${stdMatch[1]}, ${stdMatch[2]}`;
         const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
         if (messyMatch) return `${messyMatch[1]}, ${messyMatch[2]}`;
+
+        // Handle US format seen in logs: "1/27/26 10:23"
+        // Try parsing directly
+        const d = new Date(clean.replace(/-/g, '/'));
+        if (!isNaN(d.getTime())) {
+            // Reformat to ISO-like YYYY-MM-DD HH:mm
+            const pad = num => String(num).padStart(2, '0');
+            const year = d.getFullYear(); // Will be 2026
+            const month = pad(d.getMonth() + 1);
+            const day = pad(d.getDate());
+            const hours = pad(d.getHours());
+            const minutes = pad(d.getMinutes());
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
+        }
+
         return clean;
     };
 
@@ -128,6 +143,9 @@ export function useWeatherData() {
 
         setData(raw);
         setLoading(false);
+        // Debug
+        window._weatherData = raw;
+        console.log("Weather data processed and exposed to window._weatherData");
     };
 
     const getFilteredData = (range) => {
@@ -146,7 +164,18 @@ export function useWeatherData() {
             }
         }
 
-        if (start <= 0) return data;
+        if (start <= 0) {
+            // If the start is 0, it means ALL data is within range. 
+            // However, with sparse data, we might have a situation where the MOST RECENT data is actually OLDER than the cutoff, 
+            // but we still want to show it if it exists. 
+            // Actually, for "Today", we want strictly today. 
+            // BUT, if the station has NO data "today", but has data "yesterday", and we select "Today", it should be empty.
+            // The issue with French Embassy is that it HAS data "today" (until 08:00), but the chart shows nothing.
+            // The debug overlay showed NULLs for the last 10 points. 
+            // The 10 points are the END of the array (10:30).
+            // We need to verify that 'sliced' returns the WHOLE array segment, not just the Nulls at the end.
+            return data;
+        }
 
         const sliced = {};
         Object.keys(data).forEach(k => {
