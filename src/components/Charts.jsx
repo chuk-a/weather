@@ -117,14 +117,18 @@ export function AirRadialChart({ value }) {
 export function SpatialRadarChart({ stations, metrics }) {
     const data = useMemo(() => {
         if (!metrics || !stations) return [];
-        return stations.map(s => {
-            const stats = metrics.stations.find(st => st.id === s.id);
-            return {
-                subject: s.label.toUpperCase(),
-                value: stats?.val || 0,
-                fullMark: 200,
-            };
-        });
+        return stations
+            .map(s => {
+                const stats = metrics.stations.find(st => st.id === s.id);
+                return {
+                    subject: s.label.toUpperCase(),
+                    value: stats?.val || 0,
+                    fullMark: 200,
+                    status: stats?.status
+                };
+            })
+            // Only show active nodes (Live or Delayed) on the radar
+            .filter(item => item.status === 'live' || item.status === 'delayed');
     }, [stations, metrics]);
 
     return (
