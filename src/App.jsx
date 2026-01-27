@@ -321,35 +321,6 @@ function App() {
                     <span className="text-[8px] font-medium uppercase tracking-[0.2em] text-foreground/10">DATA ENGINE v1.0</span>
                 </div>
             </footer>
-            {/* Debug Overlay */}
-            {selectedStations.length > 0 && (
-                <div className="fixed bottom-10 right-10 z-[100] bg-black/90 p-4 rounded border border-red-500 font-mono text-[10px] max-w-sm max-h-96 overflow-auto text-white">
-                    <h3 className="text-red-500 font-bold mb-2">DEBUG DATA INSPECTOR</h3>
-                    {selectedStations.map(stat => {
-                        const points = filteredData[stat] || [];
-                        const timestamps = filteredData.timestamps || [];
-                        const last10 = points.slice(-10);
-                        return (
-                            <div key={stat} className="mb-4">
-                                <div className="font-bold text-yellow-500">{stat.toUpperCase()}</div>
-                                <div className="grid grid-cols-2 gap-x-4">
-                                    {last10.map((v, i) => {
-                                        const idx = points.length - 10 + i;
-                                        return (
-                                            <React.Fragment key={i}>
-                                                <span className="text-gray-400">{timestamps[idx]?.split(' ')[1]}</span>
-                                                <span className={v ? "text-green-400" : "text-red-500"}>
-                                                    {v !== null ? v : 'NULL'}
-                                                </span>
-                                            </React.Fragment>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            )}
         </div>
     );
 }

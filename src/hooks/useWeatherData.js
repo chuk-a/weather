@@ -52,7 +52,25 @@ export function useWeatherData() {
                     header: true,
                     skipEmptyLines: true,
                     complete: (results) => {
-                        processData(results.data);
+                        // Sort data by timestamp to ensure chronological order
+                        // The timestamp key might be 'timestamp' or have special chars, so we find it dynamically
+                        const rows = results.data;
+                        if (rows.length > 0) {
+                            const tsKey = Object.keys(rows[0]).find(k => k.toLowerCase().includes('timestamp'));
+                            if (tsKey) {
+                                rows.sort((a, b) => {
+                                    const tA = cleanTime(a[tsKey]);
+                                    const tB = cleanTime(b[tsKey]);
+                                    // Handle missing/invalid times by pushing them to the end or beginning?
+                                    // Standard string comparison for ISO dates works if format is YYYY-MM-DD
+                                    // But cleanTime returns standardized strings.
+                                    if (!tA) return -1;
+                                    if (!tB) return 1;
+                                    return new Date(tA) - new Date(tB);
+                                });
+                            }
+                        }
+                        processData(rows);
                     },
                     error: (err) => {
                         setError(err.message);
@@ -80,17 +98,55 @@ export function useWeatherData() {
     const cleanTime = (rawStr) => {
         if (!rawStr) return null;
         const clean = rawStr.replace(/(\r\n|\n|\r)/gm, " ").trim();
+
+        // Already ISO-like
         if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/.test(clean)) return clean;
+
+        // Format: "10:00, Jan 27"
         const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (stdMatch) return `${stdMatch[1]}, ${stdMatch[2]}`;
+        if (stdMatch) {
+            const [_, time, datePart] = stdMatch;
+            const [monName, day] = datePart.split(' ');
+            const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+            const mon = months[monName] || '01';
+            const dayFmt = day.padStart(2, '0');
+
+            // Determine year: Date doesn't have year, so guess based on current time
+            const now = new Date();
+            let year = now.getFullYear();
+
+            // Construct tentative date
+            let tentative = `${year}-${mon}-${dayFmt} ${time}`;
+
+            // If date is > 1 day in future, it's likely last year (e.g. looking at Dec data in Jan)
+            if (new Date(tentative) > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
+                year -= 1;
+                tentative = `${year}-${mon}-${dayFmt} ${time}`;
+            }
+            return tentative;
+        }
+
         const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (messyMatch) return `${messyMatch[1]}, ${messyMatch[2]}`;
+        if (messyMatch) {
+            const [_, time, datePart] = messyMatch;
+            const [monName, day] = datePart.split(' ');
+            const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+            const mon = months[monName] || '01';
+            const dayFmt = day.padStart(2, '0');
+            const now = new Date();
+            let year = now.getFullYear();
+            let tentative = `${year}-${mon}-${dayFmt} ${time}`;
+            if (new Date(tentative) > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
+                year -= 1;
+                tentative = `${year}-${mon}-${dayFmt} ${time}`;
+            }
+            return tentative;
+        }
 
         // Handle US format seen in logs: "1/27/26 10:23"
         // Try parsing directly
         const d = new Date(clean.replace(/-/g, '/'));
         if (!isNaN(d.getTime())) {
-            // Reformat to ISO-like YYYY-MM-DD HH:mm
             const pad = num => String(num).padStart(2, '0');
             const year = d.getFullYear(); // Will be 2026
             const month = pad(d.getMonth() + 1);

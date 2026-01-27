@@ -166,24 +166,58 @@ export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
 
-        console.log("ComparisonChart render:", {
-            selectedStations,
-            availableKeys: Object.keys(data),
-            sampleData: data[selectedStations[0]] ? data[selectedStations[0]].slice(-5) : 'N/A'
-        });
+        // If dataset is small enough (e.g. < 2000 points, which is roughly 24h of minute data), 
+        // show ALL data to preserve fidelity and sparse points.
+        if (data.timestamps.length < 2000) {
+            return data.timestamps.map((t, i) => {
+                const point = { time: t };
+                selectedStations.forEach(id => {
+                    if (data[id]) {
+                        const val = data[id][i];
+                        if (val !== null && val !== undefined) point[id] = val;
+                    }
+                });
+                return point;
+            });
+        }
 
-        return data.timestamps.map((t, i) => {
-            const point = { time: t };
+        // For large datasets, sample smartly to ~500 points
+        const targetPoints = 500;
+        const step = Math.ceil(data.timestamps.length / targetPoints);
+        const d = [];
 
-            // Add data for selected stations dynamically
+        for (let i = 0; i < data.timestamps.length; i += step) {
+            let bestIndex = i;
+
+            // Search this chunk for the "most interesting" data point
+            // Prioritize points where selected stations have data
+            const limit = Math.min(i + step, data.timestamps.length);
+            for (let j = i; j < limit; j++) {
+                const hasData = selectedStations.some(id => {
+                    const val = data[id] ? data[id][j] : null;
+                    return val !== null && val !== undefined;
+                });
+
+                if (hasData) {
+                    bestIndex = j;
+                    // Optional: Could try to find the 'peak' value here? 
+                    // For now just finding ANY valid data is enough to prevent emptiness.
+                    break;
+                }
+            }
+
+            const point = { time: data.timestamps[bestIndex] };
+
             selectedStations.forEach(id => {
-                if (data[id]) {
-                    point[id] = data[id][i];
+                const val = data[id] ? data[id][bestIndex] : null;
+                if (val !== null && val !== undefined) {
+                    point[id] = val;
                 }
             });
 
-            return point;
-        });
+            d.push(point);
+        }
+        return d;
     }, [data, selectedStations]);
 
     // Color palette for selected stations
