@@ -94,6 +94,8 @@ function App() {
     const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en');
 
+    const [selectedStations, setSelectedStations] = useState([]);
+
     const t = (key) => TRANSLATIONS[lang][key] || key;
 
     const metrics = useMemo(() => getLatestMetrics() || {
@@ -266,7 +268,7 @@ function App() {
                                 <RadarChart stations={stations} metrics={metrics} />
                             </TabsContent>
                             <TabsContent value="pollution" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <PollutionChart data={filteredData} />
+                                <PollutionChart data={filteredData} selectedStations={selectedStations} />
                             </TabsContent>
                             <TabsContent value="wind" className="h-full m-0 p-0 relative border-none outline-none pt-4">
                                 <WindVelocityChart data={filteredData} />
@@ -285,6 +287,7 @@ function App() {
                                 stations={stations}
                                 metrics={metrics}
                                 lang={lang}
+                                onSelectionChange={setSelectedStations}
                             />
                         </div>
 

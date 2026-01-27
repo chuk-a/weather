@@ -161,17 +161,29 @@ export function SpatialRadarChart({ stations, metrics }) {
     );
 }
 
-// --- NEW: TEMPORAL ANALYSIS (Stacked Area) ---
-export function ComparisonChart({ data }) {
+// --- NEW: TEMPORAL ANALYSIS (Stacked Area + Selected Lines) ---
+export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
-        return data.timestamps.map((t, i) => ({
-            time: t,
-            AQI: data.avgAqi ? data.avgAqi[i] : (data.french[i] || 0), // Fallback logic
-            PM25: data.french ? data.french[i] : 0,
-            PM10: data.eu ? data.eu[i] : 0
-        }));
-    }, [data]);
+        return data.timestamps.map((t, i) => {
+            const point = {
+                time: t,
+                AQI: data.avgAqi ? data.avgAqi[i] : (data.french ? data.french[i] : 0),
+            };
+
+            // Add data for selected stations dynamically
+            selectedStations.forEach(id => {
+                if (data[id]) {
+                    point[id] = data[id][i];
+                }
+            });
+
+            return point;
+        });
+    }, [data, selectedStations]);
+
+    // Color palette for selected stations
+    const stationColors = ['#f472b6', '#34d399', '#60a5fa', '#a78bfa', '#facc15', '#fb923c'];
 
     return (
         <div className="w-full h-full min-h-[200px]">
@@ -181,14 +193,6 @@ export function ComparisonChart({ data }) {
                         <linearGradient id="colorAQI" x1="0" y1="0" x2="0" y2="1">
                             <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
                             <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorPM25" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="hsl(var(--accent))" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="hsl(var(--accent))" stopOpacity={0} />
-                        </linearGradient>
-                        <linearGradient id="colorPM10" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.4} />
-                            <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
                         </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} stroke="white" strokeOpacity={0.05} strokeDasharray="3 3" />
@@ -216,33 +220,31 @@ export function ComparisonChart({ data }) {
                         }}
                         itemStyle={{ color: 'white' }}
                     />
+
+                    {/* Background Average Area */}
                     <Area
                         type="monotone"
                         dataKey="AQI"
-                        stackId="1"
+                        name="Avg City AQI"
                         stroke="hsl(var(--primary))"
                         strokeWidth={2}
                         fillOpacity={1}
                         fill="url(#colorAQI)"
                     />
-                    <Area
-                        type="monotone"
-                        dataKey="PM25"
-                        stackId="1"
-                        stroke="hsl(var(--accent))"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorPM25)"
-                    />
-                    <Area
-                        type="monotone"
-                        dataKey="PM10"
-                        stackId="1"
-                        stroke="#f43f5e"
-                        strokeWidth={2}
-                        fillOpacity={1}
-                        fill="url(#colorPM10)"
-                    />
+
+                    {/* Dynamic Lines for Selected Stations */}
+                    {selectedStations.map((stationId, index) => (
+                        <Line
+                            key={stationId}
+                            type="monotone"
+                            dataKey={stationId}
+                            name={stationId.toUpperCase()} // Ideally map to label if available
+                            stroke={stationColors[index % stationColors.length]}
+                            strokeWidth={3}
+                            dot={false}
+                            animationDuration={800}
+                        />
+                    ))}
                 </AreaChart>
             </ResponsiveContainer>
         </div>
