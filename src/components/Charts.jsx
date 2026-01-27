@@ -165,16 +165,38 @@ export function SpatialRadarChart({ stations, metrics }) {
 export function ComparisonChart({ data, selectedStations = [] }) {
     const chartData = useMemo(() => {
         if (!data || !data.timestamps) return [];
+
+        // Log for debugging
+        console.log("ComparisonChart render:", { selectedStations, dataKeys: Object.keys(data) });
+
         return data.timestamps.map((t, i) => {
+            // 1. Calculate dynamic average for this timestamp
+            let sum = 0;
+            let count = 0;
+            // Iterate over all keys that are not 'timestamps'/'temps'/etc to find station data
+            Object.keys(data).forEach(key => {
+                const excluded = ['timestamps', 'temps', 'feels', 'humidities', 'windSpeeds', 'avgAqi'];
+                if (!excluded.includes(key) && !key.startsWith('time_') && Array.isArray(data[key])) {
+                    const val = data[key][i];
+                    if (val != null) {
+                        sum += val;
+                        count++;
+                    }
+                }
+            });
+            const avg = count > 0 ? Math.round(sum / count) : 0;
+
             const point = {
                 time: t,
-                AQI: data.avgAqi ? data.avgAqi[i] : (data.french ? data.french[i] : 0),
+                AQI: avg,
             };
 
-            // Add data for selected stations dynamically
+            // 2. Add data for selected stations dynamically
             selectedStations.forEach(id => {
                 if (data[id]) {
                     point[id] = data[id][i];
+                } else {
+                    console.warn(`Missing data for selected station: ${id}`);
                 }
             });
 
