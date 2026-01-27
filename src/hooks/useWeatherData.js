@@ -13,7 +13,13 @@ const STATIONS = [
     { id: 'eu', id_num: '#09', label: 'EU Delegation', region: 'Diplomatic Quarter', flag: '🇪🇺' },
     { id: 'airv', id_num: '#10', label: 'Air V', region: 'North District', flag: '📡' },
     { id: 'yarmag', id_num: '#11', label: 'Yarmag', region: 'Uptown', flag: '🏙️' },
-    { id: 'mandakh', id_num: '#12', label: 'Mandakh', region: 'Downtown', flag: '🏙️' }
+    { id: 'mandakh', id_num: '#12', label: 'Mandakh', region: 'Downtown', flag: '🏙️' },
+    { id: 'school49', id_num: '#13', label: 'School No. 49', region: 'East District', flag: '🏫' },
+    { id: 'kind154', id_num: '#14', label: 'Kindergarten 154', region: 'South Side', flag: '🎒' },
+    { id: 'kind298', id_num: '#15', label: 'Kindergarten 298', region: 'West District', flag: '🎒' },
+    { id: 'kind292', id_num: '#16', label: 'Kindergarten 292', region: 'North Side', flag: '🎒' },
+    { id: 'neocity', id_num: '#17', label: 'Neo City', region: 'New Development', flag: '🏢' },
+    { id: 'school138', id_num: '#18', label: 'School No. 138', region: 'Suburb', flag: '🏫' }
 ];
 
 export function useWeatherData() {
@@ -86,7 +92,9 @@ export function useWeatherData() {
         const raw = {
             timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: [],
             french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: [], school17: [], school72: [], chd12: [], kind280: [],
-            time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: [], time_school17: [], time_school72: [], time_chd12: [], time_kind280: []
+            school49: [], kind154: [], kind298: [], kind292: [], neocity: [], school138: [],
+            time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: [], time_school17: [], time_school72: [], time_chd12: [], time_kind280: [],
+            time_school49: [], time_kind154: [], time_kind298: [], time_kind292: [], time_neocity: [], time_school138: []
         };
 
         rows.forEach(row => {
