@@ -193,9 +193,9 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
     return (
         <div className="bg-transparent h-full flex flex-col min-h-0 overflow-hidden font-rajdhani">
             {/* Header section remains sticky */}
-            <div className="p-4 border-b border-white/5 flex flex-col gap-1 shrink-0 bg-white/[0.02] relative z-20">
-                <span className="text-[11px] font-black uppercase tracking-[0.2em] text-primary/80">{t('regional')}</span>
-                <span className="text-[8px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('live')}</span>
+            <div className="px-3 py-2 border-b border-white/5 flex flex-col shrink-0 bg-white/[0.02] relative z-20">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/80">{t('regional')}</span>
+                <span className="text-[7px] font-bold text-muted-foreground/40 uppercase tracking-widest">{t('live')}</span>
             </div>
 
             <div className="flex-1 overflow-y-auto custom-scrollbar relative">
@@ -209,10 +209,10 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                             {/* ACTIVE / MAIN TABLE SECTION */}
                             {activeRows.length > 0 && (
                                 <div className="flex flex-col">
-                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-5 h-8 sticky top-0 z-30 backdrop-blur-md">
-                                        <div className="w-1 h-3 rounded-full bg-primary mr-3" />
-                                        <span className="text-[9px] font-black uppercase tracking-[.3em] text-primary">
-                                            {t('active')} <span className="ml-2 text-primary/40">[{activeRows.length} {t('nodes')}]</span>
+                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-3 h-5 sticky top-0 z-30 backdrop-blur-md">
+                                        <div className="w-1 h-2 rounded-full bg-primary mr-2" />
+                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-primary">
+                                            {t('active')} <span className="ml-1 text-primary/40">[{activeRows.length}]</span>
                                         </span>
                                     </div>
                                     <Table className="relative z-10 border-collapse">
@@ -220,7 +220,7 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                                             {table.getHeaderGroups().map((headerGroup) => (
                                                 <TableRow key={headerGroup.id} className="border-transparent hover:bg-transparent">
                                                     {headerGroup.headers.map((header) => (
-                                                        <TableHead key={header.id} className="px-5 h-10 align-middle">
+                                                        <TableHead key={header.id} className="px-2 h-6 align-middle">
                                                             {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
                                                         </TableHead>
                                                     ))}
@@ -238,7 +238,7 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                                                     )}
                                                 >
                                                     {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id} className="px-5 py-0 h-11 border-none">
+                                                        <TableCell key={cell.id} className="px-2 py-0 h-7 border-none">
                                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                         </TableCell>
                                                     ))}
@@ -251,11 +251,11 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
 
                             {/* STALE / BOTTOM LIST SECTION */}
                             {staleRows.length > 0 && (
-                                <div className="flex flex-col pb-4">
-                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-5 h-8 mt-2">
-                                        <div className="w-1 h-3 rounded-full bg-rose-500/60 mr-3 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
-                                        <span className="text-[9px] font-black uppercase tracking-[.3em] text-rose-500/60">
-                                            {t('stale')} <span className="ml-2 opacity-40">[{staleRows.length} {t('nodes')}]</span>
+                                <div className="flex flex-col pb-2">
+                                    <div className="bg-white/5 border-y border-white/5 flex items-center px-3 h-5 mt-1">
+                                        <div className="w-1 h-2 rounded-full bg-rose-500/60 mr-2" />
+                                        <span className="text-[8px] font-black uppercase tracking-[.2em] text-rose-500/60">
+                                            {t('stale')} <span className="ml-1 opacity-40">[{staleRows.length}]</span>
                                         </span>
                                     </div>
                                     <Table className="relative z-10 border-collapse opacity-50">
@@ -271,7 +271,7 @@ export function StationTable({ stations, metrics, onSelectionChange, lang = 'en'
                                                     )}
                                                 >
                                                     {row.getVisibleCells().map((cell) => (
-                                                        <TableCell key={cell.id} className="px-5 py-0 h-10 border-none">
+                                                        <TableCell key={cell.id} className="px-2 py-0 h-7 border-none">
                                                             {flexRender(cell.column.columnDef.cell, cell.getContext())}
                                                         </TableCell>
                                                     ))}
