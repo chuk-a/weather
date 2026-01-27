@@ -108,53 +108,46 @@ export function useWeatherData() {
         // Already ISO-like
         if (/^\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}$/.test(clean)) return clean;
 
-        // Format: "10:00, Jan 27"
-        const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (stdMatch) {
-            const [_, time, datePart] = stdMatch;
+        // Helper to infer year more robustly
+        const parseWithInferredYear = (time, datePart) => {
             const [monName, day] = datePart.split(' ');
             const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
             const mon = months[monName] || '01';
             const dayFmt = day.padStart(2, '0');
 
-            // Determine year: Date doesn't have year, so guess based on current time
             const now = new Date();
             let year = now.getFullYear();
 
             // Construct tentative date
             let tentative = `${year}-${mon}-${dayFmt} ${time}`;
+            let tDate = new Date(tentative);
 
-            // If date is > 1 day in future, it's likely last year (e.g. looking at Dec data in Jan)
-            if (new Date(tentative) > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
+            // Check for year boundary issues
+            // 1. If date is far in future (> 2 days), it must be last year (e.g. Dec 31 data viewed on Jan 1)
+            if (tDate > new Date(now.getTime() + 48 * 60 * 60 * 1000)) {
                 year -= 1;
                 tentative = `${year}-${mon}-${dayFmt} ${time}`;
             }
-            return tentative;
-        }
+            // 2. If date is far in past (> 11 months), and we are in Dec viewing Jan data?? Unlikely for logs.
+            // But standard "past" is fine.
 
+            return tentative;
+        };
+
+        // Format: "10:00, Jan 27"
+        const stdMatch = clean.match(/(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})/);
+        if (stdMatch) return parseWithInferredYear(stdMatch[1], stdMatch[2]);
+
+        // Format: "10:00 Jan 27"
         const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
-        if (messyMatch) {
-            const [_, time, datePart] = messyMatch;
-            const [monName, day] = datePart.split(' ');
-            const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
-            const mon = months[monName] || '01';
-            const dayFmt = day.padStart(2, '0');
-            const now = new Date();
-            let year = now.getFullYear();
-            let tentative = `${year}-${mon}-${dayFmt} ${time}`;
-            if (new Date(tentative) > new Date(now.getTime() + 24 * 60 * 60 * 1000)) {
-                year -= 1;
-                tentative = `${year}-${mon}-${dayFmt} ${time}`;
-            }
-            return tentative;
-        }
+        if (messyMatch) return parseWithInferredYear(messyMatch[1], messyMatch[2]);
 
         // Handle US format seen in logs: "1/27/26 10:23"
         // Try parsing directly
         const d = new Date(clean.replace(/-/g, '/'));
         if (!isNaN(d.getTime())) {
             const pad = num => String(num).padStart(2, '0');
-            const year = d.getFullYear(); // Will be 2026
+            const year = d.getFullYear(); // Will be 2026/2025
             const month = pad(d.getMonth() + 1);
             const day = pad(d.getDate());
             const hours = pad(d.getHours());
