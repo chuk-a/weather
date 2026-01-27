@@ -31,32 +31,35 @@
   }
 
   .dark {
-    --background: 257 50% 8%;
-    /* #0F0A1E */
-    --foreground: 180 20% 98%;
-    --card: 257 50% 10%;
+    --background: 233 66% 10%;
+    /* #0B0E2A - Deep blue/purple from Figma */
+    --foreground: 180 30% 96%;
+    --card: 233 50% 12%;
     --card-foreground: 180 20% 98%;
-    --popover: 257 50% 10%;
+    --popover: 233 50% 12%;
     --popover-foreground: 180 20% 98%;
-    --primary: 180 100% 50%;
-    /* #00FFFF */
-    --primary-foreground: 257 50% 2%;
-    --secondary: 257 30% 15%;
-    --secondary-foreground: 180 20% 98%;
-    --muted: 257 30% 12%;
-    --muted-foreground: 257 10% 65%;
-    --accent: 300 100% 50%;
-    /* #FF00FF */
-    --accent-foreground: 257 50% 2%;
+    --primary: 186 100% 50%;
+    /* #00F0FF - Electric cyan */
+    --primary-foreground: 233 66% 4%;
+    --secondary: 300 100% 50%;
+    /* #FF00FF - Vivid magenta */
+    --secondary-foreground: 233 66% 4%;
+    --muted: 233 30% 18%;
+    --muted-foreground: 233 10% 70%;
+    --accent: 186 100% 50%;
+    /* Cyan accent */
+    --accent-foreground: 233 66% 4%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 180 20% 98%;
-    --border: 257 20% 20%;
-    --input: 257 20% 20%;
-    --ring: 180 100% 50%;
+    --border: 233 40% 20%;
+    --input: 233 40% 20%;
+    --ring: 186 100% 50%;
 
-    /* Figma Tokens - Quantum Nexus (Dark) */
-    --cyber-cyan: 180 100% 50%;
+    /* Figma Tokens - Atmospheric Nexus (Futuristic Dark) */
+    --cyber-cyan: 186 100% 50%;
     --cyber-magenta: 300 100% 50%;
+    --glow-cyan: rgba(0, 240, 255, 0.3);
+    --glow-magenta: rgba(255, 0, 255, 0.3);
   }
 }
 
@@ -74,21 +77,23 @@
 
 @layer utilities {
   .glass-panel {
-    @apply bg-card/40 backdrop-blur-[24px] border border-white/10 shadow-2xl;
-    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+    @apply bg-card/30 backdrop-blur-[32px] border border-white/[0.12] shadow-2xl;
+    background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4),
+      0 0 0 1px rgba(255, 255, 255, 0.08) inset;
   }
 
   .glass-magenta {
-    @apply border-accent/20 shadow-[0_0_20px_rgba(255, 0, 255, 0.1)];
+    @apply border-secondary/30 shadow-[0_0_30px_rgba(255, 0, 255, 0.2), 0_0_15px_rgba(255, 0, 255, 0.1)inset];
   }
 
   .glass-cyan {
-    @apply border-primary/20 shadow-[0_0_20px_rgba(0, 255, 255, 0.1)];
+    @apply border-primary/30 shadow-[0_0_30px_rgba(0, 240, 255, 0.2), 0_0_15px_rgba(0, 240, 255, 0.1)_inset];
   }
 
   .cyber-grid {
-    background-image: linear-gradient(to right, hsl(var(--border) / 0.1) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--border) / 0.1) 1px, transparent 1px);
+    background-image: linear-gradient(to right, hsl(var(--border) / 0.15) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--border) / 0.15) 1px, transparent 1px);
     background-size: 40px 40px;
   }
 
