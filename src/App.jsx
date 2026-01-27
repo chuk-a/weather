@@ -244,7 +244,7 @@ function App() {
                     value={metrics.humidity || '--'}
                     unit="%"
                     icon={<Droplets className="w-6 h-6 text-blue-400 opacity-40" />}
-                    subValue={`WIND ${metrics.wind || '--'}m/s | RH ${metrics.humidity || '--'}%`}
+                    subValue={`WIND ${metrics.wind || '--'} m/s (${metrics.wind ? (metrics.wind * 3.6).toFixed(1) : '--'} km/h) | RH ${metrics.humidity || '--'}%`}
                 />
             </div>
 
