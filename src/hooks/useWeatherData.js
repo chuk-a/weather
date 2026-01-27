@@ -27,68 +27,68 @@ export function useWeatherData() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    useEffect(() => {
-        async function fetchData() {
+    async function fetchData() {
+        try {
+            // PRIORITIZE LOCAL DATA for Scraper interactions
+            // We try to fetch the local file first. 
+            // Only if that fails do we go to GitHub (fallback).
+
+            const cacheBust = `?t=${Date.now()}`;
+            let response;
+
+            // 1. Try local file (root relative)
             try {
-                // PRIORITIZE LOCAL DATA for Scraper interactions
-                // We try to fetch the local file first. 
-                // Only if that fails do we go to GitHub (fallback).
-
-                const cacheBust = `?t=${Date.now()}`;
-                let response;
-
-                // 1. Try local file (root relative)
-                try {
-                    response = await fetch(`/weather_log.csv${cacheBust}`);
-                } catch (e) {
-                    console.log("Local fetch failed, trying fallback...");
-                }
-
-                // 2. Try GitHub if local failed
-                if (!response || !response.ok) {
-                    console.log("Using remote/fallback data source");
-                    const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
-                    response = await fetch(`${RAW_URL}${cacheBust}`);
-                }
-
-                if (!response.ok) throw new Error('Failed to fetch data from both local and remote');
-                const text = await response.text();
-
-                Papa.parse(text.trim(), {
-                    header: true,
-                    skipEmptyLines: true,
-                    complete: (results) => {
-                        // Sort data by timestamp to ensure chronological order
-                        // The timestamp key might be 'timestamp' or have special chars, so we find it dynamically
-                        const rows = results.data;
-                        if (rows.length > 0) {
-                            const tsKey = Object.keys(rows[0]).find(k => k.toLowerCase().includes('timestamp'));
-                            if (tsKey) {
-                                rows.sort((a, b) => {
-                                    const tA = cleanTime(a[tsKey]);
-                                    const tB = cleanTime(b[tsKey]);
-                                    // Handle missing/invalid times by pushing them to the end or beginning?
-                                    // Standard string comparison for ISO dates works if format is YYYY-MM-DD
-                                    // But cleanTime returns standardized strings.
-                                    if (!tA) return -1;
-                                    if (!tB) return 1;
-                                    return new Date(tA) - new Date(tB);
-                                });
-                            }
-                        }
-                        processData(rows);
-                    },
-                    error: (err) => {
-                        setError(err.message);
-                        setLoading(false);
-                    }
-                });
-            } catch (err) {
-                setError(err.message);
-                setLoading(false);
+                response = await fetch(`/weather_log.csv${cacheBust}`);
+            } catch (e) {
+                console.log("Local fetch failed, trying fallback...");
             }
-        }
 
+            // 2. Try GitHub if local failed
+            if (!response || !response.ok) {
+                console.log("Using remote/fallback data source");
+                const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
+                response = await fetch(`${RAW_URL}${cacheBust}`);
+            }
+
+            if (!response.ok) throw new Error('Failed to fetch data from both local and remote');
+            const text = await response.text();
+
+            Papa.parse(text.trim(), {
+                header: true,
+                skipEmptyLines: true,
+                complete: (results) => {
+                    // Sort data by timestamp to ensure chronological order
+                    // The timestamp key might be 'timestamp' or have special chars, so we find it dynamically
+                    const rows = results.data;
+                    if (rows.length > 0) {
+                        const tsKey = Object.keys(rows[0]).find(k => k.toLowerCase().includes('timestamp'));
+                        if (tsKey) {
+                            rows.sort((a, b) => {
+                                const tA = cleanTime(a[tsKey]);
+                                const tB = cleanTime(b[tsKey]);
+                                // Handle missing/invalid times by pushing them to the end or beginning?
+                                // Standard string comparison for ISO dates works if format is YYYY-MM-DD
+                                // But cleanTime returns standardized strings.
+                                if (!tA) return -1;
+                                if (!tB) return 1;
+                                return new Date(tA) - new Date(tB);
+                            });
+                        }
+                    }
+                    processData(rows);
+                },
+                error: (err) => {
+                    setError(err.message);
+                    setLoading(false);
+                }
+            });
+        } catch (err) {
+            setError(err.message);
+            setLoading(false);
+        }
+    }
+
+    useEffect(() => {
         fetchData();
         // Set up auto-refresh every 5 minutes
         const interval = setInterval(fetchData, 5 * 60 * 1000);
@@ -388,6 +388,7 @@ export function useWeatherData() {
         error,
         getFilteredData,
         getLatestMetrics,
+        refetch: fetchData,
         stations: STATIONS
     };
 }

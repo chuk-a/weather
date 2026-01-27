@@ -24,7 +24,8 @@ import {
     Navigation,
     HeartPulse,
     Zap,
-    SignalHigh
+    SignalHigh,
+    RefreshCcw
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -88,8 +89,22 @@ const TRANSLATIONS = {
     }
 };
 
+const timeAgo = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    const now = new Date();
+    const seconds = Math.floor((now - date) / 1000);
+
+    if (seconds < 60) return 'Just now';
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m ago`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h ago`;
+    return dateStr.split(' ')[1]; // Fallback to time
+};
+
 function App() {
-    const { getFilteredData, getLatestMetrics, loading, error, stations } = useWeatherData();
+    const { getFilteredData, getLatestMetrics, loading, error, stations, refetch } = useWeatherData();
     const [timeRange, setTimeRange] = useState('today');
     // Force dark mode
     const [theme] = useState('dark');
@@ -311,8 +326,15 @@ function App() {
                     <div className="flex items-center gap-2">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" />
                         <span className="text-[8px] font-medium text-muted-foreground/60 uppercase tracking-widest leading-none">
-                            {t('heartbeat')}: <span className="text-primary/40 ml-1">{metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}</span>
+                            {t('heartbeat')}: <span className="text-primary/40 ml-1">{timeAgo(metrics.lastUpdated) || '--:--'}</span>
                         </span>
+                        <button
+                            onClick={refetch}
+                            className="ml-2 p-1 hover:bg-white/5 rounded-full transition-colors group"
+                            title="Refresh Data"
+                        >
+                            <RefreshCcw className="w-3 h-3 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                        </button>
                     </div>
                 </div>
                 <div>

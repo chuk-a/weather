@@ -18,7 +18,8 @@ import {
     RadialBar,
     Cell,
     PieChart,
-    Pie
+    Pie,
+    Legend
 } from 'recharts';
 
 // --- HELPER: Pivot Data (Columns -> Rows) ---
@@ -252,6 +253,12 @@ export function ComparisonChart({ data, selectedStations = [] }) {
                             isAnimationActive={true}
                         />
                     ))}
+                    <Legend
+                        verticalAlign="top"
+                        height={36}
+                        iconType="circle"
+                        wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.8 }}
+                    />
                 </LineChart>
             </ResponsiveContainer>
         </div>
