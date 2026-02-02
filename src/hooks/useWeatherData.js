@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Papa from 'papaparse';
 
 const STATIONS = [
@@ -23,77 +23,10 @@ const STATIONS = [
 ];
 
 export function useWeatherData() {
-    const [data, setData] = useState(null);
+    const [weather, setWeather] = useState(null);
+    const [aqi, setAqi] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-
-    async function fetchData() {
-        try {
-            // PRIORITIZE LOCAL DATA for Scraper interactions
-            // We try to fetch the local file first. 
-            // Only if that fails do we go to GitHub (fallback).
-
-            const cacheBust = `?t=${Date.now()}`;
-            let response;
-
-            // 1. Try local file (root relative)
-            try {
-                response = await fetch(`/weather_log.csv${cacheBust}`);
-            } catch (e) {
-                console.log("Local fetch failed, trying fallback...");
-            }
-
-            // 2. Try GitHub if local failed
-            if (!response || !response.ok) {
-                console.log("Using remote/fallback data source");
-                const RAW_URL = "https://raw.githubusercontent.com/chuk-a/weather/main/public/weather_log.csv";
-                response = await fetch(`${RAW_URL}${cacheBust}`);
-            }
-
-            if (!response.ok) throw new Error('Failed to fetch data from both local and remote');
-            const text = await response.text();
-
-            Papa.parse(text.trim(), {
-                header: true,
-                skipEmptyLines: true,
-                complete: (results) => {
-                    // Sort data by timestamp to ensure chronological order
-                    // The timestamp key might be 'timestamp' or have special chars, so we find it dynamically
-                    const rows = results.data;
-                    if (rows.length > 0) {
-                        const tsKey = Object.keys(rows[0]).find(k => k.toLowerCase().includes('timestamp'));
-                        if (tsKey) {
-                            rows.sort((a, b) => {
-                                const tA = cleanTime(a[tsKey]);
-                                const tB = cleanTime(b[tsKey]);
-                                // Handle missing/invalid times by pushing them to the end or beginning?
-                                // Standard string comparison for ISO dates works if format is YYYY-MM-DD
-                                // But cleanTime returns standardized strings.
-                                if (!tA) return -1;
-                                if (!tB) return 1;
-                                return new Date(tA) - new Date(tB);
-                            });
-                        }
-                    }
-                    processData(rows);
-                },
-                error: (err) => {
-                    setError(err.message);
-                    setLoading(false);
-                }
-            });
-        } catch (err) {
-            setError(err.message);
-            setLoading(false);
-        }
-    }
-
-    useEffect(() => {
-        fetchData();
-        // Set up auto-refresh every 5 minutes
-        const interval = setInterval(fetchData, 5 * 60 * 1000);
-        return () => clearInterval(interval);
-    }, []);
 
     const cleanNumber = (val) => {
         if (!val || val === "ERROR" || val === "OFFLINE") return null;
@@ -123,13 +56,10 @@ export function useWeatherData() {
             let tDate = new Date(tentative);
 
             // Check for year boundary issues
-            // 1. If date is far in future (> 2 days), it must be last year (e.g. Dec 31 data viewed on Jan 1)
             if (tDate > new Date(now.getTime() + 48 * 60 * 60 * 1000)) {
                 year -= 1;
                 tentative = `${year}-${mon}-${dayFmt} ${time}`;
             }
-            // 2. If date is far in past (> 11 months), and we are in Dec viewing Jan data?? Unlikely for logs.
-            // But standard "past" is fine.
 
             return tentative;
         };
@@ -142,12 +72,11 @@ export function useWeatherData() {
         const messyMatch = clean.match(/(\d{1,2}:\d{2})\s*([A-Za-z]{3}\s\d{1,2})/);
         if (messyMatch) return parseWithInferredYear(messyMatch[1], messyMatch[2]);
 
-        // Handle US format seen in logs: "1/27/26 10:23"
-        // Try parsing directly
+        // Format: "1/27/26 10:23"
         const d = new Date(clean.replace(/-/g, '/'));
         if (!isNaN(d.getTime())) {
             const pad = num => String(num).padStart(2, '0');
-            const year = d.getFullYear(); // Will be 2026/2025
+            const year = d.getFullYear(); 
             const month = pad(d.getMonth() + 1);
             const day = pad(d.getDate());
             const hours = pad(d.getHours());
@@ -158,232 +87,224 @@ export function useWeatherData() {
         return clean;
     };
 
-    const processData = (rows) => {
+    const fetchCSV = async (filename) => {
+        const cacheBust = `?t=${Date.now()}`;
+        // 1. Try local
+        try {
+            const res = await fetch(`/${filename}${cacheBust}`);
+            if (res.ok) return await res.text();
+        } catch (e) {
+            console.warn(`Local fetch for ${filename} failed, trying fallback...`);
+        }
+        // 2. Try GitHub
+        const RAW_URL = `https://raw.githubusercontent.com/chuk-a/weather/main/public/${filename}`;
+        const res = await fetch(`${RAW_URL}${cacheBust}`);
+        if (!res.ok) throw new Error(`Failed to fetch ${filename}`);
+        return await res.text();
+    };
+
+    const processWeather = (rows) => {
         const raw = {
-            timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: [],
-            french: [], eu: [], czech: [], yarmag: [], chd9: [], mandakh: [], chd6: [], airv: [], school17: [], school72: [], chd12: [], kind280: [],
-            school49: [], kind154: [], kind298: [], kind292: [], neocity: [], school138: [],
-            time_french: [], time_eu: [], time_czech: [], time_yarmag: [], time_chd9: [], time_mandakh: [], time_chd6: [], time_airv: [], time_school17: [], time_school72: [], time_chd12: [], time_kind280: [],
-            time_school49: [], time_kind154: [], time_kind298: [], time_kind292: [], time_neocity: [], time_school138: []
+            timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: []
         };
-
         rows.forEach(row => {
-            // Robustly find timestamp key (handles BOM)
-            const tsKey = Object.keys(row).find(k => k.endsWith('timestamp'));
+             const tsKey = Object.keys(row).find(k => k.toLowerCase().includes('timestamp'));
+             let ts = cleanTime(row[tsKey]);
+             
+             // Handle BOM or weird keys
+             if (!ts && row[Object.keys(row)[0]]) {
+                 ts = cleanTime(row[Object.keys(row)[0]]);
+             }
+             
+             if (!ts) return;
+
+             raw.timestamps.push(ts);
+             raw.temps.push(cleanNumber(row.temperature));
+             raw.feels.push(cleanNumber(row.feels_like));
+             raw.humidities.push(cleanNumber(row.humidity));
+             raw.windSpeeds.push(cleanNumber(row.wind_speed));
+        });
+        return raw;
+    };
+
+    const processAQI = (rows) => {
+        const raw = {
+             timestamps: [],
+             ...STATIONS.reduce((acc, s) => ({ ...acc, [s.id]: [], [`time_${s.id}`]: [] }), {})
+        };
+        
+        rows.forEach(row => {
+            const tsKey = Object.keys(row).find(k => k.toLowerCase().includes('timestamp'));
             let ts = cleanTime(row[tsKey]);
-
-            if (ts && ts.includes(',')) {
-                const [time, date] = ts.split(',').map(s => s.trim());
-                const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
-                const [monName, day] = date.split(' ');
-                const mon = months[monName] || '01';
-                const dayFmt = day.padStart(2, '0');
-                const year = new Date().getFullYear();
-                ts = `${year}-${mon}-${dayFmt} ${time}`;
-            }
-
             if (!ts) return;
 
             raw.timestamps.push(ts);
-            raw.temps.push(cleanNumber(row.temperature));
-            raw.feels.push(cleanNumber(row.feels_like));
-            raw.humidities.push(cleanNumber(row.humidity));
-            raw.windSpeeds.push(cleanNumber(row.wind_speed));
-
+            
             STATIONS.forEach(s => {
-                // Use global timestamp (A1) for chart alignment as requested
-                // This simplifes the data structure and ensures all values share the same X-axis
                 raw[s.id].push(cleanNumber(row[`pm25_${s.id}`]));
-
-                // We still valid 'time_station' for status checks (live/offline logic), 
-                // but for the main data array which feeds the chart, we rely on the row's main timestamp.
-                raw[`time_${s.id}`].push(row[`time_${s.id}`] || row[tsKey]);
+                raw[`time_${s.id}`].push(row[`time_${s.id}`]);
             });
         });
-
-        setData(raw);
-        setLoading(false);
-        // Debug
-        window._weatherData = raw;
-        console.log("Weather data processed and exposed to window._weatherData");
+        return raw;
     };
 
-    const getFilteredData = (range) => {
-        if (!data || range === 'all') return data;
+    const fetchData = useCallback(async () => {
+        setLoading(true);
+        try {
+            const [weatherText, aqiText] = await Promise.all([
+                fetchCSV('weather_log.csv'),
+                fetchCSV('pm25_log.csv')
+            ]);
 
+            const parse = (text) => {
+                return new Promise((resolve) => {
+                    Papa.parse(text.trim(), {
+                        header: true,
+                        skipEmptyLines: true,
+                        complete: (res) => resolve(res.data)
+                    });
+                });
+            };
+
+            const weatherRows = await parse(weatherText);
+            const aqiRows = await parse(aqiText);
+
+            // Sort helper
+            const sorter = (a, b) => {
+                const k = Object.keys(a).find(key => key.toLowerCase().includes('timestamp'));
+                if (!k) return 0;
+                return new Date(cleanTime(a[k])) - new Date(cleanTime(b[k]));
+            };
+
+            weatherRows.sort(sorter);
+            aqiRows.sort(sorter);
+
+            setWeather(processWeather(weatherRows));
+            setAqi(processAQI(aqiRows));
+            setLoading(false);
+
+        } catch (err) {
+            console.error(err);
+            setError(err.message);
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchData();
+        const interval = setInterval(fetchData, 5 * 60 * 1000);
+        return () => clearInterval(interval);
+    }, [fetchData]);
+
+    const getFilteredData = (dataObj, range) => {
+        if (!dataObj || range === 'all') return dataObj;
+        
         const now = new Date();
         const days = range === 'today' ? 1 : (range === 'last7' ? 7 : 30);
-        const ms = days * 24 * 60 * 60 * 1000;
-        const cutoff = new Date(now.getTime() - ms);
+        const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
         let start = 0;
-        for (let i = data.timestamps.length - 1; i >= 0; i--) {
-            if (new Date(data.timestamps[i]) < cutoff) {
+        for (let i = dataObj.timestamps.length - 1; i >= 0; i--) {
+            if (new Date(dataObj.timestamps[i]) < cutoff) {
                 start = i + 1;
                 break;
             }
         }
 
-        if (start <= 0) {
-            // If the start is 0, it means ALL data is within range. 
-            // However, with sparse data, we might have a situation where the MOST RECENT data is actually OLDER than the cutoff, 
-            // but we still want to show it if it exists. 
-            // Actually, for "Today", we want strictly today. 
-            // BUT, if the station has NO data "today", but has data "yesterday", and we select "Today", it should be empty.
-            // The issue with French Embassy is that it HAS data "today" (until 08:00), but the chart shows nothing.
-            // The debug overlay showed NULLs for the last 10 points. 
-            // The 10 points are the END of the array (10:30).
-            // We need to verify that 'sliced' returns the WHOLE array segment, not just the Nulls at the end.
-            return data;
-        }
+        if (start <= 0) return dataObj;
 
         const sliced = {};
-        Object.keys(data).forEach(k => {
-            sliced[k] = data[k].slice(start);
+        Object.keys(dataObj).forEach(k => {
+             sliced[k] = dataObj[k].slice(start);
         });
         return sliced;
     };
 
     const getLatestMetrics = () => {
-        if (!data) return null;
+        if (!weather || !aqi) return null;
 
-        // Find the last valid row with a timestamp
-        let idx = -1;
-        for (let i = data.timestamps.length - 1; i >= 0; i--) {
-            if (data.timestamps[i] && data.timestamps[i].length > 5) {
-                idx = i;
-                break;
-            }
-        }
-
-        if (idx < 0) return null;
-
-        // Helper to find value from ~60 mins ago
-        const getTrend = (stationId, currentIdx) => {
-            if (idx < 5) return 'stable'; // Not enough history
-            const currentTime = new Date(data.timestamps[currentIdx]);
-
-            // Look back ~60 mins
-            let oldIdx = -1;
-            for (let i = currentIdx - 1; i >= 0; i--) {
-                const prevTime = new Date(data.timestamps[i]);
-                const diffMin = (currentTime - prevTime) / (1000 * 60);
-                if (diffMin >= 50 && diffMin <= 75) {
-                    oldIdx = i;
-                    break;
-                }
-                if (diffMin > 75) break;
-            }
-
-            if (oldIdx === -1) return 'stable';
-            const oldVal = data[stationId][oldIdx];
-            const newVal = data[stationId][currentIdx];
-            if (oldVal == null || newVal == null) return 'stable';
-
-            const diff = newVal - oldVal;
-            if (diff > (oldVal * 0.05)) return 'up';
-            if (diff < -(oldVal * 0.05)) return 'down';
-            return 'stable';
-        };
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
-
-        const processedStations = STATIONS.map(s => {
-            let val = data[s.id][idx];
-            let tStr = cleanTime(data[`time_${s.id}`][idx]);
-
-            // If current value is null/empty OR time is ERROR/null, look backwards for last known valid data
-            if (val == null || val === '' || !tStr || tStr === 'ERROR' || tStr.includes('ERROR')) {
-                for (let i = idx - 1; i >= 0; i--) {
-                    const histVal = data[s.id][i];
-                    const histTime = cleanTime(data[`time_${s.id}`][i]);
-                    // Only use historical row if it has BOTH valid value AND valid time
-                    if (histVal != null && histVal !== '' &&
-                        histTime && histTime !== 'ERROR' && !histTime.includes('ERROR')) {
-                        val = histVal;
-                        tStr = histTime;
-                        break;
-                    }
-                }
-            }
-
-
-            let status = 'offline';
-
-            if (tStr) {
-                try {
-                    // Robust parser for "HH:mm, MMM DD"
-                    if (tStr.includes(',')) {
-                        const [timePart, datePart] = tStr.split(',').map(x => x.trim());
-                        const [monName, day] = datePart.split(' ');
-                        const mon = months[monName] || '01';
-                        const dayFmt = day.padStart(2, '0');
-                        // Construct ISO string for local time parsing
-                        // Note: We assume the data is in the same timezone as the user (Ulaanbaatar)
-                        const isoStr = `${year}-${mon}-${dayFmt}T${timePart}:00`;
-                        const d = new Date(isoStr);
-
-                        if (!isNaN(d.getTime())) {
-                            const diffHrs = (now - d) / (1000 * 60 * 60);
-                            if (diffHrs < 2.0 && diffHrs > -1.0) { // Delayed up to 2h
-                                status = diffHrs < 0.5 ? 'live' : 'delayed';
-                            } else {
-                                status = 'stale';
-                            }
-                        }
-                    } else if (/^\d{4}/.test(tStr)) {
-                        // Standard YYYY-MM-DD HH:mm
-                        const d = new Date(tStr.replace(' ', 'T'));
-                        if (!isNaN(d.getTime())) {
-                            const diffHrs = (now - d) / (1000 * 60 * 60);
-                            status = diffHrs < 0.5 ? 'live' : (diffHrs < 2 ? 'delayed' : 'stale');
-                        }
-                    }
-                } catch (e) {
-                    status = 'offline';
-                }
-            }
-
-            return {
-                ...s,
-                val,
-                time: tStr,
-                status,
-                trend: getTrend(s.id, idx)
-            };
-        });
-
-        // Strict Filtering: Only include stations updated within the last 2 hours (live/delayed)
-        const currentVals = processedStations
-            .filter(s => (s.status === 'live' || s.status === 'delayed') && s.val != null)
-            .map(s => s.val);
-
+        // Latest Weather
+        const wIdx = weather.timestamps.length - 1;
+        
+        // Latest AQI
+        const aIdx = aqi.timestamps.length - 1;
+        
+        // Calculate AQI avg from latest row
+        const currentVals = STATIONS
+            .map(s => aqi[s.id][aIdx])
+            .filter(v => v != null);
+            
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
             : null;
 
-        // Severe disconnection: Only hide if NO active stations exist
-        const lastTs = new Date(data.timestamps[idx]);
-        const isCompletelyDead = (now - lastTs) / (1000 * 60 * 60) > 24; // Keep historical view if < 24h
+        const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
+        
+        const processedStations = STATIONS.map(s => {
+             const val = aqi[s.id][aIdx];
+             const tStr = cleanTime(aqi[`time_${s.id}`][aIdx]);
+             
+             let status = 'offline';
+             if (tStr) {
+                // Status logic (same as before)
+                try {
+                     const now = new Date();
+                     const year = now.getFullYear();
+                     
+                     let d;
+                     if (tStr.includes(',')) {
+                         const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                         const [monName, day] = datePart.split(' ');
+                         const mon = months[monName] || '01';
+                         const dayFmt = day.padStart(2, '0');
+                         d = new Date(`${year}-${mon}-${dayFmt}T${timePart}:00`);
+                     } else {
+                         d = new Date(tStr.replace(' ', 'T'));
+                     }
+                     
+                     if (!isNaN(d.getTime())) {
+                          const diffHrs = (now - d) / (1000 * 60 * 60);
+                          // Allow lenient delay since AQI is hourly
+                          if (diffHrs < 2.5 && diffHrs > -1.0) {
+                               status = diffHrs < 1.1 ? 'live' : 'delayed';
+                          } else {
+                               status = 'stale';
+                          }
+                     }
+                } catch(e) { status = 'offline'; }
+             }
+
+             return {
+                 ...s,
+                 val,
+                 time: tStr,
+                 status,
+                 trend: 'stable' // Simplified for now
+             };
+        });
+
+        // Determine if system is offline based on Weather timestamp
+        const lastWTime = new Date(weather.timestamps[wIdx]);
+        const now = new Date();
+        const isOffline = (now - lastWTime) / (1000 * 60 * 60) > 1; // Weather should be fresh
 
         return {
-            lastUpdated: data.timestamps[idx],
+            lastUpdated: weather.timestamps[wIdx],
             avgAQI: avg,
             activeCount: currentVals.length,
             totalCount: STATIONS.length,
-            isOffline: avg === null || isCompletelyDead,
-            temp: data.temps[idx],
-            feels: data.feels[idx],
-            humidity: data.humidities[idx],
-            wind: data.windSpeeds[idx],
+            isOffline: isOffline,
+            temp: weather.temps[wIdx],
+            feels: weather.feels[wIdx],
+            humidity: weather.humidities[wIdx],
+            wind: weather.windSpeeds[wIdx],
             stations: processedStations
         };
     };
 
     return {
-        data,
+        weather,
+        aqi,
         loading,
         error,
         getFilteredData,

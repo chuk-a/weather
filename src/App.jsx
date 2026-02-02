@@ -80,10 +80,6 @@ const TRANSLATIONS = {
         today: '1Ө',
         last7: '1Д',
         last30: '1С',
-        all: 'БҮГД',
-        today: '1Ө',
-        last7: '1Д',
-        last30: '1С',
         unitTemp: 'Хэм',
         unitHumidity: '%'
     }
@@ -104,9 +100,18 @@ const timeAgo = (dateStr) => {
 };
 
 function App() {
-    const { getFilteredData, getLatestMetrics, loading, error, stations, refetch } = useWeatherData();
+    const {
+        weather,
+        aqi,
+        loading,
+        error,
+        getFilteredData,
+        getLatestMetrics,
+        stations,
+        refetch
+    } = useWeatherData();
+
     const [timeRange, setTimeRange] = useState('today');
-    // Force dark mode
     const [theme] = useState('dark');
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en');
 
@@ -127,7 +132,9 @@ function App() {
         stations: []
     }, [getLatestMetrics]);
 
-    const filteredData = useMemo(() => getFilteredData(timeRange), [getFilteredData, timeRange]);
+    // Separate filtered views
+    const filteredWeather = useMemo(() => getFilteredData(weather, timeRange), [getFilteredData, weather, timeRange]);
+    const filteredAQI = useMemo(() => getFilteredData(aqi, timeRange), [getFilteredData, aqi, timeRange]);
 
     useEffect(() => {
         const root = window.document.documentElement;
@@ -225,7 +232,7 @@ function App() {
             </header>
 
             {/* Primary Metrics Layer (Restored 4nd-card header) */}
-            < div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0 relative" >
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0 relative">
                 <MetricCard
                     label={t('cityConc')}
                     value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
@@ -259,13 +266,13 @@ function App() {
                     subValue={`SPEED ${metrics.wind ? (metrics.wind * 3.6).toFixed(1) : '--'} km/h | RELATIVE HUMIDITY ${metrics.humidity || '--'} %`}
                     statusColor="text-blue-500"
                 />
-            </div >
+            </div>
 
             {/* Main Intelligence Grid (Hybrid 70/30) */}
-            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-y-auto md:overflow-hidden relative" >
+            <main className="flex-1 grid grid-cols-1 md:grid-cols-10 gap-2 z-10 min-h-0 overflow-y-auto md:overflow-hidden relative">
 
                 {/* Left Section (70%): Tabs Restore */}
-                <Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80 min-h-[450px] md:min-h-0" >
+                <Card className="md:col-span-7 border-border bg-card/60 backdrop-blur-sm relative overflow-hidden flex flex-col p-0 shadow-sm transition-all hover:bg-card/80 min-h-[450px] md:min-h-0">
                     <Tabs defaultValue="map" className="flex flex-col h-full bg-transparent">
                         <div className="px-6 pt-4 flex items-center justify-between shrink-0">
                             <div className="flex items-center gap-4">
@@ -286,17 +293,17 @@ function App() {
                                 <RadarChart stations={stations} metrics={metrics} />
                             </TabsContent>
                             <TabsContent value="pollution" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <PollutionChart data={filteredData} selectedStations={selectedStations} />
+                                <PollutionChart data={filteredAQI} selectedStations={selectedStations} />
                             </TabsContent>
                             <TabsContent value="wind" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <WindVelocityChart data={filteredData} />
+                                <WindVelocityChart data={filteredWeather} />
                             </TabsContent>
                             <TabsContent value="climate" className="h-full m-0 p-0 relative border-none outline-none pt-4">
-                                <AtmosphereTrendChart data={filteredData} />
+                                <AtmosphereTrendChart data={filteredWeather} />
                             </TabsContent>
                         </div>
                     </Tabs>
-                </Card >
+                </Card>
 
                 <div className="md:col-span-3 flex flex-col min-h-[600px] md:min-h-0">
                     <Card className="flex-1 border-border bg-card/60 backdrop-blur-sm overflow-hidden flex flex-col relative p-0 shadow-sm transition-all hover:bg-card/80">
