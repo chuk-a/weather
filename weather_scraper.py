@@ -54,7 +54,7 @@ def get_text(xpath, label):
 def scrape_weather():
     print("Scraping weather.gov.mn...")
     if not safe_get("https://weather.gov.mn"):
-        return ["ERROR"] * 5  # now returning 5 values total
+        return ["ERROR"] * 4
 
     driver.get("https://weather.gov.mn")
 
