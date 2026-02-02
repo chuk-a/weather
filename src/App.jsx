@@ -256,7 +256,7 @@ function App() {
                     value={metrics.temp != null ? `${metrics.temp}°` : '--'}
                     unit="C"
                     icon={<ThermometerSun className="w-6 h-6 text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.4)]" />}
-                    subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | T-ZONE`}
+                    subValue={`${t('feels')} ${metrics.feels != null ? metrics.feels : '--'}°C | ${metrics.lastUpdated ? metrics.lastUpdated.split(' ')[1] : '--:--'}`}
                     statusColor="text-amber-500"
                 />
                 <MetricCard
