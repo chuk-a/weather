@@ -173,6 +173,7 @@ def clean(val, is_time=False):
         return val.strip()
     return val
 
+
 # ... existing code ...
 
 def get_last_entry(filepath):
@@ -221,21 +222,99 @@ def should_update_pm25(last_entry):
         # If parsing fails, default to updating
         return True
 
-# Standardized output path relative to project root
-output_path = "public/weather_log.csv"
+# ... existing code ...
+
+# Standardized output paths
+weather_path = "public/weather_log.csv"
+pm25_path = "public/pm25_log.csv"
+
+# Function to initialize CSV if empty
+def init_csv(path, headers):
+    if not os.path.exists(path) or os.stat(path).st_size == 0:
+        with open(path, "w", encoding="utf-8-sig", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(headers)
+
+# Initialize files
+init_csv(weather_path, [
+    "timestamp", "temperature", "feels_like", "wind_speed", "humidity"
+])
+
+init_csv(pm25_path, [
+    "timestamp",
+    "pm25_french", "time_french",
+    "pm25_eu", "time_eu",
+    "pm25_czech", "time_czech",
+    "pm25_yarmag", "time_yarmag",
+    "pm25_chd9", "time_chd9",
+    "pm25_mandakh", "time_mandakh",
+    "pm25_chd6", "time_chd6",
+    "pm25_airv", "time_airv",
+    "pm25_school17", "time_school17",
+    "pm25_school72", "time_school72",
+    "pm25_chd12", "time_chd12",
+    "pm25_kind280", "time_kind280",
+    "pm25_school49", "time_school49",
+    "pm25_kind154", "time_kind154",
+    "pm25_kind298", "time_kind298",
+    "pm25_kind292", "time_kind292",
+    "pm25_neocity", "time_neocity",
+    "pm25_school138", "time_school138"
+])
+
+
+def get_last_timestamp(filepath):
+    """Reads the last timestamp from a CSV."""
+    if not os.path.exists(filepath) or os.stat(filepath).st_size == 0:
+        return None
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        from collections import deque
+        try:
+            last_line = deque(csv.reader(f), maxlen=1)[0]
+            return last_line[0] if last_line else None
+        except IndexError:
+            return None
+
+def should_update_pm25(last_ts_str):
+    """Decides if PM2.5 should be scraped."""
+    if not last_ts_str:
+        return True
+    try:
+        last_dt = datetime.strptime(last_ts_str, "%Y-%m-%d %H:%M")
+        last_dt = tz.localize(last_dt)
+        current_dt = datetime.now(tz)
+        
+        # Update if different hour OR > 60 mins old
+        if current_dt.hour != last_dt.hour:
+            return True
+        if (current_dt - last_dt).total_seconds() > 3600:
+            return True
+        return False
+    except ValueError:
+        return True
 
 # Check if we need to scrape PM2.5
-last_entry = get_last_entry(output_path)
-update_pm25 = should_update_pm25(last_entry)
+# We check the PM2.5 log specifically now
+last_pm25_ts = get_last_timestamp(pm25_path)
+update_pm25 = should_update_pm25(last_pm25_ts)
 
-# Always scrape weather (lightweight)
+# Always scrape weather
 temperature, feels_like, wind_speed, humidity = scrape_weather()
 
-pm25_data = []
+# Write Weather Data
+with open(weather_path, "a", encoding="utf-8-sig", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        timestamp,
+        clean(temperature),
+        clean(feels_like),
+        clean(wind_speed),
+        clean(humidity)
+    ])
 
+# Conditional PM2.5 Scrape
 if update_pm25:
     print("New hour detected. Scraping fresh PM2.5 data...")
-    # List of (url, label)
     iqair_stations = [
         ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy"),
         ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/eu-delegation-to-mongolia", "EU Delegation"),
@@ -257,59 +336,16 @@ if update_pm25:
         ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
     ]
     
+    pm25_row = [timestamp]
     for url, label in iqair_stations:
         p, t = scrape_pm25(url, label)
-        pm25_data.extend([clean(p), clean(t, is_time=True)])
+        pm25_row.extend([clean(p), clean(t, is_time=True)])
+        
+    # Write PM2.5 Data
+    with open(pm25_path, "a", encoding="utf-8-sig", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(pm25_row)
 else:
-    print(f"Skipping PM2.5 scrape (last data from {last_entry[0]} is recent). reusing previous values.")
-    # Reuse values from last entry (columns 5 onwards)
-    # The last entry is a list of strings
-    if last_entry and len(last_entry) >= 41: # Ensure we have enough columns
-        pm25_data = last_entry[5:]
-    else:
-        # Fallback if file is corrupted/too short but we decided not to update?
-        # Should ideally force update, but logic above handles `not last_entry`.
-        # If partial row, fill with ERROR
-        pm25_data = ["ERROR"] * 36 # 18 stations * 2 cols
+    print(f"Skipping PM2.5 scrape (last data from {last_pm25_ts} is recent).")
 
 driver.quit()
-
-# Write header if file is empty
-if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
-    with open(output_path, "w", encoding="utf-8-sig", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            "timestamp", "temperature", "feels_like", "wind_speed", "humidity",
-            "pm25_french", "time_french",
-            "pm25_eu", "time_eu",
-            "pm25_czech", "time_czech",
-            "pm25_yarmag", "time_yarmag",
-            "pm25_chd9", "time_chd9",
-            "pm25_mandakh", "time_mandakh",
-            "pm25_chd6", "time_chd6",
-            "pm25_airv", "time_airv",
-            "pm25_school17", "time_school17",
-            "pm25_school72", "time_school72",
-            "pm25_chd12", "time_chd12",
-            "pm25_kind280", "time_kind280",
-            "pm25_school49", "time_school49",
-            "pm25_kind154", "time_kind154",
-            "pm25_kind298", "time_kind298",
-            "pm25_kind292", "time_kind292",
-            "pm25_neocity", "time_neocity",
-            "pm25_school138", "time_school138"
-        ])
-
-# Append latest data with UB-local timestamp
-with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
-    writer = csv.writer(f)
-    weather_data = [
-        timestamp,
-        clean(temperature),
-        clean(feels_like),
-        clean(wind_speed),
-        clean(humidity)
-    ]
-    # Combine lists
-    full_row = weather_data + pm25_data
-    writer.writerow(full_row)
