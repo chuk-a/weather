@@ -173,33 +173,106 @@ def clean(val, is_time=False):
         return val.strip()
     return val
 
-# Scrape all data
-temperature, feels_like, wind_speed, humidity = scrape_weather()
-pm25_french, time_french = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy")
-pm25_eu, time_eu         = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/eu-delegation-to-mongolia", "EU Delegation")
-pm25_czech, time_czech   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/czech-embassy-ulaanbaatar", "Czech Embassy")
-pm25_yarmag, time_yarmag = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/yarmag-garden-city", "Yarmag Garden City")
-pm25_chd9, time_chd9     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-9-khoroo", "CHD 9 Khoroo")
-pm25_mandakh, time_mandakh = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/mandakh-naran-tuv", "Mandakh Naran Tuv")
-pm25_chd6, time_chd6     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-6-horoo", "CHD 6 Horoo")
-pm25_airv, time_airv     = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/air-v", "Air V")
-pm25_school17, time_school17 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-17", "School 17")
-pm25_school72, time_school72 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-72", "School 72")
-pm25_chd12, time_chd12   = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-12-khoroo", "CHD 12")
-pm25_kind280, time_kind280 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--280", "Kindergarden 280")
-pm25_school49, time_school49 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/49-r-surguuli", "School 49")
-pm25_kind154, time_kind154 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--154", "Kindergarden 154")
-pm25_kind298, time_kind298 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--298", "Kindergarden 298")
-pm25_kind292, time_kind292 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--292", "Kindergarden 292")
-pm25_neocity, time_neocity = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/neo-city", "Neo City")
-pm25_school138, time_school138 = scrape_pm25("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
+# ... existing code ...
 
+def get_last_entry(filepath):
+    """Reads the last row of the CSV to get previous PM2.5 data and timestamp."""
+    if not os.path.exists(filepath) or os.stat(filepath).st_size == 0:
+        return None
+    
+    with open(filepath, "r", encoding="utf-8-sig") as f:
+        # Use deque to efficiently get the last line without reading everything
+        from collections import deque
+        try:
+            last_line = deque(csv.reader(f), maxlen=1)[0]
+            if not last_line: return None
+            
+            # Map headers to values
+            # (Assuming standard order as defined in writer.writerow below)
+            # headers: [timestamp, temperature, feels_like, wind_speed, humidity, pm25_french, time_french, ...]
+            # We specifically need the PM2.5 columns (indices 5 onwards)
+            return last_line
+        except IndexError:
+            return None
 
-
-driver.quit()
+def should_update_pm25(last_entry):
+    """Decides if PM2.5 should be re-scraped based on last timestamp."""
+    if not last_entry:
+        return True
+    
+    last_ts_str = last_entry[0] # First column is timestamp
+    try:
+        # Parse timestamp (Format: YYYY-MM-DD HH:MM)
+        last_dt = datetime.strptime(last_ts_str, "%Y-%m-%d %H:%M")
+        last_dt = tz.localize(last_dt) # Assume it was saved in local time
+        
+        current_dt = datetime.now(tz)
+        
+        # Update if:
+        # 1. It's a different hour than the last record
+        # 2. OR the last record is older than 60 minutes (failsafe)
+        if current_dt.hour != last_dt.hour:
+            return True
+        if (current_dt - last_dt).total_seconds() > 3600:
+            return True
+            
+        return False
+    except ValueError:
+        # If parsing fails, default to updating
+        return True
 
 # Standardized output path relative to project root
 output_path = "public/weather_log.csv"
+
+# Check if we need to scrape PM2.5
+last_entry = get_last_entry(output_path)
+update_pm25 = should_update_pm25(last_entry)
+
+# Always scrape weather (lightweight)
+temperature, feels_like, wind_speed, humidity = scrape_weather()
+
+pm25_data = []
+
+if update_pm25:
+    print("New hour detected. Scraping fresh PM2.5 data...")
+    # List of (url, label)
+    iqair_stations = [
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/eu-delegation-to-mongolia", "EU Delegation"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/czech-embassy-ulaanbaatar", "Czech Embassy"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/yarmag-garden-city", "Yarmag Garden City"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-9-khoroo", "CHD 9 Khoroo"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/mandakh-naran-tuv", "Mandakh Naran Tuv"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-6-horoo", "CHD 6 Horoo"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/air-v", "Air V"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-17", "School 17"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-72", "School 72"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-12-khoroo", "CHD 12"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--280", "Kindergarden 280"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/49-r-surguuli", "School 49"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--154", "Kindergarden 154"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--298", "Kindergarden 298"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--292", "Kindergarden 292"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/neo-city", "Neo City"),
+        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
+    ]
+    
+    for url, label in iqair_stations:
+        p, t = scrape_pm25(url, label)
+        pm25_data.extend([clean(p), clean(t, is_time=True)])
+else:
+    print(f"Skipping PM2.5 scrape (last data from {last_entry[0]} is recent). reusing previous values.")
+    # Reuse values from last entry (columns 5 onwards)
+    # The last entry is a list of strings
+    if last_entry and len(last_entry) >= 41: # Ensure we have enough columns
+        pm25_data = last_entry[5:]
+    else:
+        # Fallback if file is corrupted/too short but we decided not to update?
+        # Should ideally force update, but logic above handles `not last_entry`.
+        # If partial row, fill with ERROR
+        pm25_data = ["ERROR"] * 36 # 18 stations * 2 cols
+
+driver.quit()
 
 # Write header if file is empty
 if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
@@ -230,28 +303,13 @@ if not os.path.exists(output_path) or os.stat(output_path).st_size == 0:
 # Append latest data with UB-local timestamp
 with open(output_path, "a", encoding="utf-8-sig", newline="") as f:
     writer = csv.writer(f)
-    writer.writerow([
+    weather_data = [
         timestamp,
         clean(temperature),
         clean(feels_like),
         clean(wind_speed),
-        clean(humidity),
-        clean(pm25_french), clean(time_french, is_time=True),
-        clean(pm25_eu), clean(time_eu, is_time=True),
-        clean(pm25_czech), clean(time_czech, is_time=True),
-        clean(pm25_yarmag), clean(time_yarmag, is_time=True),
-        clean(pm25_chd9), clean(time_chd9, is_time=True),
-        clean(pm25_mandakh), clean(time_mandakh, is_time=True),
-        clean(pm25_chd6), clean(time_chd6, is_time=True),
-        clean(pm25_airv), clean(time_airv, is_time=True),
-        clean(pm25_school17), clean(time_school17, is_time=True),
-        clean(pm25_school72), clean(time_school72, is_time=True),
-        clean(pm25_chd12), clean(time_chd12, is_time=True),
-        clean(pm25_kind280), clean(time_kind280, is_time=True),
-        clean(pm25_school49), clean(time_school49, is_time=True),
-        clean(pm25_kind154), clean(time_kind154, is_time=True),
-        clean(pm25_kind298), clean(time_kind298, is_time=True),
-        clean(pm25_kind292), clean(time_kind292, is_time=True),
-        clean(pm25_neocity), clean(time_neocity, is_time=True),
-        clean(pm25_school138), clean(time_school138, is_time=True)
-    ])
+        clean(humidity)
+    ]
+    # Combine lists
+    full_row = weather_data + pm25_data
+    writer.writerow(full_row)
