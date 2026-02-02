@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Papa from 'papaparse';
 
-const STATIONS = [
+export const STATIONS = [
     { id: 'school72', id_num: '#01', label: 'School No. 72', region: 'Downtown', flag: '🏫' },
     { id: 'school17', id_num: '#02', label: 'School No. 17', region: 'Midtown', flag: '🏫' },
     { id: 'kind280', id_num: '#03', label: 'Kindergarten 280', region: 'Uptown', flag: '🎒' },
@@ -76,7 +76,7 @@ export function useWeatherData() {
         const d = new Date(clean.replace(/-/g, '/'));
         if (!isNaN(d.getTime())) {
             const pad = num => String(num).padStart(2, '0');
-            const year = d.getFullYear(); 
+            const year = d.getFullYear();
             const month = pad(d.getMonth() + 1);
             const day = pad(d.getDate());
             const hours = pad(d.getHours());
@@ -108,38 +108,38 @@ export function useWeatherData() {
             timestamps: [], temps: [], feels: [], humidities: [], windSpeeds: []
         };
         rows.forEach(row => {
-             const tsKey = Object.keys(row).find(k => k.toLowerCase().includes('timestamp'));
-             let ts = cleanTime(row[tsKey]);
-             
-             // Handle BOM or weird keys
-             if (!ts && row[Object.keys(row)[0]]) {
-                 ts = cleanTime(row[Object.keys(row)[0]]);
-             }
-             
-             if (!ts) return;
+            const tsKey = Object.keys(row).find(k => k.toLowerCase().includes('timestamp'));
+            let ts = cleanTime(row[tsKey]);
 
-             raw.timestamps.push(ts);
-             raw.temps.push(cleanNumber(row.temperature));
-             raw.feels.push(cleanNumber(row.feels_like));
-             raw.humidities.push(cleanNumber(row.humidity));
-             raw.windSpeeds.push(cleanNumber(row.wind_speed));
+            // Handle BOM or weird keys
+            if (!ts && row[Object.keys(row)[0]]) {
+                ts = cleanTime(row[Object.keys(row)[0]]);
+            }
+
+            if (!ts) return;
+
+            raw.timestamps.push(ts);
+            raw.temps.push(cleanNumber(row.temperature));
+            raw.feels.push(cleanNumber(row.feels_like));
+            raw.humidities.push(cleanNumber(row.humidity));
+            raw.windSpeeds.push(cleanNumber(row.wind_speed));
         });
         return raw;
     };
 
     const processAQI = (rows) => {
         const raw = {
-             timestamps: [],
-             ...STATIONS.reduce((acc, s) => ({ ...acc, [s.id]: [], [`time_${s.id}`]: [] }), {})
+            timestamps: [],
+            ...STATIONS.reduce((acc, s) => ({ ...acc, [s.id]: [], [`time_${s.id}`]: [] }), {})
         };
-        
+
         rows.forEach(row => {
             const tsKey = Object.keys(row).find(k => k.toLowerCase().includes('timestamp'));
             let ts = cleanTime(row[tsKey]);
             if (!ts) return;
 
             raw.timestamps.push(ts);
-            
+
             STATIONS.forEach(s => {
                 raw[s.id].push(cleanNumber(row[`pm25_${s.id}`]));
                 raw[`time_${s.id}`].push(row[`time_${s.id}`]);
@@ -198,7 +198,7 @@ export function useWeatherData() {
 
     const getFilteredData = (dataObj, range) => {
         if (!dataObj || range === 'all') return dataObj;
-        
+
         const now = new Date();
         const days = range === 'today' ? 1 : (range === 'last7' ? 7 : 30);
         const cutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
@@ -215,7 +215,7 @@ export function useWeatherData() {
 
         const sliced = {};
         Object.keys(dataObj).forEach(k => {
-             sliced[k] = dataObj[k].slice(start);
+            sliced[k] = dataObj[k].slice(start);
         });
         return sliced;
     };
@@ -225,62 +225,62 @@ export function useWeatherData() {
 
         // Latest Weather
         const wIdx = weather.timestamps.length - 1;
-        
+
         // Latest AQI
         const aIdx = aqi.timestamps.length - 1;
-        
+
         // Calculate AQI avg from latest row
         const currentVals = STATIONS
             .map(s => aqi[s.id][aIdx])
             .filter(v => v != null);
-            
+
         const avg = currentVals.length
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
             : null;
 
         const months = { Jan: '01', Feb: '02', Mar: '03', Apr: '04', May: '05', Jun: '06', Jul: '07', Aug: '08', Sep: '09', Oct: '10', Nov: '11', Dec: '12' };
-        
+
         const processedStations = STATIONS.map(s => {
-             const val = aqi[s.id][aIdx];
-             const tStr = cleanTime(aqi[`time_${s.id}`][aIdx]);
-             
-             let status = 'offline';
-             if (tStr) {
+            const val = aqi[s.id][aIdx];
+            const tStr = cleanTime(aqi[`time_${s.id}`][aIdx]);
+
+            let status = 'offline';
+            if (tStr) {
                 // Status logic (same as before)
                 try {
-                     const now = new Date();
-                     const year = now.getFullYear();
-                     
-                     let d;
-                     if (tStr.includes(',')) {
-                         const [timePart, datePart] = tStr.split(',').map(x => x.trim());
-                         const [monName, day] = datePart.split(' ');
-                         const mon = months[monName] || '01';
-                         const dayFmt = day.padStart(2, '0');
-                         d = new Date(`${year}-${mon}-${dayFmt}T${timePart}:00`);
-                     } else {
-                         d = new Date(tStr.replace(' ', 'T'));
-                     }
-                     
-                     if (!isNaN(d.getTime())) {
-                          const diffHrs = (now - d) / (1000 * 60 * 60);
-                          // Allow lenient delay since AQI is hourly
-                          if (diffHrs < 2.5 && diffHrs > -1.0) {
-                               status = diffHrs < 1.1 ? 'live' : 'delayed';
-                          } else {
-                               status = 'stale';
-                          }
-                     }
-                } catch(e) { status = 'offline'; }
-             }
+                    const now = new Date();
+                    const year = now.getFullYear();
 
-             return {
-                 ...s,
-                 val,
-                 time: tStr,
-                 status,
-                 trend: 'stable' // Simplified for now
-             };
+                    let d;
+                    if (tStr.includes(',')) {
+                        const [timePart, datePart] = tStr.split(',').map(x => x.trim());
+                        const [monName, day] = datePart.split(' ');
+                        const mon = months[monName] || '01';
+                        const dayFmt = day.padStart(2, '0');
+                        d = new Date(`${year}-${mon}-${dayFmt}T${timePart}:00`);
+                    } else {
+                        d = new Date(tStr.replace(' ', 'T'));
+                    }
+
+                    if (!isNaN(d.getTime())) {
+                        const diffHrs = (now - d) / (1000 * 60 * 60);
+                        // Allow lenient delay since AQI is hourly
+                        if (diffHrs < 2.5 && diffHrs > -1.0) {
+                            status = diffHrs < 1.1 ? 'live' : 'delayed';
+                        } else {
+                            status = 'stale';
+                        }
+                    }
+                } catch (e) { status = 'offline'; }
+            }
+
+            return {
+                ...s,
+                val,
+                time: tStr,
+                status,
+                trend: 'stable' // Simplified for now
+            };
         });
 
         // Determine if system is offline based on Weather timestamp

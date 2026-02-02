@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { useWeatherData } from './hooks/useWeatherData';
+import { useWeatherData, STATIONS } from './hooks/useWeatherData';
 import { StationTable } from './components/StationTable';
 import {
     ComparisonChart as PollutionChart,
@@ -115,7 +115,8 @@ function App() {
     const [theme] = useState('dark');
     const [lang, setLang] = useState(() => localStorage.getItem('lang') || 'en');
 
-    const [selectedStations, setSelectedStations] = useState([]);
+    // Default to first 5 stations
+    const [selectedStations, setSelectedStations] = useState(() => STATIONS.slice(0, 5).map(s => s.id));
 
     // Debug selection
     useEffect(() => {
