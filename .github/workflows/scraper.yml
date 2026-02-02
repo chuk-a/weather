@@ -46,8 +46,8 @@ jobs:
 
     - name: Push CSV changes to main
       run: |
-        git pull --rebase origin main || echo "Already up to date"
-        git push origin main || echo "Nothing to push"
+        git pull --rebase -Xtheirs origin main
+        git push origin main
 
     - name: Setup Node
       uses: actions/setup-node@v3
