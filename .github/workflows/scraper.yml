@@ -2,10 +2,14 @@ name: Weather Scraper & Deploy
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # every 10 minutes
+    - cron: '*/30 * * * *'  # every 30 minutes
   workflow_dispatch:        # manual trigger
   push:
     branches: [ "main" ]
+
+concurrency:
+  group: scraper-workflow
+  cancel-in-progress: true
 
 permissions:
   contents: write  # needed for auto-commit
@@ -13,6 +17,7 @@ permissions:
 jobs:
   scrape-and-deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
     - name: Checkout repository
@@ -35,7 +40,11 @@ jobs:
         sudo apt install -y ./google-chrome-stable_current_amd64.deb
 
     - name: Run weather scraper
-      run: python weather_scraper.py
+      uses: nick-invision/retry@v2
+      with:
+        timeout_minutes: 10
+        max_attempts: 3
+        command: python weather_scraper.py
 
     - name: Auto-commit updated CSV
       run: |
