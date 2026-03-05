@@ -129,6 +129,17 @@ def scrape_pm25(url, label):
         except:
             if i == len(xpath_val_strategies) - 1:
                 print(f"{label} PM2.5: All strategies failed")
+                # Debug: dump page info on first failure
+                if global_iqair_failures == 0:
+                    print(f"DEBUG PAGE TITLE: {driver.title}")
+                    print(f"DEBUG PAGE URL: {driver.current_url}")
+                    src = driver.page_source[:2000]
+                    print(f"DEBUG PAGE SOURCE (first 2000 chars): {src}")
+                    try:
+                        driver.save_screenshot(f"debug_{label.replace(' ', '_')}.png")
+                        print(f"DEBUG screenshot saved for {label}")
+                    except Exception as ss_err:
+                        print(f"DEBUG screenshot failed: {ss_err}")
     
     # Robust Time Extraction
     time_val = "ERROR"
