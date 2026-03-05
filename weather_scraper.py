@@ -37,7 +37,7 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.set_page_load_timeout(15)
 wait = WebDriverWait(driver, 10)
 
-def safe_get(url, retries=2, delay=2):
+def safe_get(url, retries=1, delay=2):
     for attempt in range(retries):
         try:
             driver.get(url)
@@ -343,10 +343,25 @@ if update_pm25:
     ]
     
     pm25_row = [timestamp]
+    consecutive_failures = 0
+    
     for url, label in iqair_stations:
+        if consecutive_failures >= 3:
+            print(f"Circuit breaker active: Skipping {label} due to repeated timeouts.")
+            pm25_row.extend(["ERROR", "ERROR"])
+            continue
+            
         p, t = scrape_pm25(url, label)
         pm25_row.extend([clean(p), clean(t, is_time=True)])
-        time.sleep(random.uniform(3, 7))
+        
+        if p == "ERROR" and t == "ERROR":
+            consecutive_failures += 1
+        else:
+            consecutive_failures = 0
+            
+        # Only sleep if we didn't just fail/timeout (since timeout means we already waited a long time)
+        if consecutive_failures == 0:
+            time.sleep(random.uniform(3, 7))
         
     # Write PM2.5 Data
     with open(pm25_path, "a", encoding="utf-8-sig", newline="") as f:
