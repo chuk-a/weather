@@ -76,14 +76,20 @@ def scrape_pm25(url, label):
     if not safe_get(url):
         return "ERROR", "ERROR"
     
-    # Check for "No current data" message first
+    # Check for Cloudflare challenge or "No current data" early
     try:
         page_source = driver.page_source
+        if "Just a moment" in page_source or "cf-browser-verification" in page_source:
+            print(f"{label}: Cloudflare challenge detected, skipping")
+            return "ERROR", "ERROR"
         if "No current data" in page_source or "no current data" in page_source.lower():
             print(f"{label}: No current data available")
             return "OFFLINE", "OFFLINE"
     except:
         pass
+    
+    # Use a short wait (2s) for fallback XPath strategies
+    short_wait = WebDriverWait(driver, 2)
     
     # Robust Value Extraction with multiple fallback strategies
     val = "ERROR"
@@ -96,9 +102,11 @@ def scrape_pm25(url, label):
         "//main//p[contains(text(), 'µg/m³')]/preceding-sibling::*[1]",
     ]
     
+    # First strategy gets a longer wait (5s), rest get 2s
     for i, xpath in enumerate(xpath_val_strategies):
         try:
-            elem = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            w = WebDriverWait(driver, 5) if i == 0 else short_wait
+            elem = w.until(EC.presence_of_element_located((By.XPATH, xpath)))
             val = elem.text.strip()
             if val and val != "ERROR":
                 print(f"{label} PM2.5 (Strategy #{i+1}): {val}")
@@ -114,16 +122,11 @@ def scrape_pm25(url, label):
         '//*[contains(text(), "local time")]',
         "//time",
         '//*[contains(@class, "time")]',
-        '//*[contains(text(), "Updated")]',
-        '//*[contains(text(), "updated")]',
-        "//div[contains(@class, 'date')]",
-        "//span[contains(@class, 'date')]",
-        "//p[contains(text(), ':') and (contains(text(), 'AM') or contains(text(), 'PM') or contains(text(), 'Jan') or contains(text(), 'Feb') or contains(text(), 'Mar') or contains(text(), 'Apr') or contains(text(), 'May') or contains(text(), 'Jun') or contains(text(), 'Jul') or contains(text(), 'Aug') or contains(text(), 'Sep') or contains(text(), 'Oct') or contains(text(), 'Nov') or contains(text(), 'Dec'))]",
     ]
     
     for i, xpath in enumerate(xpath_time_strategies):
         try:
-            elem = wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            elem = short_wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
             time_val = elem.text.strip()
             if time_val and time_val != "ERROR" and len(time_val) > 0:
                 print(f"{label} Time (Strategy #{i+1}): {time_val}")
