@@ -236,7 +236,7 @@ function App() {
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 z-10 shrink-0 relative">
                 <MetricCard
                     label={t('cityConc')}
-                    value={metrics.isOffline ? 'LOST' : metrics.avgAQI}
+                    value={metrics.isOffline ? 'LOST' : (metrics.avgAQI || '--')}
                     unit="µg/m³"
                     icon={<AirRadialChart value={metrics.avgAQI} />}
                     subValue={`${metrics.activeCount}/${metrics.totalCount} ${t('activeSignals')} | ${t('filtering')}`}

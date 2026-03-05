@@ -234,7 +234,7 @@ export function useWeatherData() {
             .map(s => aqi[s.id][aIdx])
             .filter(v => v != null);
 
-        const avg = currentVals.length
+        const avg = (currentVals.length > 0)
             ? Math.round(currentVals.reduce((a, b) => a + b, 0) / currentVals.length)
             : null;
 
@@ -286,7 +286,7 @@ export function useWeatherData() {
         // Determine if system is offline based on Weather timestamp
         const lastWTime = new Date(weather.timestamps[wIdx]);
         const now = new Date();
-        const isOffline = (now - lastWTime) / (1000 * 60 * 60) > 1; // Weather should be fresh
+        const isOffline = (now - lastWTime) / (1000 * 60 * 60) > 6; // Weather should be fresh (6h threshold)
 
         return {
             lastUpdated: weather.timestamps[wIdx],
