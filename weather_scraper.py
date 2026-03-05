@@ -10,6 +10,7 @@ import pytz
 import re
 import random
 import sys
+import subprocess
 
 # Localized timestamp for Ulaanbaatar
 tz = pytz.timezone("Asia/Ulaanbaatar")
@@ -17,6 +18,29 @@ timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
 # Detect if running in CI (GitHub Actions sets CI=true)
 IS_CI = os.environ.get("CI", "false").lower() == "true"
+
+# Auto-detect installed Chrome major version to avoid ChromeDriver mismatch
+def get_chrome_version():
+    """Detect installed Chrome major version."""
+    try:
+        for cmd in ["google-chrome --version", "google-chrome-stable --version", 
+                     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --version"]:
+            try:
+                result = subprocess.run(cmd.split(), capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    match = re.search(r"(\d+)\.", result.stdout)
+                    if match:
+                        version = int(match.group(1))
+                        print(f"Detected Chrome version: {version}")
+                        return version
+            except (FileNotFoundError, subprocess.TimeoutExpired):
+                continue
+    except Exception:
+        pass
+    print("Could not detect Chrome version, letting undetected-chromedriver auto-detect")
+    return None
+
+chrome_version = get_chrome_version()
 
 # Setup undetected Chrome
 options = uc.ChromeOptions()
@@ -32,7 +56,7 @@ else:
     # Local: run headless for convenience
     options.add_argument("--headless=new")
 
-driver = uc.Chrome(options=options, version_main=None)
+driver = uc.Chrome(options=options, version_main=chrome_version)
 driver.set_page_load_timeout(20)
 wait = WebDriverWait(driver, 10)
 
