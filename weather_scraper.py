@@ -25,7 +25,8 @@ chromedriver_autoinstaller.install(path=custom_path)
 
 # Setup headless Chrome for CI/CD
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.page_load_strategy = 'eager'
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
@@ -33,16 +34,18 @@ chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 15)
+driver.set_page_load_timeout(15)
+wait = WebDriverWait(driver, 10)
 
-def safe_get(url, retries=3, delay=10):
+def safe_get(url, retries=2, delay=2):
     for attempt in range(retries):
         try:
             driver.get(url)
             return True
         except Exception as e:
-            print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: {e}")
-            time.sleep(delay)
+            print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: Timeout or Error")
+            if attempt < retries - 1:
+                time.sleep(delay)
     return False
 
 def get_text(xpath, label):
