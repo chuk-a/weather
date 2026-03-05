@@ -46,13 +46,31 @@ def safe_get(url, retries=3, delay=5):
             # Random delay before request to mimic human behavior
             time.sleep(random.uniform(1, 3))
             driver.get(url)
-            # Basic check if page loaded
-            page_src = driver.page_source.lower()
-            if "cloudflare" in page_src or "access denied" in page_src or "just a moment" in page_src or "verify you are human" in page_src:
-                print(f"Bot detection detected for {url}")
-                time.sleep(delay * 2)
+            
+            # Wait for Vercel Security Checkpoint to auto-solve (up to 15s)
+            for wait_sec in range(15):
+                page_title = driver.title.lower()
+                page_src = driver.page_source.lower()
+                
+                if "vercel security checkpoint" in page_title or "security checkpoint" in page_src:
+                    print(f"Vercel checkpoint detected for {url}, waiting... ({wait_sec+1}s)")
+                    time.sleep(1)
+                    continue
+                elif "cloudflare" in page_src or "access denied" in page_src or "just a moment" in page_src or "verify you are human" in page_src:
+                    print(f"Bot detection detected for {url}")
+                    break
+                else:
+                    # Page loaded successfully
+                    return True
+            else:
+                # Vercel checkpoint didn't resolve after 15s
+                print(f"Vercel checkpoint did not resolve for {url} after 15s")
+                time.sleep(delay)
                 continue
-            return True
+            
+            # Bot detection fallback
+            time.sleep(delay * 2)
+            continue
         except Exception as e:
             print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: {e}")
             time.sleep(delay)
