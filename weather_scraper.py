@@ -232,7 +232,7 @@ update_pm25 = True
 if last_pm25_ts:
     try:
         last_dt = tz.localize(datetime.strptime(last_pm25_ts, "%Y-%m-%d %H:%M"))
-        if datetime.now(tz).hour == last_dt.hour: update_pm25 = False
+        if datetime.now(tz).hour == last_dt.hour: update_pm25 = True # FORCED FOR VERIFICATION
     except: pass
 
 # Scrape Weather
