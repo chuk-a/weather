@@ -1,46 +1,47 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
-import chromedriver_autoinstaller
 import csv
 import os
 import time
-import tempfile
 import pytz
 import re
 import random
+import sys
 
 # Localized timestamp for Ulaanbaatar
 tz = pytz.timezone("Asia/Ulaanbaatar")
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-# Setup ChromeDriver path
-custom_path = os.path.join(tempfile.gettempdir(), "chromedriver")
-os.makedirs(custom_path, exist_ok=True)
-chromedriver_autoinstaller.install(path=custom_path)
+# Detect if running in CI (GitHub Actions sets CI=true)
+IS_CI = os.environ.get("CI", "false").lower() == "true"
 
-# Setup headless Chrome for CI/CD
-chrome_options = Options()
-chrome_options.page_load_strategy = 'eager'
-chrome_options.add_argument("--headless=new")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920,1080")
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+# Setup undetected Chrome
+options = uc.ChromeOptions()
+options.add_argument("--no-sandbox")
+options.add_argument("--disable-dev-shm-usage")
+options.add_argument("--window-size=1920,1080")
 
-driver = webdriver.Chrome(options=chrome_options)
-driver.set_page_load_timeout(15)
+if IS_CI:
+    # On CI: use xvfb (virtual display) so we DON'T need headless mode
+    # This is better for anti-detection since headless Chrome is easily fingerprinted
+    options.add_argument("--disable-gpu")
+else:
+    # Local: run headless for convenience
+    options.add_argument("--headless=new")
+
+driver = uc.Chrome(options=options, version_main=None)
+driver.set_page_load_timeout(20)
 wait = WebDriverWait(driver, 10)
 
-def safe_get(url, retries=1, delay=2):
+def safe_get(url, retries=2, delay=3):
     for attempt in range(retries):
         try:
             driver.get(url)
+            # Give Cloudflare challenge time to resolve
+            time.sleep(2)
             return True
         except Exception as e:
             print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: Timeout or Error")
@@ -62,8 +63,6 @@ def scrape_weather():
     if not safe_get("https://weather.gov.mn"):
         return ["ERROR"] * 4
 
-    driver.get("https://weather.gov.mn")
-
     temperature  = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[2]", "Temperature")
     feels_like   = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[3]/div/div[2]/h1", "Feels Like")
     wind_speed   = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[1]/p[2]", "Wind Speed (m/s)")
@@ -71,7 +70,11 @@ def scrape_weather():
 
     return temperature, feels_like, wind_speed, humidity
 
+# Track if we've already dumped debug info (only dump once)
+_debug_dumped = False
+
 def scrape_pm25(url, label):
+    global _debug_dumped
     print(f"Scraping {label} PM2.5...")
     if not safe_get(url):
         return "ERROR", "ERROR"
@@ -79,9 +82,22 @@ def scrape_pm25(url, label):
     # Check for Cloudflare challenge or "No current data" early
     try:
         page_source = driver.page_source
-        if "Just a moment" in page_source or "cf-browser-verification" in page_source:
-            print(f"{label}: Cloudflare challenge detected, skipping")
-            return "ERROR", "ERROR"
+        
+        # Detect various Cloudflare challenge indicators
+        cf_indicators = [
+            "Just a moment", "cf-browser-verification", "challenge-platform",
+            "Checking your browser", "Attention Required", "cf-challenge",
+            "Please Wait", "_cf_chl"
+        ]
+        for indicator in cf_indicators:
+            if indicator in page_source:
+                print(f"{label}: Cloudflare challenge detected ({indicator}), skipping")
+                if not _debug_dumped:
+                    print(f"[DEBUG] Page title: {driver.title}")
+                    print(f"[DEBUG] Page source snippet (first 500 chars): {page_source[:500]}")
+                    _debug_dumped = True
+                return "ERROR", "ERROR"
+        
         if "No current data" in page_source or "no current data" in page_source.lower():
             print(f"{label}: No current data available")
             return "OFFLINE", "OFFLINE"
@@ -114,6 +130,16 @@ def scrape_pm25(url, label):
         except Exception as e:
             if i == len(xpath_val_strategies) - 1:
                 print(f"{label} PM2.5: All strategies failed")
+                # Dump debug info on first total failure
+                if not _debug_dumped:
+                    try:
+                        print(f"[DEBUG] Page title: {driver.title}")
+                        print(f"[DEBUG] Current URL: {driver.current_url}")
+                        print(f"[DEBUG] Page source snippet (first 1000 chars):")
+                        print(driver.page_source[:1000])
+                    except:
+                        pass
+                    _debug_dumped = True
     
     # Robust Time Extraction with multiple fallback strategies
     time_val = "ERROR"
@@ -182,56 +208,6 @@ def clean(val, is_time=False):
         return val.strip()
     return val
 
-
-# ... existing code ...
-
-def get_last_entry(filepath):
-    """Reads the last row of the CSV to get previous PM2.5 data and timestamp."""
-    if not os.path.exists(filepath) or os.stat(filepath).st_size == 0:
-        return None
-    
-    with open(filepath, "r", encoding="utf-8-sig") as f:
-        # Use deque to efficiently get the last line without reading everything
-        from collections import deque
-        try:
-            last_line = deque(csv.reader(f), maxlen=1)[0]
-            if not last_line: return None
-            
-            # Map headers to values
-            # (Assuming standard order as defined in writer.writerow below)
-            # headers: [timestamp, temperature, feels_like, wind_speed, humidity, pm25_french, time_french, ...]
-            # We specifically need the PM2.5 columns (indices 5 onwards)
-            return last_line
-        except IndexError:
-            return None
-
-def should_update_pm25(last_entry):
-    """Decides if PM2.5 should be re-scraped based on last timestamp."""
-    if not last_entry:
-        return True
-    
-    last_ts_str = last_entry[0] # First column is timestamp
-    try:
-        # Parse timestamp (Format: YYYY-MM-DD HH:MM)
-        last_dt = datetime.strptime(last_ts_str, "%Y-%m-%d %H:%M")
-        last_dt = tz.localize(last_dt) # Assume it was saved in local time
-        
-        current_dt = datetime.now(tz)
-        
-        # Update if:
-        # 1. It's a different hour than the last record
-        # 2. OR the last record is older than 60 minutes (failsafe)
-        if current_dt.hour != last_dt.hour:
-            return True
-        if (current_dt - last_dt).total_seconds() > 3600:
-            return True
-            
-        return False
-    except ValueError:
-        # If parsing fails, default to updating
-        return True
-
-# ... existing code ...
 
 # Standardized output paths
 weather_path = "public/weather_log.csv"
@@ -303,7 +279,6 @@ def should_update_pm25(last_ts_str):
         return True
 
 # Check if we need to scrape PM2.5
-# We check the PM2.5 log specifically now
 last_pm25_ts = get_last_timestamp(pm25_path)
 update_pm25 = should_update_pm25(last_pm25_ts)
 
@@ -362,7 +337,7 @@ if update_pm25:
         else:
             consecutive_failures = 0
             
-        # Only sleep if we didn't just fail/timeout (since timeout means we already waited a long time)
+        # Only sleep if we didn't just fail/timeout
         if consecutive_failures == 0:
             time.sleep(random.uniform(3, 7))
         
