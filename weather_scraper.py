@@ -1,76 +1,58 @@
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
+import chromedriver_autoinstaller
 import csv
 import os
 import time
+import tempfile
 import pytz
 import re
 import random
-import sys
-import subprocess
 
 # Localized timestamp for Ulaanbaatar
 tz = pytz.timezone("Asia/Ulaanbaatar")
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-# Detect if running in CI (GitHub Actions sets CI=true)
-IS_CI = os.environ.get("CI", "false").lower() == "true"
+# Setup ChromeDriver path
+custom_path = os.path.join(tempfile.gettempdir(), "chromedriver")
+os.makedirs(custom_path, exist_ok=True)
+chromedriver_autoinstaller.install(path=custom_path)
 
-# Auto-detect installed Chrome major version to avoid ChromeDriver mismatch
-def get_chrome_version():
-    """Detect installed Chrome major version."""
-    try:
-        for cmd in ["google-chrome --version", "google-chrome-stable --version", 
-                     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome --version"]:
-            try:
-                result = subprocess.run(cmd.split(), capture_output=True, text=True, timeout=5)
-                if result.returncode == 0:
-                    match = re.search(r"(\d+)\.", result.stdout)
-                    if match:
-                        version = int(match.group(1))
-                        print(f"Detected Chrome version: {version}")
-                        return version
-            except (FileNotFoundError, subprocess.TimeoutExpired):
-                continue
-    except Exception:
-        pass
-    print("Could not detect Chrome version, letting undetected-chromedriver auto-detect")
-    return None
+# Setup headless Chrome for CI/CD
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+# Add a realistic user agent to help bypass simple bot detection
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
-chrome_version = get_chrome_version()
+driver = webdriver.Chrome(options=chrome_options)
+wait = WebDriverWait(driver, 15)
 
-# Setup undetected Chrome
-options = uc.ChromeOptions()
-options.add_argument("--no-sandbox")
-options.add_argument("--disable-dev-shm-usage")
-options.add_argument("--window-size=1920,1080")
+# Circuit breaker state
+consecutive_failures = {}
 
-if IS_CI:
-    # On CI: use xvfb (virtual display) so we DON'T need headless mode
-    # This is better for anti-detection since headless Chrome is easily fingerprinted
-    options.add_argument("--disable-gpu")
-else:
-    # Local: run headless for convenience
-    options.add_argument("--headless=new")
-
-driver = uc.Chrome(options=options, version_main=chrome_version)
-driver.set_page_load_timeout(20)
-wait = WebDriverWait(driver, 10)
-
-def safe_get(url, retries=2, delay=3):
+def safe_get(url, retries=3, delay=5):
     for attempt in range(retries):
         try:
+            # Random delay before request to mimic human behavior
+            time.sleep(random.uniform(1, 3))
             driver.get(url)
-            # Give Cloudflare challenge time to resolve
-            time.sleep(2)
+            # Basic check if page loaded
+            if "Cloudflare" in driver.page_source or "Access Denied" in driver.page_source:
+                print(f"Bot detection detected for {url}")
+                time.sleep(delay * 2)
+                continue
             return True
         except Exception as e:
-            print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: Timeout or Error")
-            if attempt < retries - 1:
-                time.sleep(delay)
+            print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: {e}")
+            time.sleep(delay)
     return False
 
 def get_text(xpath, label):
@@ -94,44 +76,28 @@ def scrape_weather():
 
     return temperature, feels_like, wind_speed, humidity
 
-# Track if we've already dumped debug info (only dump once)
-_debug_dumped = False
-
 def scrape_pm25(url, label):
-    global _debug_dumped
+    # Circuit breaker check
+    if consecutive_failures.get(label, 0) >= 3:
+        print(f"Circuit breaker active: Skipping {label} due to repeated timeouts.")
+        return "ERROR", "ERROR"
+
     print(f"Scraping {label} PM2.5...")
     if not safe_get(url):
+        consecutive_failures[label] = consecutive_failures.get(label, 0) + 1
         return "ERROR", "ERROR"
     
-    # Check for Cloudflare challenge or "No current data" early
+    consecutive_failures[label] = 0 # Reset on success
+    
+    # Check for "No current data"
     try:
-        page_source = driver.page_source
-        
-        # Detect various Cloudflare challenge indicators
-        cf_indicators = [
-            "Just a moment", "cf-browser-verification", "challenge-platform",
-            "Checking your browser", "Attention Required", "cf-challenge",
-            "Please Wait", "_cf_chl"
-        ]
-        for indicator in cf_indicators:
-            if indicator in page_source:
-                print(f"{label}: Cloudflare challenge detected ({indicator}), skipping")
-                if not _debug_dumped:
-                    print(f"[DEBUG] Page title: {driver.title}")
-                    print(f"[DEBUG] Page source snippet (first 500 chars): {page_source[:500]}")
-                    _debug_dumped = True
-                return "ERROR", "ERROR"
-        
-        if "No current data" in page_source or "no current data" in page_source.lower():
+        if "No current data" in driver.page_source or "no current data" in driver.page_source.lower():
             print(f"{label}: No current data available")
             return "OFFLINE", "OFFLINE"
     except:
         pass
     
-    # Use a short wait (2s) for fallback XPath strategies
-    short_wait = WebDriverWait(driver, 2)
-    
-    # Robust Value Extraction with multiple fallback strategies
+    # Robust Value Extraction
     val = "ERROR"
     xpath_val_strategies = [
         '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p',
@@ -142,185 +108,93 @@ def scrape_pm25(url, label):
         "//main//p[contains(text(), 'µg/m³')]/preceding-sibling::*[1]",
     ]
     
-    # First strategy gets a longer wait (5s), rest get 2s
     for i, xpath in enumerate(xpath_val_strategies):
         try:
-            w = WebDriverWait(driver, 5) if i == 0 else short_wait
-            elem = w.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            elem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, xpath)))
             val = elem.text.strip()
             if val and val != "ERROR":
                 print(f"{label} PM2.5 (Strategy #{i+1}): {val}")
                 break
-        except Exception as e:
+        except:
             if i == len(xpath_val_strategies) - 1:
                 print(f"{label} PM2.5: All strategies failed")
-                # Dump debug info on first total failure
-                if not _debug_dumped:
-                    try:
-                        print(f"[DEBUG] Page title: {driver.title}")
-                        print(f"[DEBUG] Current URL: {driver.current_url}")
-                        print(f"[DEBUG] Page source snippet (first 1000 chars):")
-                        print(driver.page_source[:1000])
-                    except:
-                        pass
-                    _debug_dumped = True
     
-    # Robust Time Extraction with multiple fallback strategies
+    # Robust Time Extraction
     time_val = "ERROR"
     xpath_time_strategies = [
         '//*[contains(text(), "Local time")]',
         '//*[contains(text(), "local time")]',
         "//time",
         '//*[contains(@class, "time")]',
+        "//p[contains(text(), ':') and (contains(text(), 'AM') or contains(text(), 'PM'))]",
     ]
     
     for i, xpath in enumerate(xpath_time_strategies):
         try:
-            elem = short_wait.until(EC.presence_of_element_located((By.XPATH, xpath)))
+            elem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, xpath)))
             time_val = elem.text.strip()
-            if time_val and time_val != "ERROR" and len(time_val) > 0:
+            if time_val and time_val != "ERROR":
                 print(f"{label} Time (Strategy #{i+1}): {time_val}")
                 break
-        except Exception as e:
+        except:
             if i == len(xpath_time_strategies) - 1:
                 print(f"{label} Time: All strategies failed")
             
     return val, time_val
 
 def clean(val, is_time=False):
-    if isinstance(val, str):
-        # Remove embedding newlines and extra spaces
-        val = val.replace("\r", " ").replace("\n", " ").strip()
-        
-        if "ERROR" in val:
-            return "ERROR"
-        
-        if "OFFLINE" in val:
-            return "OFFLINE"
-        
-        if is_time:
-            # Extract timestamp if it matches HH:mm, MMM DD (IQAir format)
-            # Try multiple time formats
-            patterns = [
-                r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "15:00, Jan 26"
-                r"Local time:\s*(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "Local time: 15:00, Jan 26"
-                r"Updated.*?(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",  # "Updated 15:00, Jan 26"
-                r"(\d{1,2}:\d{2}\s*[AP]M),\s*([A-Za-z]{3}\s\d{1,2})",  # "3:00 PM, Jan 26"
-            ]
-            
-            for pattern in patterns:
-                ts_match = re.search(pattern, val, re.IGNORECASE)
-                if ts_match:
-                    return f"{ts_match.group(1)}, {ts_match.group(2)}"
-            
-            # If no pattern matches but we have a colon (likely a time), return as is
-            if ":" in val and len(val) < 50:
-                return val
-            
-            return "ERROR"
+    if not val or val == "ERROR": return "ERROR"
+    if val == "OFFLINE": return "OFFLINE"
+    
+    val = val.replace("\r", " ").replace("\n", " ").strip()
+    
+    if is_time:
+        patterns = [
+            r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",
+            r"(\d{1,2}:\d{2}\s*[AP]M),\s*([A-Za-z]{3}\s\d{1,2})"
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, val)
+            if match: return f"{match.group(1)}, {match.group(2)}"
+        return val[:30] # Limit length if no pattern matches
 
-        # Check for specific IQAir "No current data" patterns
-        if "No current data" in val or "no current data" in val.lower():
-             return "OFFLINE"
-
-        # Standard cleaning for numbers/units
-        # Extract only the numeric part if it's a value (preserving negative sign)
-        num_match = re.search(r"(-?\d+(\.\d+)?)", val)
-        if num_match:
-            return num_match.group(1)
-
-        return val.strip()
-    return val
-
+    num_match = re.search(r"(-?\d+(\.\d+)?)", val)
+    return num_match.group(1) if num_match else "ERROR"
 
 # Standardized output paths
 weather_path = "public/weather_log.csv"
 pm25_path = "public/pm25_log.csv"
 
-# Function to initialize CSV if empty
 def init_csv(path, headers):
     if not os.path.exists(path) or os.stat(path).st_size == 0:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w", encoding="utf-8-sig", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(headers)
+            csv.writer(f).writerow(headers)
 
-# Initialize files
-init_csv(weather_path, [
-    "timestamp", "temperature", "feels_like", "wind_speed", "humidity"
-])
-
-init_csv(pm25_path, [
-    "timestamp",
-    "pm25_french", "time_french",
-    "pm25_eu", "time_eu",
-    "pm25_czech", "time_czech",
-    "pm25_yarmag", "time_yarmag",
-    "pm25_chd9", "time_chd9",
-    "pm25_mandakh", "time_mandakh",
-    "pm25_chd6", "time_chd6",
-    "pm25_airv", "time_airv",
-    "pm25_school17", "time_school17",
-    "pm25_school72", "time_school72",
-    "pm25_chd12", "time_chd12",
-    "pm25_kind280", "time_kind280",
-    "pm25_school49", "time_school49",
-    "pm25_kind154", "time_kind154",
-    "pm25_kind298", "time_kind298",
-    "pm25_kind292", "time_kind292",
-    "pm25_neocity", "time_neocity",
-    "pm25_school138", "time_school138"
-])
-
+init_csv(weather_path, ["timestamp", "temperature", "feels_like", "wind_speed", "humidity"])
+init_csv(pm25_path, ["timestamp", "pm25_french", "time_french", "pm25_eu", "time_eu", "pm25_czech", "time_czech", "pm25_yarmag", "time_yarmag", "pm25_chd9", "time_chd9", "pm25_mandakh", "time_mandakh", "pm25_chd6", "time_chd6", "pm25_airv", "time_airv", "pm25_school17", "time_school17", "pm25_school72", "time_school72", "pm25_chd12", "time_chd12", "pm25_kind280", "time_kind280", "pm25_school49", "time_school49", "pm25_kind154", "time_kind154", "pm25_kind298", "time_kind298", "pm25_kind292", "time_kind292", "pm25_neocity", "time_neocity", "pm25_school138", "time_school138"])
 
 def get_last_timestamp(filepath):
-    """Reads the last timestamp from a CSV."""
-    if not os.path.exists(filepath) or os.stat(filepath).st_size == 0:
-        return None
+    if not os.path.exists(filepath) or os.stat(filepath).st_size == 0: return None
+    from collections import deque
     with open(filepath, "r", encoding="utf-8-sig") as f:
-        from collections import deque
-        try:
-            last_line = deque(csv.reader(f), maxlen=1)[0]
-            return last_line[0] if last_line else None
-        except IndexError:
-            return None
+        try: return deque(csv.reader(f), maxlen=1)[0][0]
+        except: return None
 
-def should_update_pm25(last_ts_str):
-    """Decides if PM2.5 should be scraped."""
-    if not last_ts_str:
-        return True
-    try:
-        last_dt = datetime.strptime(last_ts_str, "%Y-%m-%d %H:%M")
-        last_dt = tz.localize(last_dt)
-        current_dt = datetime.now(tz)
-        
-        # Update if different hour OR > 60 mins old
-        if current_dt.hour != last_dt.hour:
-            return True
-        if (current_dt - last_dt).total_seconds() > 3600:
-            return True
-        return False
-    except ValueError:
-        return True
-
-# Check if we need to scrape PM2.5
 last_pm25_ts = get_last_timestamp(pm25_path)
-update_pm25 = should_update_pm25(last_pm25_ts)
+update_pm25 = True
+if last_pm25_ts:
+    try:
+        last_dt = tz.localize(datetime.strptime(last_pm25_ts, "%Y-%m-%d %H:%M"))
+        if datetime.now(tz).hour == last_dt.hour: update_pm25 = False
+    except: pass
 
-# Always scrape weather
+# Scrape Weather
 temperature, feels_like, wind_speed, humidity = scrape_weather()
-
-# Write Weather Data
 with open(weather_path, "a", encoding="utf-8-sig", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow([
-        timestamp,
-        clean(temperature),
-        clean(feels_like),
-        clean(wind_speed),
-        clean(humidity)
-    ])
+    csv.writer(f).writerow([timestamp, clean(temperature), clean(feels_like), clean(wind_speed), clean(humidity)])
 
-# Conditional PM2.5 Scrape
+# Scrape PM2.5
 if update_pm25:
     print("New hour detected. Scraping fresh PM2.5 data...")
     iqair_stations = [
@@ -343,33 +217,11 @@ if update_pm25:
         ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/neo-city", "Neo City"),
         ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
     ]
-    
     pm25_row = [timestamp]
-    consecutive_failures = 0
-    
     for url, label in iqair_stations:
-        if consecutive_failures >= 3:
-            print(f"Circuit breaker active: Skipping {label} due to repeated timeouts.")
-            pm25_row.extend(["ERROR", "ERROR"])
-            continue
-            
         p, t = scrape_pm25(url, label)
         pm25_row.extend([clean(p), clean(t, is_time=True)])
-        
-        if p == "ERROR" and t == "ERROR":
-            consecutive_failures += 1
-        else:
-            consecutive_failures = 0
-            
-        # Only sleep if we didn't just fail/timeout
-        if consecutive_failures == 0:
-            time.sleep(random.uniform(3, 7))
-        
-    # Write PM2.5 Data
     with open(pm25_path, "a", encoding="utf-8-sig", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(pm25_row)
-else:
-    print(f"Skipping PM2.5 scrape (last data from {last_pm25_ts} is recent).")
+        csv.writer(f).writerow(pm25_row)
 
 driver.quit()
