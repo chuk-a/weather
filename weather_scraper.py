@@ -47,7 +47,8 @@ def safe_get(url, retries=3, delay=5):
             time.sleep(random.uniform(1, 3))
             driver.get(url)
             # Basic check if page loaded
-            if "Cloudflare" in driver.page_source or "Access Denied" in driver.page_source:
+            page_src = driver.page_source.lower()
+            if "cloudflare" in page_src or "access denied" in page_src or "just a moment" in page_src or "verify you are human" in page_src:
                 print(f"Bot detection detected for {url}")
                 time.sleep(delay * 2)
                 continue
@@ -149,6 +150,12 @@ def scrape_pm25(url, label):
         except:
             if i == len(xpath_time_strategies) - 1:
                 print(f"{label} Time: All strategies failed")
+                
+    # If we got a 200 OK but failed entirely to scrape any data, it's likely a silent block (e.g., invisible captcha)
+    if val == "ERROR" and time_val == "ERROR":
+        print(f"Failed to find any data elements for {label}. Treating as block.")
+        consecutive_failures[label] = consecutive_failures.get(label, 0) + 1
+        global_iqair_failures += 1
             
     return val, time_val
 
