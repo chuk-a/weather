@@ -33,10 +33,12 @@ chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.set_page_load_timeout(30)
 wait = WebDriverWait(driver, 15)
 
 # Circuit breaker state
 consecutive_failures = {}
+global_iqair_failures = 0
 
 def safe_get(url, retries=3, delay=5):
     for attempt in range(retries):
@@ -77,6 +79,13 @@ def scrape_weather():
     return temperature, feels_like, wind_speed, humidity
 
 def scrape_pm25(url, label):
+    global global_iqair_failures
+    
+    # Global circuit breaker check
+    if global_iqair_failures >= 3:
+        print(f"Global circuit breaker active: Skipping {label} due to upstream blocks.")
+        return "ERROR", "ERROR"
+
     # Circuit breaker check
     if consecutive_failures.get(label, 0) >= 3:
         print(f"Circuit breaker active: Skipping {label} due to repeated timeouts.")
@@ -85,6 +94,7 @@ def scrape_pm25(url, label):
     print(f"Scraping {label} PM2.5...")
     if not safe_get(url):
         consecutive_failures[label] = consecutive_failures.get(label, 0) + 1
+        global_iqair_failures += 1
         return "ERROR", "ERROR"
     
     consecutive_failures[label] = 0 # Reset on success
