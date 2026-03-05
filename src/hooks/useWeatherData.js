@@ -286,7 +286,7 @@ export function useWeatherData() {
         // Determine if system is offline based on Weather timestamp
         const lastWTime = new Date(weather.timestamps[wIdx]);
         const now = new Date();
-        const isOffline = (now - lastWTime) / (1000 * 60 * 60) > 6; // Weather should be fresh (6h threshold)
+        const isOffline = (now - lastWTime) / (1000 * 60 * 60) > 1.1; // Weather should be fresh (~1h threshold)
 
         return {
             lastUpdated: weather.timestamps[wIdx],
