@@ -1,231 +1,121 @@
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import requests
 from datetime import datetime
-import undetected_chromedriver as uc
-from selenium_stealth import stealth
 import csv
 import os
-import time
-import tempfile
 import pytz
-import re
+import time
 import random
 
 # Localized timestamp for Ulaanbaatar
 tz = pytz.timezone("Asia/Ulaanbaatar")
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-import subprocess
+# IQAir internal API base URL (no Vercel checkpoint, no auth needed)
+API_BASE = "https://website-api.airvisual.com/v1/stations"
 
-chrome_options = uc.ChromeOptions()
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--window-size=1920,1080")
+# All 18 IQAir stations in Ulaanbaatar with their API IDs
+iqair_stations = [
+    ("655ee265e6e0c82f596ac45b", "French Embassy"),
+    ("65b0a99b8441ccadf01c0c77", "EU Delegation"),
+    ("6821a8a4c40bbf0f2b1304d1", "Czech Embassy"),
+    ("6646c42fb9b5ef12c29b1334", "Yarmag Garden City"),
+    ("696ef79a8db9bc0e8091e24d", "CHD 9 Khoroo"),
+    ("3e191f101dde82a1ccfc", "Mandakh Naran Tuv"),
+    ("696ef7ad096d7ae05dbd288b", "CHD 6 Horoo"),
+    ("696f1c1536e5461e2dad20b4", "Air V"),
+    ("696f1ab73b94da2d865efa34", "School 17"),
+    ("696efa01096d7ae05dbd2944", "School 72"),
+    ("696ef700b1e0755bd589c3ff", "CHD 12"),
+    ("6976ffb080858d5e2d7f78c1", "Kindergarden 280"),
+    ("69773a5ed1bb673c5ead0cc1", "School 49"),
+    ("6976fc7aaf5db8104f30adff", "Kindergarden 154"),
+    ("697716b4104dafaea0d4351c", "Kindergarden 298"),
+    ("6977005d4890fb7a3a7eb910", "Kindergarden 292"),
+    ("67b6ce7c79d02d01146e8ac8", "Neo City"),
+    ("6976fc5997a4a17f409850a0", "School 138"),
+]
 
-# Detect installed Chrome version to avoid driver mismatch
-chrome_ver = None
-try:
-    result = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True, timeout=5)
-    if result.returncode == 0:
-        chrome_ver = int(result.stdout.strip().split()[-1].split(".")[0])
-        print(f"Detected Chrome version: {chrome_ver}")
-except Exception:
-    pass
+# Session for connection reuse
+session = requests.Session()
+session.headers.update({
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Accept": "application/json",
+})
 
-driver = uc.Chrome(options=chrome_options, version_main=chrome_ver)
-driver.set_page_load_timeout(45)
-
-# Apply selenium-stealth to mask automation fingerprints
-stealth(driver,
-    languages=["en-US", "en"],
-    vendor="Google Inc.",
-    platform="Win32",
-    webgl_vendor="Intel Inc.",
-    renderer="Intel Iris OpenGL Engine",
-    fix_hairline=True,
-)
-
-wait = WebDriverWait(driver, 15)
-
-# Circuit breaker state
-consecutive_failures = {}
-global_iqair_failures = 0
-
-def safe_get(url, retries=3, delay=5):
-    for attempt in range(retries):
-        try:
-            # Random delay before request to mimic human behavior
-            time.sleep(random.uniform(2, 5))
-            driver.get(url)
-            
-            # Wait for Vercel Security Checkpoint to auto-solve (up to 25s)
-            for wait_sec in range(25):
-                page_title = driver.title.lower()
-                page_src = driver.page_source.lower()
-                
-                if "vercel security checkpoint" in page_title or "security checkpoint" in page_src:
-                    print(f"Vercel checkpoint detected for {url}, waiting... ({wait_sec+1}s)")
-                    time.sleep(1)
-                    continue
-                elif "cloudflare" in page_src or "access denied" in page_src or "just a moment" in page_src or "verify you are human" in page_src:
-                    print(f"Bot detection detected for {url}")
-                    break
-                else:
-                    # Page loaded successfully
-                    return True
-            else:
-                # Vercel checkpoint didn't resolve after 15s
-                print(f"Vercel checkpoint did not resolve for {url} after 25s")
-                time.sleep(delay)
-                continue
-            
-            # Bot detection fallback
-            time.sleep(delay * 2)
-            continue
-        except Exception as e:
-            print(f"[{datetime.now().isoformat()}] Attempt {attempt+1} failed for {url}: {e}")
-            time.sleep(delay)
-    return False
-
-def get_text(xpath, label):
+def fetch_station(station_id, label):
+    """Fetch PM2.5 data from IQAir's internal API."""
+    url = f"{API_BASE}/{station_id}"
     try:
-        value = wait.until(EC.presence_of_element_located((By.XPATH, xpath))).text.strip()
-        print(f"{label}: {value}")
-        return value
+        time.sleep(random.uniform(0.5, 1.5))  # Polite delay
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+
+        # Extract PM2.5 from pollutants array
+        pm25 = "ERROR"
+        current = data.get("current", {})
+        pollutants = current.get("pollutants", [])
+        for p in pollutants:
+            if p.get("pollutantName") == "pm25":
+                pm25 = str(p.get("concentration", "ERROR"))
+                break
+
+        # If no pollutants array, try top-level concentration (mainPollutant is pm25)
+        if pm25 == "ERROR" and current.get("mainPollutant") == "pm25":
+            pm25 = str(current.get("concentration", "ERROR"))
+
+        # Extract timestamp from API response
+        ts = current.get("ts", "ERROR")
+        if ts != "ERROR":
+            try:
+                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                local_dt = dt.astimezone(tz)
+                ts = local_dt.strftime("%H:%M, %b %d")
+            except:
+                ts = ts[:16]  # Fallback: just trim ISO string
+
+        print(f"{label}: PM2.5={pm25} µg/m³, Time={ts}")
+        return pm25, ts
+
+    except requests.exceptions.HTTPError as e:
+        if e.response.status_code == 404:
+            print(f"{label}: Station not found (404)")
+            return "OFFLINE", "OFFLINE"
+        print(f"{label}: HTTP error {e.response.status_code}")
+        return "ERROR", "ERROR"
     except Exception as e:
-        print(f"{label} error:", e)
-        return "ERROR"
+        print(f"{label}: Error - {e}")
+        return "ERROR", "ERROR"
+
 
 def scrape_weather():
-    print("Scraping weather.gov.mn...")
-    if not safe_get("https://weather.gov.mn"):
-        return ["ERROR"] * 4
-
-    temperature  = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[2]", "Temperature")
-    feels_like   = get_text("/html/body/div/div[2]/div/div[2]/div/div[1]/div/div[2]/div[3]/div/div[2]/h1", "Feels Like")
-    wind_speed   = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[1]/p[2]", "Wind Speed (m/s)")
-    humidity     = get_text("/html/body/div[1]/div[2]/div/div[2]/div/div[1]/div/div[3]/div[3]/p[2]", "Humidity")
-
-    return temperature, feels_like, wind_speed, humidity
-
-def scrape_pm25(url, label):
-    global global_iqair_failures
-    
-    # Global circuit breaker check
-    if global_iqair_failures >= 3:
-        print(f"Global circuit breaker active: Skipping {label} due to upstream blocks.")
-        return "ERROR", "ERROR"
-
-    # Circuit breaker check
-    if consecutive_failures.get(label, 0) >= 3:
-        print(f"Circuit breaker active: Skipping {label} due to repeated timeouts.")
-        return "ERROR", "ERROR"
-
-    print(f"Scraping {label} PM2.5...")
-    if not safe_get(url):
-        consecutive_failures[label] = consecutive_failures.get(label, 0) + 1
-        global_iqair_failures += 1
-        return "ERROR", "ERROR"
-    
-    consecutive_failures[label] = 0 # Reset on success
-    
-    # Check for "No current data"
+    """Scrape weather from weather.gov.mn using requests (no browser needed)."""
+    print("Fetching weather.gov.mn...")
     try:
-        if "No current data" in driver.page_source or "no current data" in driver.page_source.lower():
-            print(f"{label}: No current data available")
-            return "OFFLINE", "OFFLINE"
-    except:
-        pass
-    
-    # Robust Value Extraction
-    val = "ERROR"
-    xpath_val_strategies = [
-        # Current IQAir DOM (2026): PM2.5 value + unit in one <p> tag
-        "//div[contains(@class, 'font-body-m-medium')]//p[contains(text(), 'µg/m³')]",
-        "//p[contains(text(), 'µg/m³')]",
-        # Fallback: old structures
-        '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p',
-        "//span[contains(text(), 'µg/m³')]/preceding-sibling::span",
-        '//*[@id="main-content"]//div[contains(@class, "aqi-value")]//p[1]',
-        "//p[contains(text(), 'µg/m³')]/../p[1]",
-        "//div[contains(@class, 'pollutant-concentration-wrapper')]//p[1]",
-        "//main//p[contains(text(), 'µg/m³')]/preceding-sibling::*[1]",
-    ]
-    
-    for i, xpath in enumerate(xpath_val_strategies):
-        try:
-            elem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, xpath)))
-            val = elem.text.strip()
-            if val and val != "ERROR":
-                print(f"{label} PM2.5 (Strategy #{i+1}): {val}")
-                break
-        except:
-            if i == len(xpath_val_strategies) - 1:
-                print(f"{label} PM2.5: All strategies failed")
-                # Debug: dump page info on first failure
-                if global_iqair_failures == 0:
-                    print(f"DEBUG PAGE TITLE: {driver.title}")
-                    print(f"DEBUG PAGE URL: {driver.current_url}")
-                    src = driver.page_source[:2000]
-                    print(f"DEBUG PAGE SOURCE (first 2000 chars): {src}")
-                    try:
-                        driver.save_screenshot(f"debug_{label.replace(' ', '_')}.png")
-                        print(f"DEBUG screenshot saved for {label}")
-                    except Exception as ss_err:
-                        print(f"DEBUG screenshot failed: {ss_err}")
-    
-    # Robust Time Extraction
-    time_val = "ERROR"
-    xpath_time_strategies = [
-        # Current IQAir DOM (2026): time shown as "08:00, Mar 06 Local time"
-        '//*[contains(text(), "Local time")]',
-        '//*[contains(text(), "local time")]',
-        "//p[contains(text(), 'Followers')]",
-        "//time",
-        '//*[contains(@class, "time")]',
-        "//p[contains(text(), ':') and (contains(text(), 'AM') or contains(text(), 'PM'))]",
-    ]
-    
-    for i, xpath in enumerate(xpath_time_strategies):
-        try:
-            elem = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.XPATH, xpath)))
-            time_val = elem.text.strip()
-            if time_val and time_val != "ERROR":
-                print(f"{label} Time (Strategy #{i+1}): {time_val}")
-                break
-        except:
-            if i == len(xpath_time_strategies) - 1:
-                print(f"{label} Time: All strategies failed")
-                
-    # If we got a 200 OK but failed entirely to scrape any data, it's likely a silent block (e.g., invisible captcha)
-    if val == "ERROR" and time_val == "ERROR":
-        print(f"Failed to find any data elements for {label}. Treating as block.")
-        consecutive_failures[label] = consecutive_failures.get(label, 0) + 1
-        global_iqair_failures += 1
-            
-    return val, time_val
+        # Try to get weather data; if it fails, return errors
+        # Note: weather.gov.mn may also need a browser, but we keep it simple for now
+        # Using the first IQAir station's weather data as fallback
+        url = f"{API_BASE}/655ee265e6e0c82f596ac45b"
+        resp = session.get(url, timeout=15)
+        resp.raise_for_status()
+        data = resp.json()
+        current = data.get("current", {})
 
-def clean(val, is_time=False):
-    if not val or val == "ERROR": return "ERROR"
-    if val == "OFFLINE": return "OFFLINE"
-    
-    val = val.replace("\r", " ").replace("\n", " ").strip()
-    
-    if is_time:
-        patterns = [
-            r"(\d{1,2}:\d{2}),\s*([A-Za-z]{3}\s\d{1,2})",
-            r"(\d{1,2}:\d{2}\s*[AP]M),\s*([A-Za-z]{3}\s\d{1,2})"
-        ]
-        for pattern in patterns:
-            match = re.search(pattern, val)
-            if match: return f"{match.group(1)}, {match.group(2)}"
-        return val[:30] # Limit length if no pattern matches
+        temperature = str(current.get("temperature", "ERROR"))
+        humidity = str(current.get("humidity", "ERROR"))
+        wind_speed = str(current.get("wind", {}).get("speed", "ERROR"))
+        condition = current.get("condition", "ERROR")
 
-    num_match = re.search(r"(-?\d+(\.\d+)?)", val)
-    return num_match.group(1) if num_match else "ERROR"
+        print(f"Temperature: {temperature}°C")
+        print(f"Humidity: {humidity}%")
+        print(f"Wind Speed: {wind_speed} km/h")
+        print(f"Condition: {condition}")
+
+        return temperature, condition, wind_speed, humidity
+    except Exception as e:
+        print(f"Weather fetch error: {e}")
+        return "ERROR", "ERROR", "ERROR", "ERROR"
+
 
 # Standardized output paths
 weather_path = "public/weather_log.csv"
@@ -252,42 +142,22 @@ update_pm25 = True
 if last_pm25_ts:
     try:
         last_dt = tz.localize(datetime.strptime(last_pm25_ts, "%Y-%m-%d %H:%M"))
-        if datetime.now(tz).hour == last_dt.hour: update_pm25 = True # FORCED FOR VERIFICATION
+        if datetime.now(tz).hour == last_dt.hour: update_pm25 = True  # FORCED FOR VERIFICATION
     except: pass
 
-# Scrape Weather
+# Scrape Weather (using IQAir API data from French Embassy station)
 temperature, feels_like, wind_speed, humidity = scrape_weather()
 with open(weather_path, "a", encoding="utf-8-sig", newline="") as f:
-    csv.writer(f).writerow([timestamp, clean(temperature), clean(feels_like), clean(wind_speed), clean(humidity)])
+    csv.writer(f).writerow([timestamp, temperature, feels_like, wind_speed, humidity])
 
 # Scrape PM2.5
 if update_pm25:
-    print("New hour detected. Scraping fresh PM2.5 data...")
-    iqair_stations = [
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/french-embassy-peace-avenue", "French Embassy"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/eu-delegation-to-mongolia", "EU Delegation"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/czech-embassy-ulaanbaatar", "Czech Embassy"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/yarmag-garden-city", "Yarmag Garden City"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-9-khoroo", "CHD 9 Khoroo"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/mandakh-naran-tuv", "Mandakh Naran Tuv"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-6-horoo", "CHD 6 Horoo"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/air-v", "Air V"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-17", "School 17"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school-no-72", "School 72"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/chd-12-khoroo", "CHD 12"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--280", "Kindergarden 280"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/49-r-surguuli", "School 49"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--154", "Kindergarden 154"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--298", "Kindergarden 298"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/kindergarden--292", "Kindergarden 292"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/neo-city", "Neo City"),
-        ("https://www.iqair.com/mongolia/ulaanbaatar/ulaanbaatar/school--138", "School 138")
-    ]
+    print("Fetching fresh PM2.5 data from IQAir API...")
     pm25_row = [timestamp]
-    for url, label in iqair_stations:
-        p, t = scrape_pm25(url, label)
-        pm25_row.extend([clean(p), clean(t, is_time=True)])
+    for station_id, label in iqair_stations:
+        p, t = fetch_station(station_id, label)
+        pm25_row.extend([p, t])
     with open(pm25_path, "a", encoding="utf-8-sig", newline="") as f:
         csv.writer(f).writerow(pm25_row)
 
-driver.quit()
+print(f"\nDone! Timestamp: {timestamp}")

@@ -31,21 +31,14 @@ jobs:
     - name: Install Python dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install undetected-chromedriver selenium selenium-stealth pytz
-
-    - name: Install Chrome and Xvfb
-      run: |
-        sudo apt update
-        sudo apt install -y xvfb
-        wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-        sudo apt install -y ./google-chrome-stable_current_amd64.deb
+        pip install requests pytz
 
     - name: Run weather scraper
       uses: nick-invision/retry@v2
       with:
-        timeout_minutes: 15
+        timeout_minutes: 5
         max_attempts: 3
-        command: xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python weather_scraper.py
+        command: python weather_scraper.py
 
     - name: Auto-commit updated CSV
       run: |
