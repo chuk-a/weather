@@ -17,7 +17,8 @@ import random
 tz = pytz.timezone("Asia/Ulaanbaatar")
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-# Setup headless Chrome for CI/CD with undetected-chromedriver
+import subprocess
+
 chrome_options = uc.ChromeOptions()
 chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
@@ -25,7 +26,17 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--window-size=1920,1080")
 
-driver = uc.Chrome(options=chrome_options, version_main=None)
+# Detect installed Chrome version to avoid driver mismatch
+chrome_ver = None
+try:
+    result = subprocess.run(["google-chrome", "--version"], capture_output=True, text=True, timeout=5)
+    if result.returncode == 0:
+        chrome_ver = int(result.stdout.strip().split()[-1].split(".")[0])
+        print(f"Detected Chrome version: {chrome_ver}")
+except Exception:
+    pass
+
+driver = uc.Chrome(options=chrome_options, version_main=chrome_ver)
 driver.set_page_load_timeout(45)
 
 # Apply selenium-stealth to mask automation fingerprints
