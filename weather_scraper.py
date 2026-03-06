@@ -1,11 +1,10 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from datetime import datetime
-import chromedriver_autoinstaller
+import undetected_chromedriver as uc
+from selenium_stealth import stealth
 import csv
 import os
 import time
@@ -18,22 +17,27 @@ import random
 tz = pytz.timezone("Asia/Ulaanbaatar")
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-# Setup ChromeDriver path
-custom_path = os.path.join(tempfile.gettempdir(), "chromedriver")
-os.makedirs(custom_path, exist_ok=True)
-chromedriver_autoinstaller.install(path=custom_path)
-
-# Setup headless Chrome for CI/CD
-chrome_options = Options()
-chrome_options.add_argument("--headless")
+# Setup headless Chrome for CI/CD with undetected-chromedriver
+chrome_options = uc.ChromeOptions()
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-# Add a realistic user agent to help bypass simple bot detection
-chrome_options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+chrome_options.add_argument("--window-size=1920,1080")
 
-driver = webdriver.Chrome(options=chrome_options)
-driver.set_page_load_timeout(30)
+driver = uc.Chrome(options=chrome_options, version_main=None)
+driver.set_page_load_timeout(45)
+
+# Apply selenium-stealth to mask automation fingerprints
+stealth(driver,
+    languages=["en-US", "en"],
+    vendor="Google Inc.",
+    platform="Win32",
+    webgl_vendor="Intel Inc.",
+    renderer="Intel Iris OpenGL Engine",
+    fix_hairline=True,
+)
+
 wait = WebDriverWait(driver, 15)
 
 # Circuit breaker state
@@ -44,11 +48,11 @@ def safe_get(url, retries=3, delay=5):
     for attempt in range(retries):
         try:
             # Random delay before request to mimic human behavior
-            time.sleep(random.uniform(1, 3))
+            time.sleep(random.uniform(2, 5))
             driver.get(url)
             
-            # Wait for Vercel Security Checkpoint to auto-solve (up to 15s)
-            for wait_sec in range(15):
+            # Wait for Vercel Security Checkpoint to auto-solve (up to 25s)
+            for wait_sec in range(25):
                 page_title = driver.title.lower()
                 page_src = driver.page_source.lower()
                 
@@ -64,7 +68,7 @@ def safe_get(url, retries=3, delay=5):
                     return True
             else:
                 # Vercel checkpoint didn't resolve after 15s
-                print(f"Vercel checkpoint did not resolve for {url} after 15s")
+                print(f"Vercel checkpoint did not resolve for {url} after 25s")
                 time.sleep(delay)
                 continue
             
@@ -129,6 +133,10 @@ def scrape_pm25(url, label):
     # Robust Value Extraction
     val = "ERROR"
     xpath_val_strategies = [
+        # Current IQAir DOM (2026): PM2.5 value + unit in one <p> tag
+        "//div[contains(@class, 'font-body-m-medium')]//p[contains(text(), 'µg/m³')]",
+        "//p[contains(text(), 'µg/m³')]",
+        # Fallback: old structures
         '//*[@id="main-content"]//p[contains(text(), "µg/m³")]/preceding-sibling::p',
         "//span[contains(text(), 'µg/m³')]/preceding-sibling::span",
         '//*[@id="main-content"]//div[contains(@class, "aqi-value")]//p[1]',
@@ -162,8 +170,10 @@ def scrape_pm25(url, label):
     # Robust Time Extraction
     time_val = "ERROR"
     xpath_time_strategies = [
+        # Current IQAir DOM (2026): time shown as "08:00, Mar 06 Local time"
         '//*[contains(text(), "Local time")]',
         '//*[contains(text(), "local time")]',
+        "//p[contains(text(), 'Followers')]",
         "//time",
         '//*[contains(@class, "time")]',
         "//p[contains(text(), ':') and (contains(text(), 'AM') or contains(text(), 'PM'))]",
