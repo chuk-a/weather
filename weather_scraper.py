@@ -89,32 +89,57 @@ def fetch_station(station_id, label):
 
 
 def scrape_weather():
-    """Scrape weather from weather.gov.mn using requests (no browser needed)."""
-    print("Fetching weather.gov.mn...")
+    """Scrape weather from weather.gov.mn API."""
+    print("Fetching weather.gov.mn API...")
+    url = "https://weather.gov.mn/api/get/obs/data"
+    headers = {
+        "Content-Type": "application/json",
+        "Referer": "https://weather.gov.mn/",
+        "Origin": "https://weather.gov.mn",
+        "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    }
+    
     try:
-        # Try to get weather data; if it fails, return errors
-        # Note: weather.gov.mn may also need a browser, but we keep it simple for now
-        # Using the first IQAir station's weather data as fallback
-        url = f"{API_BASE}/655ee265e6e0c82f596ac45b"
-        resp = session.get(url, timeout=15)
+        resp = session.post(url, json={}, headers=headers, timeout=15)
         resp.raise_for_status()
         data = resp.json()
-        current = data.get("current", {})
+        
+        # Locate Ulaanbaatar station (sid: 292, sum_name: "Улаанбаатар")
+        ub_data = next((obs for obs in data.get("obs_data", []) if obs.get("sid") == 292 or obs.get("sum_name") == "Улаанбаатар"), None)
+        
+        if not ub_data:
+            raise Exception("Ulaanbaatar data not found in API response")
 
-        temperature = str(current.get("temperature", "ERROR"))
-        humidity = str(current.get("humidity", "ERROR"))
-        wind_speed = str(current.get("wind", {}).get("speed", "ERROR"))
-        condition = current.get("condition", "ERROR")
+        temperature = str(ub_data.get("ttt", "ERROR"))
+        feels_like = str(ub_data.get("ttt_feels", "ERROR"))
+        wind_speed = str(ub_data.get("wind_speed", "ERROR"))
+        humidity = str(ub_data.get("ff", "ERROR"))
 
         print(f"Temperature: {temperature}°C")
+        print(f"Feels Like: {feels_like}°C")
+        print(f"Wind Speed: {wind_speed} m/s")
         print(f"Humidity: {humidity}%")
-        print(f"Wind Speed: {wind_speed} km/h")
-        print(f"Condition: {condition}")
 
-        return temperature, condition, wind_speed, humidity
+        return temperature, feels_like, wind_speed, humidity
+
     except Exception as e:
-        print(f"Weather fetch error: {e}")
-        return "ERROR", "ERROR", "ERROR", "ERROR"
+        print(f"Weather fetch error: {e}. Falling back to IQAir data...")
+        try:
+            # Fallback to IQAir for basic metrics
+            url = f"{API_BASE}/655ee265e6e0c82f596ac45b"
+            resp = session.get(url, timeout=15)
+            resp.raise_for_status()
+            data = resp.json()
+            current = data.get("current", {})
+
+            temperature = str(current.get("temperature", "ERROR"))
+            humidity = str(current.get("humidity", "ERROR"))
+            wind_speed = str(current.get("wind", {}).get("speed", "ERROR"))
+            feels_like = "ERROR" # Falling back to IQAir means no feels_like
+
+            return temperature, feels_like, wind_speed, humidity
+        except:
+            return "ERROR", "ERROR", "ERROR", "ERROR"
 
 
 # Standardized output paths
