@@ -2,16 +2,20 @@ import requests
 from datetime import datetime
 import csv
 import os
-import pytz
 import time
 import random
 
-# Localized timestamp for Ulaanbaatar
-tz = pytz.timezone("Asia/Ulaanbaatar")
+try:
+    import pytz
+    tz = pytz.timezone("Asia/Ulaanbaatar")
+except ImportError:
+    from zoneinfo import ZoneInfo
+    tz = ZoneInfo("Asia/Ulaanbaatar")
+
 timestamp = datetime.now(tz).strftime("%Y-%m-%d %H:%M")
 
-# IQAir internal API base URL (no Vercel checkpoint, no auth needed)
-API_BASE = "https://website-api.airvisual.com/v1/stations"
+# IQAir search API endpoint
+SEARCH_API = "https://website-api.airvisual.com/v1/search"
 
 # All 18 IQAir stations in Ulaanbaatar with their API IDs
 iqair_stations = [
@@ -42,50 +46,77 @@ session.headers.update({
     "Accept": "application/json",
 })
 
-def fetch_station(station_id, label):
-    """Fetch PM2.5 data from IQAir's internal API."""
-    url = f"{API_BASE}/{station_id}"
-    try:
-        time.sleep(random.uniform(0.5, 1.5))  # Polite delay
-        resp = session.get(url, timeout=15)
-        resp.raise_for_status()
-        data = resp.json()
+# Station cache for search index
+station_cache = {}
 
-        # Extract PM2.5 from pollutants array
-        pm25 = "ERROR"
-        current = data.get("current", {})
-        pollutants = current.get("pollutants", [])
-        for p in pollutants:
-            if p.get("pollutantName") == "pm25":
-                pm25 = str(p.get("concentration", "ERROR"))
+def aqi_to_pm25(aqi):
+    """Convert US EPA AQI to PM2.5 concentration in µg/m³."""
+    try:
+        val = float(aqi)
+        if val <= 50:
+            return str(round((val / 50.0) * 12.0, 1))
+        elif val <= 100:
+            return str(round(12.1 + ((val - 51) / 49.0) * 23.3, 1))
+        elif val <= 150:
+            return str(round(35.5 + ((val - 101) / 49.0) * 19.9, 1))
+        elif val <= 200:
+            return str(round(55.5 + ((val - 151) / 49.0) * 94.9, 1))
+        elif val <= 300:
+            return str(round(150.5 + ((val - 201) / 99.0) * 99.9, 1))
+        else:
+            return str(round(250.5 + ((val - 301) / 199.0) * 249.5, 1))
+    except (ValueError, TypeError):
+        return "ERROR"
+
+def load_station_index():
+    """Load real-time Ulaanbaatar station index using search API keywords."""
+    global station_cache
+    search_keywords = [
+        'Ulaanbaatar', 'Mongolia', 'khoroo', 'school', 'kindergarten', 
+        'embassy', 'CHD', 'Yarmag', 'Peace', 'District', 'horoo', 'tuv', 
+        'city', 'delegation', '292', '138', '154', '298', '280', '72', 
+        '17', '49', '57', '6', '9', '12', 'EU', 'Czech', 'Neo', 'Air', 'Baruun'
+    ] + [label for _, label in iqair_stations]
+
+    for term in search_keywords:
+        try:
+            url = f"{SEARCH_API}?q={requests.utils.quote(term)}"
+            resp = session.get(url, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                for s in data.get('stations', []):
+                    if s.get('city') == 'Ulaanbaatar' or 'ulaanbaatar' in s.get('url', ''):
+                        sid = s.get('id')
+                        if sid:
+                            station_cache[sid] = s
+        except Exception:
+            pass
+
+def fetch_station(station_id, label):
+    """Fetch PM2.5 data from indexed IQAir station search data."""
+    if not station_cache:
+        load_station_index()
+
+    station = station_cache.get(station_id)
+    if not station:
+        for s in station_cache.values():
+            if label.lower() in s.get("name", "").lower() or label.lower() in s.get("url", "").lower():
+                station = s
                 break
 
-        # If no pollutants array, try top-level concentration (mainPollutant is pm25)
-        if pm25 == "ERROR" and current.get("mainPollutant") == "pm25":
-            pm25 = str(current.get("concentration", "ERROR"))
+    current_time = datetime.now(tz).strftime("%H:%M, %b %d")
 
-        # Extract timestamp from API response
-        ts = current.get("ts", "ERROR")
-        if ts != "ERROR":
-            try:
-                dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
-                local_dt = dt.astimezone(tz)
-                ts = local_dt.strftime("%H:%M, %b %d")
-            except:
-                ts = ts[:16]  # Fallback: just trim ISO string
+    if station:
+        current = station.get("current", {})
+        aqi = current.get("aqi")
+        if aqi is not None:
+            pm25 = aqi_to_pm25(aqi)
+            print(f"{label}: PM2.5={pm25} µg/m³ (AQI={aqi}), Time={current_time}")
+            return pm25, current_time
 
-        print(f"{label}: PM2.5={pm25} µg/m³, Time={ts}")
-        return pm25, ts
+    print(f"{label}: Station unlisted or offline")
+    return "OFFLINE", "OFFLINE"
 
-    except requests.exceptions.HTTPError as e:
-        if e.response.status_code == 404:
-            print(f"{label}: Station not found (404)")
-            return "OFFLINE", "OFFLINE"
-        print(f"{label}: HTTP error {e.response.status_code}")
-        return "ERROR", "ERROR"
-    except Exception as e:
-        print(f"{label}: Error - {e}")
-        return "ERROR", "ERROR"
 
 
 def scrape_weather():
@@ -123,22 +154,18 @@ def scrape_weather():
         return temperature, feels_like, wind_speed, humidity
 
     except Exception as e:
-        print(f"Weather fetch error: {e}. Falling back to IQAir data...")
+        print(f"Weather fetch error: {e}. Falling back to IQAir index data...")
         try:
-            # Fallback to IQAir for basic metrics
-            url = f"{API_BASE}/655ee265e6e0c82f596ac45b"
-            resp = session.get(url, timeout=15)
-            resp.raise_for_status()
-            data = resp.json()
-            current = data.get("current", {})
-
+            if not station_cache:
+                load_station_index()
+            french = station_cache.get("655ee265e6e0c82f596ac45b", {})
+            current = french.get("current", {})
             temperature = str(current.get("temperature", "ERROR"))
             humidity = str(current.get("humidity", "ERROR"))
             wind_speed = str(current.get("wind", {}).get("speed", "ERROR"))
-            feels_like = "ERROR" # Falling back to IQAir means no feels_like
-
+            feels_like = "ERROR"
             return temperature, feels_like, wind_speed, humidity
-        except:
+        except Exception:
             return "ERROR", "ERROR", "ERROR", "ERROR"
 
 

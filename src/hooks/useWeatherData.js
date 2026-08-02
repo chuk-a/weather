@@ -89,18 +89,31 @@ export function useWeatherData() {
 
     const fetchCSV = async (filename) => {
         const cacheBust = `?t=${Date.now()}`;
-        // 1. Try local
+        const baseUrl = import.meta.env.BASE_URL || './';
+        const relativePath = `${baseUrl.endsWith('/') ? baseUrl : baseUrl + '/'}${filename}`;
+
+        // 1. Try relative / base URL path
         try {
-            const res = await fetch(`/${filename}${cacheBust}`);
-            if (res.ok) return await res.text();
+            const res = await fetch(`${relativePath}${cacheBust}`);
+            if (res.ok) {
+                const text = await res.text();
+                if (!text.trim().startsWith('<')) {
+                    return text;
+                }
+            }
         } catch (e) {
-            console.warn(`Local fetch for ${filename} failed, trying fallback...`);
+            console.warn(`Base fetch for ${filename} failed, trying fallback...`, e);
         }
-        // 2. Try GitHub
+
+        // 2. Try GitHub Raw fallback
         const RAW_URL = `https://raw.githubusercontent.com/chuk-a/weather/main/public/${filename}`;
         const res = await fetch(`${RAW_URL}${cacheBust}`);
         if (!res.ok) throw new Error(`Failed to fetch ${filename}`);
-        return await res.text();
+        const text = await res.text();
+        if (text.trim().startsWith('<')) {
+            throw new Error(`Invalid CSV response received for ${filename}`);
+        }
+        return text;
     };
 
     const processWeather = (rows) => {
@@ -221,7 +234,7 @@ export function useWeatherData() {
     };
 
     const getLatestMetrics = () => {
-        if (!weather || !aqi) return null;
+        if (!weather || !aqi || !weather.timestamps?.length || !aqi.timestamps?.length) return null;
 
         // Latest Weather
         const wIdx = weather.timestamps.length - 1;
